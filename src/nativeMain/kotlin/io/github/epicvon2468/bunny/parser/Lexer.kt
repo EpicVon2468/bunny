@@ -15,7 +15,7 @@ import kotlinx.io.readString
 
 data class Lexer(val input: Source) {
 
-	val output: MutableList<KeywordInstance> = mutableListOf()
+	val output: MutableList<Expression> = mutableListOf()
 
 	// https://man.openbsd.org/sysexits.3
 	fun start(): Int {
