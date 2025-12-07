@@ -5,22 +5,7 @@ headers = llvm-c/Core.h llvm-c/Target.h llvm-c/Analysis.h llvm-c/BitWriter.h \
 
 headerFilter = llvm-c/* llvm-c/**/*
 
-# NOTE: No idea what this is on about; Copied from Kotlin/Native's LLVM Interop code and modified a lot but this huge block I have no idea on.  I may restore these in future.
-# Functions from LLVMIntPtrType to LLVMModuleCreateWithName are excluded because they work with the GlobalContext.
-# This might not be safe if the compiler is called from a daemon process.
-#
-# Also exclude the functions that rely on typed pointers as we get rid of them from the code generator.
-excludedFunctions = LLVMInitializeAllAsmParsers LLVMInitializeAllAsmPrinters LLVMInitializeAllDisassemblers \
-    LLVMInitializeAllTargetInfos LLVMInitializeAllTargetMCs LLVMInitializeAllTargets LLVMInitializeNativeTarget \
-    LLVMInitializeNativeAsmParser LLVMInitializeNativeAsmPrinter LLVMInitializeNativeDisassembler \
-    LLVMIntPtrType LLVMIntPtrTypeForAS LLVMGetMDKindID LLVMInt1Type LLVMInt8Type \
-    LLVMInt16Type LLVMInt32Type LLVMInt64Type LLVMInt128Type LLVMIntType LLVMHalfType LLVMFloatType LLVMDoubleType \
-    LLVMX86FP80Type LLVMFP128Type LLVMPPCFP128Type LLVMX86MMXType LLVMStructType LLVMVoidType LLVMLabelType \
-    LLVMMDString LLVMMDNode LLVMConstString LLVMConstStruct LLVMAppendBasicBlock LLVMInsertBasicBlock LLVMCreateBuilder \
-    LLVMParseBitcode LLVMParseBitcode2 LLVMGetBitcodeModule LLVMGetBitcodeModule2 LLVMGetGlobalContext LLVMModuleCreateWithName \
-    LLVMBuildLoad LLVMBuildGEP LLVMBuildStructGEP LLVMConstGEP LLVMConstInBoundsGEP LLVMAddAlias LLVMBuildInvoke LLVMBuildCall
-
 strictEnums = LLVMIntPredicate LLVMOpcode LLVMDLLStorageClass LLVMCallConv LLVMThreadLocalMode LLVMAtomicOrdering
 
-compilerOpts.linux = -v -I/usr/lib/llvm-20/include  -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
+compilerOpts.linux = -I/usr/lib/llvm-20/include  -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 linkerOpts.linux = -L/usr/lib/llvm-20/lib -lLLVM-20
