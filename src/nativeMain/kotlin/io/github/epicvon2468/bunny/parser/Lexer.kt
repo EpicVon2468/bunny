@@ -61,7 +61,7 @@ data class Lexer(val input: Source) {
 		input.peek { peekSource: Source ->
 			var char: Char = peekSource.readChar()
 			while (char.isWhitespace() && !peekSource.exhausted()) {
-				if (char == '\n' && stopAtNewline) break
+				if (char == '\n' && stopAtNewline) break // Because `\r` is considered whitespace, and it should always be followed by `\n`, we should be fine.
 				amount++
 				char = peekSource.readChar()
 			}

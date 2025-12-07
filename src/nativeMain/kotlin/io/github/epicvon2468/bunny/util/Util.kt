@@ -1,8 +1,9 @@
 package io.github.epicvon2468.bunny.util
 
 import kotlinx.io.Source
+import kotlinx.io.readCodePointValue
 
-fun Source.readChar(): Char = this.readByte().toInt().toChar()
+fun Source.readChar(): Char = this.readCodePointValue().toChar()
 
 fun <R> Source.peek(block: (Source) -> R): R = this.peek().use(block)
 
