@@ -13,6 +13,7 @@ import kotlinx.io.files.FileNotFoundException
 import kotlinx.io.readLine
 import kotlinx.io.readString
 
+// TODO: Lexer should return Token (sealed class).
 data class Lexer(val input: Source) {
 
 	val output: MutableList<ASTNode> = mutableListOf()
