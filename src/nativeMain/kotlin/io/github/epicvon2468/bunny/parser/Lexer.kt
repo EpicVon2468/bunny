@@ -90,7 +90,7 @@ data class Lexer(val input: Source) {
 				println("set")
 				parseIdentifier(uncertain = true)
 				skipSpaces(stopAtNewline = true)
-				parseIdentifier(uncertain = true, skipSpaces = false)
+				parseIdentifier(uncertain = true, skipSpaces = false) // TODO: This should be Literal/Variable, not Identifier.
 				if (hasNext()) skipSpaces(stopAtNewline = true)
 			}
 		}

@@ -14,7 +14,7 @@ import platform.posix.exit as _exit
 fun main() {
 	println("Hello, world!")
 	val source: Source = try {
-		with(SystemFileSystem) { source("./in") }
+		with(SystemFileSystem) { source("./in.todoFileExtensionHere") }
 	} catch (e: FileNotFoundException) {
 		e.printStackTrace()
 		exit(66) // EX_NOINPUT

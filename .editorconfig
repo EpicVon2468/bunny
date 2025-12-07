@@ -8,5 +8,8 @@ charset = utf-8
 insert_final_newline = false
 trim_trailing_whitespace = true
 
-[*.json]
+[{*.json,*.md}]
 tab_width = 2
+
+[*.todoFileExtensionHere]
+trim_trailing_whitespace = false
