@@ -17,8 +17,8 @@ behaviour over compiler behaviour.
 ## Code Guidelines
 
 - All input files **must** be encoded in UTF-8.
-- Input files *may* use `\r\n` or `\n` for newlines. Legacy macOS newlines (`\r`) are not supported.
-- Input files *may* contain a mixture of spaces and tabs for indentation, alongside trailing whitespace; However, the
+- Input files may use `\r\n` or `\n` for newlines. Legacy macOS newlines (`\r`) are not supported.
+- Input files may contain a mixture of spaces and tabs for indentation, alongside trailing whitespace; However, the
 	recommended behaviour is tabs with no trailing whitespace.
 - British English is **strongly** recommended, as the standard library will be written with this in mind (Colour vs Color, Maths vs Math, Initialise vs Initialize, etc).
 
