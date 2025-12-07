@@ -11,6 +11,10 @@ import kotlinx.io.files.SystemFileSystem
 
 import platform.posix.exit as _exit
 
+// TODO: https://github.com/AlexPl292/Kaleidoscope-Kotlin-Llvm/
+// 	https://www.pauladamsmith.com/blog/2015/01/how-to-get-started-with-llvm-c-api.html
+// 	https://www.reddit.com/r/Compilers/comments/mrxyiz/looking_for_guidance_on_understandingusing_llvm_c/
+// 	https://github.com/farzonl/expr-ir
 fun main() {
 	println("Hello, world!")
 	val source: Source = try {
