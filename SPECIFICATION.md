@@ -16,11 +16,12 @@ behaviour over compiler behaviour.
 
 ## Code Guidelines
 
-- All input files **must** be encoded in UTF-8.
+- All input files **must** be encoded in UTF-8. UTF-16 & UTF-32 will not be tolerated (supporting ligature characters in these encodings is problematic).
 - Input files may use `\r\n` or `\n` for newlines. Legacy macOS newlines (`\r`) are not supported.
 - Input files may contain a mixture of spaces and tabs for indentation, alongside trailing whitespace; However, the
 	recommended behaviour is tabs with no trailing whitespace.
-- British English is **strongly** recommended, as the standard library will be written with this in mind (Colour vs Color, Maths vs Math, Initialise vs Initialize, etc).
+- British English is **strongly** recommended, as the standard library will be written with this in mind (Colour vs
+	Color, Maths vs Math, Initialise vs Initialize, etc).
 
 ## Syntax
 
@@ -34,10 +35,11 @@ behaviour over compiler behaviour.
 	- "VERSION" is not a substitution, you literally write `VERSION ` before the version numbers.
 	- Only positive integers may be used in version numbers.
 	- The version line will always be at minimum 13 characters long.
+	- Force version override from commandline.
 
-#### Import Specification
+#### Import Specification:
 
-- `import {QualifiedName} using "{FilePath}"`
+- `import {QualifiedName} using "{FilePath}"`.
 	- Examples:
 		- `import exampleLib.ExtendedMaths using "include/exampleLib"`;
 		- `import standard.Maths using "standard"`;
@@ -46,6 +48,6 @@ behaviour over compiler behaviour.
 		- This does not require the existence of a `standard` file or directory.
 		- TODO: Make the `using "standard"` entirely optional?
 
-#### Semantics
+#### Semantics:
 
-- A statement/expression is considered terminated when a newline character is read.
+- A statement/expression is considered terminated when a newline character is read;
