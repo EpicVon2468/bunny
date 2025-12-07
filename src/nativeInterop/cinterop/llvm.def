@@ -7,5 +7,4 @@ headerFilter = llvm-c/* llvm-c/**/*
 
 strictEnums = LLVMIntPredicate LLVMOpcode LLVMDLLStorageClass LLVMCallConv LLVMThreadLocalMode LLVMAtomicOrdering
 
-compilerOpts.linux = -I/usr/lib/llvm-20/include  -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
-linkerOpts.linux = -L/usr/lib/llvm-20/lib -lLLVM-20
+# Compiler & Linker options managed in build.gradle.kts
