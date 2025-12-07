@@ -5,9 +5,17 @@ Status of feature implementation:
 ### Overall:
 
 - [ ] Runtime;
-- [ ] LLVM for code execution;
+- [ ] LLVM(-C) for code execution;
 - [ ] Lexer;
 - [ ] Parser;
+
+### Code Guidelines:
+
+- [X] Input files must use UTF-8 (not checked);
+- [X] Input files may use `\r\n` or `\n`;
+- [X] Mix of tabs & spaces is allowed;
+- [ ] Trailing whitespace is allowed:
+	- Problem: Trailing whitespace at end of file crashes lexer.
 
 ### Specification:
 

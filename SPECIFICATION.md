@@ -16,7 +16,8 @@ behaviour over compiler behaviour.
 
 ## Code Guidelines
 
-- All input files **must** be encoded in UTF-8. UTF-16 & UTF-32 will not be tolerated (supporting ligature characters in these encodings is problematic).
+- All input files **must** be encoded in UTF-8. UTF-16 & UTF-32 will not be tolerated (supporting ligature characters in
+	these encodings is problematic).
 - Input files may use `\r\n` or `\n` for newlines. Legacy macOS newlines (`\r`) are not supported.
 - Input files may contain a mixture of spaces and tabs for indentation, alongside trailing whitespace; However, the
 	recommended behaviour is tabs with no trailing whitespace.

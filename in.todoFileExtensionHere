@@ -8,4 +8,4 @@ VERSION 0 0 0
 
 call	 iAm		 
 get  theAllRange 	 	  		   		
-set 			atomic 		 sword	 
+set 			atomic 		 sword
