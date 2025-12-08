@@ -20,6 +20,10 @@ sealed interface Option<T : Any> {
 	}
 }
 
+fun <T : Any> T?.toOption(): Option<T> = this?.toSome() ?: None()
+
+fun <T : Any> T.toSome(): Some<T> = Some(this)
+
 fun <T : Any> Option<T>.isSome(): Boolean {
 	contract {
 		returns(true) implies (this@isSome is Some<T>)

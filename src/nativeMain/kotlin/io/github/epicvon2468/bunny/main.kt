@@ -29,6 +29,7 @@ import platform.posix.exit as _exit
 // 	https://www.pauladamsmith.com/blog/2015/01/how-to-get-started-with-llvm-c-api.html
 // 	https://www.reddit.com/r/Compilers/comments/mrxyiz/looking_for_guidance_on_understandingusing_llvm_c/
 // 	https://github.com/farzonl/expr-ir
+// 	https://github.com/MWGuy/llvm-hello/blob/master/main.cpp
 @OptIn(ShutUpAndLetMeUseCCode::class)
 fun main() {
 	println("Hello, world!")
