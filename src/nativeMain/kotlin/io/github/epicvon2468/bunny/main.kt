@@ -1,5 +1,6 @@
 package io.github.epicvon2468.bunny
 
+import io.github.epicvon2468.bunny.llvm.hello
 import io.github.epicvon2468.bunny.parser.Lexer
 
 import kotlinx.cinterop.ByteVar
@@ -54,6 +55,7 @@ fun main() {
 		)
 		fflush(stderr)
 	}
+	return hello()
 	val source: Source = try {
 		with(SystemFileSystem) { source("./in.todoFileExtensionHere") }
 	} catch (e: FileNotFoundException) {
