@@ -17,7 +17,8 @@ kotlin {
 				// Thank you, kind stranger.
 				// https://discuss.kotlinlang.org/t/mismatch-between-glibc-versions-kotlin-native-on-linux/30780
 				linkerOpts += listOf(
-					"-L/usr/lib/x86_64-linux-gnu", // TODO: Can Nix provide glibc? Consistency is best.
+					"-L${System.getenv("GLIBC_LOCATION")}/lib",
+					"-L${System.getenv("LIBCXX_LOCATION")}/lib",
 					"-lc++",
 					"--allow-shlib-undefined",
 					"--unresolved-symbols=ignore-all",
