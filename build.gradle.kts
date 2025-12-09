@@ -14,6 +14,15 @@ kotlin {
 		binaries {
 			executable {
 				entryPoint = "io.github.epicvon2468.bunny.main"
+				// Thank you, kind stranger.
+				// https://discuss.kotlinlang.org/t/mismatch-between-glibc-versions-kotlin-native-on-linux/30780
+				linkerOpts += listOf(
+					"-L/usr/lib/x86_64-linux-gnu", // TODO: Can Nix provide glibc? Consistency is best.
+					"-lc++",
+					"--allow-shlib-undefined",
+					"--unresolved-symbols=ignore-all",
+					"--warn-unresolved-symbols",
+				)
 			}
 		}
 		compilations.getByName("main") {
