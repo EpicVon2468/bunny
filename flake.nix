@@ -20,6 +20,7 @@
 							llvm.libllvm
 							glibc
 							libcxx
+							llvm.clang
 						];
 
 						LIB_LLVM_LOCATION = llvm.llvm.lib.outPath;
