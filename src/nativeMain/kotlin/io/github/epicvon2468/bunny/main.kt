@@ -55,7 +55,9 @@ fun main() {
 		)
 		fflush(stderr)
 	}
-	return hello()
+	return memScoped {
+		hello()
+	}
 	val source: Source = try {
 		with(SystemFileSystem) { source("./in.todoFileExtensionHere") }
 	} catch (e: FileNotFoundException) {
