@@ -1,5 +1,6 @@
 package io.github.epicvon2468.bunny
 
+import io.github.epicvon2468.bunny.llvm.CodeGen
 import io.github.epicvon2468.bunny.llvm.hello
 import io.github.epicvon2468.bunny.parser.Lexer
 
@@ -7,6 +8,7 @@ import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CArrayPointer
 import kotlinx.cinterop.ExperimentalForeignApi as ShutUpAndLetMeUseCCode
 import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.set
 import kotlinx.cinterop.toKString
@@ -36,7 +38,7 @@ fun main() {
 	println("Hello, world!")
 	val isDebug: Boolean = memScoped {
 		val str: CArrayPointer<ByteVar> = allocArray<ByteVar>(PATH_MAX + 1)
-		val length: ssize_t = readlink("/proc/self/exe", str, PATH_MAX.toULong())
+		val length: ssize_t = readlink("/proc/self/exe", str, PATH_MAX.convert())
 		str[length.toInt()] = '\u0000'.code.toByte()
 		println("Got self path: ${str.toKString()}")
 
@@ -55,9 +57,12 @@ fun main() {
 		)
 		fflush(stderr)
 	}
-	return memScoped {
+	memScoped {
 		hello()
 	}
+	CodeGen.dumpAll()
+	CodeGen.dispose()
+	return
 	val source: Source = try {
 		with(SystemFileSystem) { source("./in.todoFileExtensionHere") }
 	} catch (e: FileNotFoundException) {

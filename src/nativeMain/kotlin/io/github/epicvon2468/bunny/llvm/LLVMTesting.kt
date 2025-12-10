@@ -27,7 +27,7 @@ import llvm.LLVMValueRef
 inline val TRUE: LLVMBool get() = 1
 inline val FALSE: LLVMBool get() = 0
 
-fun MemScope.hello() = BunnyCodeGen.withModule("bunny") { context: LLVMContextRef ->
+fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 	val module: LLVMModuleRef = this
 	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
 
