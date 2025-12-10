@@ -8,6 +8,7 @@ import llvm.LLVMAppendBasicBlockInContext
 import llvm.LLVMBasicBlockRef
 import llvm.LLVMBool
 import llvm.LLVMBuildAdd
+import llvm.LLVMBuildAlloca
 import llvm.LLVMBuildCall2
 import llvm.LLVMBuildGlobalString
 import llvm.LLVMBuildPointerCast
@@ -22,6 +23,8 @@ import llvm.LLVMInt32TypeInContext
 import llvm.LLVMInt8TypeInContext
 import llvm.LLVMPointerType
 import llvm.LLVMPositionBuilderAtEnd
+import llvm.LLVMStructCreateNamed
+import llvm.LLVMStructSetBody
 import llvm.LLVMTypeRef
 import llvm.LLVMValueRef
 
@@ -29,6 +32,50 @@ import llvm.LLVMValueRef
 
 inline val TRUE: LLVMBool get() = 1
 inline val FALSE: LLVMBool get() = 0
+
+fun MemScope.struct() = CodeGen.withModule("testThree") { context: LLVMContextRef ->
+	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
+		val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
+		val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!
+		val structType: LLVMTypeRef = LLVMStructCreateNamed(
+			context,
+			"myStruct"
+		)!!
+		// LLVMStructTypeInContext(
+		//			/*c =*/ context,
+		//			/*elementTypes =*/ allocArrayOf(
+		//				int8Type,
+		//				int8Type
+		//			),
+		//			/*elementCount =*/ 2u,
+		//			/*packed =*/ FALSE
+		//		)!!
+		LLVMStructSetBody(
+			structType,
+			allocArrayOf(
+				int8Type,
+				int8Type
+			),
+			2u,
+			FALSE
+		)
+
+		val mainFunctionType: LLVMTypeRef = LLVMFunctionType(
+			/*ReturnType =*/ int32Type,
+			/*ParamTypes =*/ null,
+			/*ParamCount =*/ 0u,
+			/*IsVarArg =*/ FALSE
+		)!!
+		val mainFunction: LLVMValueRef = LLVMAddFunction(this, "main", mainFunctionType)!!
+
+		val entry: LLVMBasicBlockRef = LLVMAppendBasicBlockInContext(context, mainFunction, "entry")!!
+		LLVMPositionBuilderAtEnd(builder, entry)
+
+		fun makeChar(code: Int): LLVMValueRef = LLVMConstInt(int8Type, code.convert(), FALSE)!!
+		LLVMBuildAlloca(builder, structType, "v")
+		LLVMBuildRet(builder, LLVMConstInt(int32Type, 0u, FALSE))
+	}
+}
 
 fun MemScope.another() = CodeGen.withModule("testTwo") { context: LLVMContextRef ->
 	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
@@ -105,7 +152,7 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 			/*Fn =*/ putsFunction,
 			/*Args =*/ putsFunctionArgs,
 			/*NumArgs =*/ 1u,
-			/*Name =*/ "_i"
+			/*Name =*/ "i"
 		)
 		LLVMBuildRet(builder, LLVMConstInt(/*IntTy =*/ int32Type, /*N =*/ 0u, /*SignExtend =*/ FALSE))
 		// end

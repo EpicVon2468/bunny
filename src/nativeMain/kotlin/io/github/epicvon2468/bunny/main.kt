@@ -58,6 +58,7 @@ fun main() {
 		fflush(stderr)
 	}
 	memScoped {
+		struct()
 		another()
 		hello()
 	}
