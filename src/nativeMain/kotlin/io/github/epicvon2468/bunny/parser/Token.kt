@@ -29,4 +29,6 @@ sealed interface Token {
 	}
 
 	data object Call : Token
+
+	data object EOL : Token
 }

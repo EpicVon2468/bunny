@@ -13,8 +13,6 @@ import llvm.LLVMBuildPointerCast
 import llvm.LLVMBuildRet
 import llvm.LLVMBuilderRef
 import llvm.LLVMConstInt
-import llvm.LLVMContextCreate
-import llvm.LLVMContextDispose
 import llvm.LLVMContextRef
 import llvm.LLVMCreateBuilderInContext
 import llvm.LLVMDisposeBuilder
@@ -34,12 +32,12 @@ inline val TRUE: LLVMBool get() = 1
 inline val FALSE: LLVMBool get() = 0
 
 fun hello(): Unit = memScoped {
-	val context: LLVMContextRef = LLVMContextCreate()!!
-	val module: LLVMModuleRef = LLVMModuleCreateWithNameInContext(/*ModuleID =*/ "hello", context)!!
+	val context: LLVMContextRef = BunnyCodeGen.CONTEXT
+	val module: LLVMModuleRef = LLVMModuleCreateWithNameInContext(/*ModuleID =*/ "bunny", context)!!
 	val builder: LLVMBuilderRef = LLVMCreateBuilderInContext(context)!!
 
 	val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!
-	val int8TypePtr: LLVMTypeRef = LLVMPointerType(int8Type, 0u)!!
+	val int8TypePtr: LLVMTypeRef = LLVMPointerType(int8Type, 0u)!! // String is 'char*'
 	val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
 
 	// Puts function
@@ -85,12 +83,12 @@ fun hello(): Unit = memScoped {
 		/*NumArgs =*/ 1u,
 		/*Name =*/ "i"
 	)
-	LLVMBuildRet(builder, LLVMConstInt(int32Type, 0u, FALSE))
+	LLVMBuildRet(builder, LLVMConstInt(/*IntTy =*/ int32Type, /*N =*/ 0u, /*SignExtend =*/ FALSE))
 	// end
 
-	LLVMPrintModuleToFile(module, "hello.ll", null)
+	LLVMPrintModuleToFile(module, "bunny2.ll", null)
 
 	LLVMDisposeBuilder(builder)
 	LLVMDisposeModule(module)
-	LLVMContextDispose(context)
+	BunnyCodeGen.dispose()
 }
