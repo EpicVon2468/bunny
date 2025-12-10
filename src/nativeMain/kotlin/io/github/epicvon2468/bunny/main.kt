@@ -62,7 +62,6 @@ fun main() {
 		another()
 		hello()
 	}
-	CodeGen.dumpAll()
 	CodeGen.dispose()
 	return
 	val source: Source = try {

@@ -28,7 +28,24 @@ import llvm.LLVMStructSetBody
 import llvm.LLVMTypeRef
 import llvm.LLVMValueRef
 
+// FIXME: It was `.toKString()`. Report this to JetBrains via YouTrack / Slack.
 // TODO: Using `Name = "i"` is causing variables to be named `7` and breaking references to them. `%i` is valid, so this shouldn't be happening.
+//		It gets worse.  To be concise for future me, I'll map it out.
+//		"a" = "0x0.07ffc7d0d0948p-1022"
+//		"b" = "111"
+//		"c" = ""
+//		"d" = "7"
+//		"i" = "7"
+//		"m" = "Success"
+//		"n" = wipes the entire file
+//		"o" = "7"
+//		"p" = "0x7"
+//		"q" = either "" or "%", not sure which.
+//		"r" = "r"
+//		"s" = non-zero exit value 139, blank file
+//		"t" = see "q"
+//		"u" = "7"
+//		"v" = "v"
 
 inline val TRUE: LLVMBool get() = 1
 inline val FALSE: LLVMBool get() = 0
@@ -72,7 +89,7 @@ fun MemScope.struct() = CodeGen.withModule("testThree") { context: LLVMContextRe
 		LLVMPositionBuilderAtEnd(builder, entry)
 
 		fun makeChar(code: Int): LLVMValueRef = LLVMConstInt(int8Type, code.convert(), FALSE)!!
-		LLVMBuildAlloca(builder, structType, "v")
+		LLVMBuildAlloca(builder, structType, "i")
 		LLVMBuildRet(builder, LLVMConstInt(int32Type, 0u, FALSE))
 	}
 }
@@ -99,7 +116,7 @@ fun MemScope.another() = CodeGen.withModule("testTwo") { context: LLVMContextRef
 			builder,
 			LLVMGetParam(function, 0u)!!,
 			LLVMConstInt(int32Type, 1u, FALSE),
-			"v"
+			"i"
 		)!!
 		LLVMBuildRet(builder, value)
 	}
