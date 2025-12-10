@@ -1,7 +1,6 @@
 package io.github.epicvon2468.bunny
 
-import io.github.epicvon2468.bunny.llvm.CodeGen
-import io.github.epicvon2468.bunny.llvm.hello
+import io.github.epicvon2468.bunny.llvm.*
 import io.github.epicvon2468.bunny.parser.Lexer
 
 import kotlinx.cinterop.ByteVar
@@ -33,6 +32,7 @@ import platform.posix.exit as _exit
 // 	https://www.reddit.com/r/Compilers/comments/mrxyiz/looking_for_guidance_on_understandingusing_llvm_c/
 // 	https://github.com/farzonl/expr-ir
 // 	https://github.com/MWGuy/llvm-hello/blob/master/main.cpp
+// 	https://mapping-high-level-constructs-to-llvm-ir.readthedocs.io/en/latest/index.html
 @OptIn(ShutUpAndLetMeUseCCode::class)
 fun main() {
 	println("Hello, world!")
@@ -58,6 +58,7 @@ fun main() {
 		fflush(stderr)
 	}
 	memScoped {
+		another()
 		hello()
 	}
 	CodeGen.dumpAll()

@@ -7,6 +7,7 @@ import llvm.LLVMAddFunction
 import llvm.LLVMAppendBasicBlockInContext
 import llvm.LLVMBasicBlockRef
 import llvm.LLVMBool
+import llvm.LLVMBuildAdd
 import llvm.LLVMBuildCall2
 import llvm.LLVMBuildGlobalString
 import llvm.LLVMBuildPointerCast
@@ -16,21 +17,49 @@ import llvm.LLVMConstInt
 import llvm.LLVMContextRef
 import llvm.LLVMCreateBuilderInContext
 import llvm.LLVMFunctionType
+import llvm.LLVMGetParam
 import llvm.LLVMInt32TypeInContext
 import llvm.LLVMInt8TypeInContext
-import llvm.LLVMModuleRef
 import llvm.LLVMPointerType
 import llvm.LLVMPositionBuilderAtEnd
 import llvm.LLVMTypeRef
 import llvm.LLVMValueRef
 
+// TODO: Using `Name = "i"` is causing variables to be named `7` and breaking references to them. `%i` is valid, so this shouldn't be happening.
+
 inline val TRUE: LLVMBool get() = 1
 inline val FALSE: LLVMBool get() = 0
 
-fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
-	val module: LLVMModuleRef = this
+fun MemScope.another() = CodeGen.withModule("testTwo") { context: LLVMContextRef ->
 	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
+		val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
 
+		val functionArgsType: CArrayPointer<CPointerVarOf<LLVMTypeRef>> = allocArrayOf(
+			int32Type
+		)
+		val functionType: LLVMTypeRef = LLVMFunctionType(
+			/*returnType =*/ int32Type,
+			/*paramTypes =*/ functionArgsType,
+			/*paramCount =*/ 1u,
+			/*isVarArg = */ FALSE
+		)!!
+		val function: LLVMValueRef = LLVMAddFunction(this, "test", functionType)!!
+
+		val entry: LLVMBasicBlockRef = LLVMAppendBasicBlockInContext(context, function, "entry")!!
+		LLVMPositionBuilderAtEnd(builder, entry)
+
+		val value: LLVMValueRef = LLVMBuildAdd(
+			builder,
+			LLVMGetParam(function, 0u)!!,
+			LLVMConstInt(int32Type, 1u, FALSE),
+			"v"
+		)!!
+		LLVMBuildRet(builder, value)
+	}
+}
+
+fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
+	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
 		val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!
 		val int8TypePtr: LLVMTypeRef = LLVMPointerType(int8Type, 0u)!! // String is 'char*'
 		val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
@@ -46,7 +75,7 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 			/*ParamCount =*/ 1u,
 			/*IsVarArg =*/ FALSE
 		)!!
-		val putsFunction: LLVMValueRef = LLVMAddFunction(module, "puts", putsFunctionType)!!
+		val putsFunction: LLVMValueRef = LLVMAddFunction(this, "puts", putsFunctionType)!!
 		// end
 
 		// Main function
@@ -56,7 +85,7 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 			/*ParamCount =*/ 0u,
 			/*IsVarArg =*/ FALSE
 		)!!
-		val mainFunction: LLVMValueRef = LLVMAddFunction(module, "main", mainFunctionType)!!
+		val mainFunction: LLVMValueRef = LLVMAddFunction(this, "main", mainFunctionType)!!
 
 		val entry: LLVMBasicBlockRef = LLVMAppendBasicBlockInContext(context, mainFunction, "entry")!!
 		LLVMPositionBuilderAtEnd(builder, entry)
@@ -66,7 +95,7 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 				/*arg0 =*/ builder,
 				/*Val =*/ LLVMBuildGlobalString(builder, "Hello, world!", "hello"),
 				/*DestTy =*/ int8TypePtr,
-				/*Name =*/ "0",
+				/*Name =*/ "0"
 			)
 		)
 
@@ -76,7 +105,7 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 			/*Fn =*/ putsFunction,
 			/*Args =*/ putsFunctionArgs,
 			/*NumArgs =*/ 1u,
-			/*Name =*/ "i"
+			/*Name =*/ "_i"
 		)
 		LLVMBuildRet(builder, LLVMConstInt(/*IntTy =*/ int32Type, /*N =*/ 0u, /*SignExtend =*/ FALSE))
 		// end

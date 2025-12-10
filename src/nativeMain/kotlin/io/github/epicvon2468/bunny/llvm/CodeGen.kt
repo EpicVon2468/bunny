@@ -41,7 +41,7 @@ data object CodeGen {
 		)
 		this.createDirectories(outputFolder)
 		for ((name: String, content: String) in this@CodeGen.dumpedStrings) memScoped {
-			val file: CPointer<FILE>? = fopen(outputFolder + name, "w")
+			val file: CPointer<FILE>? = fopen(outputFolder + name + ".ll", "w")
 			if (file == null) {
 				fprintf(stderr, "ERROR!  Couldn't open file '$name' under folder '$outputFolder'!")
 				fflush(stderr)
