@@ -57,6 +57,7 @@ fun main() {
 		)
 		fflush(stderr)
 	}
+	CodeGen.TARGET_MACHINE
 	memScoped {
 		standardIO2()
 		standardIO()
