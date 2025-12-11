@@ -55,60 +55,6 @@ import llvm.LLVMVoidTypeInContext
 inline val TRUE: LLVMBool get() = 1
 inline val FALSE: LLVMBool get() = 0
 
-fun MemScope.standardIO2() = CodeGen.withModule("standard__IO__2") { context: LLVMContextRef ->
-	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
-		val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!
-		val int8TypePtr: LLVMTypeRef = LLVMPointerType(int8Type, 0u)!! // String is 'char*'
-		val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
-
-		val printfFunctionType: LLVMTypeRef = LLVMFunctionType(
-			int32Type,
-			allocArrayOf(int8TypePtr),
-			1u,
-			TRUE
-		)!!
-		val printfFunction: LLVMValueRef = LLVMAddFunction(
-			this,
-			"printf",
-			printfFunctionType
-		)!!
-
-		val printIntFunctionType: LLVMTypeRef = LLVMFunctionType(
-			LLVMVoidTypeInContext(context),
-			allocArrayOf(int32Type),
-			1u,
-			FALSE
-		)!!
-		val printIntFunction: LLVMValueRef = LLVMAddFunction(
-			this,
-			"printInt",
-			printIntFunctionType
-		)!!
-
-		val entry: LLVMBasicBlockRef = LLVMAppendBasicBlockInContext(context, printIntFunction, "entry")!!
-		LLVMPositionBuilderAtEnd(builder, entry)
-
-		LLVMBuildCall2(
-			builder,
-			printfFunctionType,
-			printfFunction,
-			allocArrayOf(
-				LLVMBuildPointerCast(
-					builder,
-					LLVMBuildGlobalString(builder, "%d\n", "printIntStr"),
-					int8TypePtr,
-					""
-				),
-				LLVMGetParam(printIntFunction, 0u)
-			),
-			2u,
-			"call"
-		)
-
-		LLVMBuildRetVoid(builder)
-	}
-}
-
 fun MemScope.standardIO() = CodeGen.withModule("standard__IO") { context: LLVMContextRef ->
 	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
 		val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!

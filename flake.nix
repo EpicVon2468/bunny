@@ -21,6 +21,7 @@
 							glibc
 							libcxx
 							llvm.clang
+							pkgs.gdb
 						];
 
 						LIB_LLVM_LOCATION = llvm.llvm.lib.outPath;

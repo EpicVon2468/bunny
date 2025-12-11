@@ -59,7 +59,6 @@ fun main() {
 	}
 	CodeGen.TARGET_MACHINE
 	memScoped {
-		standardIO2()
 		standardIO()
 		struct()
 		another()
