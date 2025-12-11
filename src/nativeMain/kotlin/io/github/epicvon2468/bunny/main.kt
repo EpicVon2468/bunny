@@ -1,6 +1,6 @@
 package io.github.epicvon2468.bunny
 
-import io.github.epicvon2468.bunny.llvm.*
+import io.github.epicvon2468.bunny.codegen.*
 import io.github.epicvon2468.bunny.parser.Lexer
 
 import kotlinx.cinterop.ByteVar

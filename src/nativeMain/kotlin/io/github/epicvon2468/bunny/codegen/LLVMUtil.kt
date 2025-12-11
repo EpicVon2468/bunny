@@ -1,14 +1,18 @@
 @file:OptIn(ExperimentalForeignApi::class)
-package io.github.epicvon2468.bunny.llvm
+package io.github.epicvon2468.bunny.codegen
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.convert
 
+import llvm.LLVMBool
 import llvm.LLVMBuildRet
 import llvm.LLVMBuilderRef
 import llvm.LLVMConstInt
 import llvm.LLVMDisposeBuilder
 import llvm.LLVMTypeRef
+
+inline val TRUE: LLVMBool get() = 1
+inline val FALSE: LLVMBool get() = 0
 
 fun <T : Any?> LLVMBuilderRef.use(block: (LLVMBuilderRef) -> T): T = block(this).let { returnValue: T ->
 	LLVMDisposeBuilder(this)

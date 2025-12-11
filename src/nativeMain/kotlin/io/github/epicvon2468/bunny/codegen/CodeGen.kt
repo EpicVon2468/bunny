@@ -1,5 +1,5 @@
 @file:OptIn(ExperimentalForeignApi::class)
-package io.github.epicvon2468.bunny.llvm
+package io.github.epicvon2468.bunny.codegen
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString

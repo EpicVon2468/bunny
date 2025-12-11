@@ -1,12 +1,12 @@
 @file:OptIn(ExperimentalForeignApi::class)
-package io.github.epicvon2468.bunny.llvm
+package io.github.epicvon2468.bunny.codegen
 
+import io.github.epicvon2468.bunny.codegen.standard.generateStandardIO
 import kotlinx.cinterop.*
 
 import llvm.LLVMAddFunction
 import llvm.LLVMAppendBasicBlockInContext
 import llvm.LLVMBasicBlockRef
-import llvm.LLVMBool
 import llvm.LLVMBuildAdd
 import llvm.LLVMBuildAlloca
 import llvm.LLVMBuildCall2
@@ -52,63 +52,40 @@ import llvm.LLVMVoidTypeInContext
 //		"u" = "7"
 //		"v" = "v"
 
-inline val TRUE: LLVMBool get() = 1
-inline val FALSE: LLVMBool get() = 0
+// Hold please:
+//		val entry: LLVMBasicBlockRef = LLVMAppendBasicBlockInContext(context, printIntFunction, "entry")!!
+//		LLVMPositionBuilderAtEnd(builder, entry)
+//
+//		val ptr: LLVMValueRef = LLVMBuildAlloca(builder, int32Type, "a.addr")!!
+//		LLVMBuildStore(builder, LLVMGetParam(printIntFunction, 0u), ptr)
+//		val value: LLVMValueRef = LLVMBuildLoad2(builder, int32Type, ptr, "0")!!
+//		LLVMBuildCall2(
+//			builder,
+//			printfFunctionType,
+//			printfFunction,
+//			allocArrayOf(
+//				LLVMBuildPointerCast(
+//					builder,
+//					LLVMBuildGlobalString(builder, "%d\n", "printIntStr"),
+//					int8TypePtr,
+//					""
+//				),
+//				value
+//			),
+//			2u,
+//			"call"
+//		)
+//
+//		LLVMBuildRetVoid(builder)
 
 fun MemScope.standardIO() = CodeGen.withModule("standard__IO") { context: LLVMContextRef ->
 	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
-		val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!
-		val int8TypePtr: LLVMTypeRef = LLVMPointerType(int8Type, 0u)!! // String is 'char*'
-		val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
-
-		val printfFunctionType: LLVMTypeRef = LLVMFunctionType(
-			int32Type,
-			allocArrayOf(int8TypePtr),
-			1u,
-			TRUE
-		)!!
-		val printfFunction: LLVMValueRef = LLVMAddFunction(
-			this,
-			"printf",
-			printfFunctionType
-		)!!
-
-		val printIntFunctionType: LLVMTypeRef = LLVMFunctionType(
-			LLVMVoidTypeInContext(context),
-			allocArrayOf(int32Type),
-			1u,
-			FALSE
-		)!!
-		val printIntFunction: LLVMValueRef = LLVMAddFunction(
-			this,
-			"printInt",
-			printIntFunctionType
-		)!!
-
-		val entry: LLVMBasicBlockRef = LLVMAppendBasicBlockInContext(context, printIntFunction, "entry")!!
-		LLVMPositionBuilderAtEnd(builder, entry)
-
-		val ptr: LLVMValueRef = LLVMBuildAlloca(builder, int32Type, "a.addr")!!
-		LLVMBuildStore(builder, LLVMGetParam(printIntFunction, 0u), ptr)
-		val value: LLVMValueRef = LLVMBuildLoad2(builder, int32Type, ptr, "0")!!
-		LLVMBuildCall2(
-			builder,
-			printfFunctionType,
-			printfFunction,
-			allocArrayOf(
-				LLVMBuildPointerCast(
-					builder,
-					LLVMBuildGlobalString(builder, "%d\n", "printIntStr"),
-					int8TypePtr,
-					""
-				),
-				value
-			),
-			2u,
-			"call"
+		this@standardIO.generateStandardIO(
+			context = context,
+			module = this,
+			builder = builder,
+			headersOnly = false
 		)
-
-		LLVMBuildRetVoid(builder)
 	}
 }
 
@@ -184,6 +161,15 @@ fun MemScope.another() = CodeGen.withModule("testTwo") { context: LLVMContextRef
 
 fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
+		val (
+			functionTypes: Map<String, LLVMTypeRef>,
+			functions: Map<String, LLVMValueRef>
+		) = this@hello.generateStandardIO(
+			context = context,
+			module = this,
+			builder = builder
+		)
+
 		val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!
 		val int8TypePtr: LLVMTypeRef = LLVMPointerType(int8Type, 0u)!! // String is 'char*'
 		val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
@@ -226,6 +212,15 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 			/*Args =*/ putsFunctionArgs,
 			/*NumArgs =*/ 1u,
 			/*Name =*/ "i"
+		)
+
+		LLVMBuildCall2(
+			builder,
+			functionTypes["printInt"]!!,
+			functions["printInt"]!!,
+			allocArrayOf(LLVMConstInt(int32Type, 42u, FALSE)),
+			1u,
+			""
 		)
 		builder.buildIntReturn0(int32Type)
 		// end
