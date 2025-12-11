@@ -58,6 +58,8 @@ fun main() {
 		fflush(stderr)
 	}
 	memScoped {
+		standardIO2()
+		standardIO()
 		struct()
 		another()
 		hello()
