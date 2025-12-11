@@ -13,6 +13,8 @@ import llvm.LLVMBuildCall2
 import llvm.LLVMBuildGlobalString
 import llvm.LLVMBuildPointerCast
 import llvm.LLVMBuildRet
+import llvm.LLVMBuildStore
+import llvm.LLVMBuildStructGEP2
 import llvm.LLVMBuilderRef
 import llvm.LLVMConstInt
 import llvm.LLVMContextRef
@@ -88,9 +90,10 @@ fun MemScope.struct() = CodeGen.withModule("testThree") { context: LLVMContextRe
 		val entry: LLVMBasicBlockRef = LLVMAppendBasicBlockInContext(context, mainFunction, "entry")!!
 		LLVMPositionBuilderAtEnd(builder, entry)
 
-		fun makeChar(code: Int): LLVMValueRef = LLVMConstInt(int8Type, code.convert(), FALSE)!!
-		LLVMBuildAlloca(builder, structType, "i")
-		LLVMBuildRet(builder, LLVMConstInt(int32Type, 0u, FALSE))
+		val struct: LLVMValueRef = LLVMBuildAlloca(builder, structType, "instance")!!
+		val structField1Ptr: LLVMValueRef = LLVMBuildStructGEP2(builder, structType, struct, 0u, "instance_0")!!
+		LLVMBuildStore(builder, LLVMConstInt(int8Type, 5u, FALSE), structField1Ptr)
+		builder.buildIntReturn0(int32Type)
 	}
 }
 
@@ -171,7 +174,7 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 			/*NumArgs =*/ 1u,
 			/*Name =*/ "i"
 		)
-		LLVMBuildRet(builder, LLVMConstInt(/*IntTy =*/ int32Type, /*N =*/ 0u, /*SignExtend =*/ FALSE))
+		builder.buildIntReturn0(int32Type)
 		// end
 	}
 }
