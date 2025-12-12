@@ -4,6 +4,7 @@ package io.github.epicvon2468.bunny.codegen.standard
 
 import io.github.epicvon2468.bunny.codegen.FALSE
 import io.github.epicvon2468.bunny.codegen.TRUE
+import io.github.epicvon2468.bunny.codegen.getFunctionAndType
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.MemScope
@@ -19,7 +20,9 @@ import llvm.LLVMBuildRetVoid
 import llvm.LLVMBuilderRef
 import llvm.LLVMContextRef
 import llvm.LLVMFunctionType
+import llvm.LLVMGetNamedFunction
 import llvm.LLVMGetParam
+import llvm.LLVMGlobalGetValueType
 import llvm.LLVMInt32TypeInContext
 import llvm.LLVMInt64TypeInContext
 import llvm.LLVMInt8TypeInContext
@@ -62,7 +65,6 @@ fun MemScope.generateStandardIO(
 		int8PtrType,
 		int32Type,
 		int64Type,
-		functionsAndTypes,
 		headersOnly,
 	)
 }
@@ -74,7 +76,6 @@ fun MemScope.meta__generatePrintInt(
 	int8PtrType: LLVMTypeRef,
 	int32Type: LLVMTypeRef,
 	int64Type: LLVMTypeRef,
-	functionsAndTypes: DeclaredFunctionsAndTypes,
 	headersOnly: Boolean
 ) {
 	this.generatePrintInt(
@@ -83,7 +84,6 @@ fun MemScope.meta__generatePrintInt(
 		builder = builder,
 		int8PtrType = int8PtrType,
 		intType = int32Type,
-		functionsAndTypes = functionsAndTypes,
 		num = "32",
 		headersOnly = headersOnly
 	)
@@ -93,7 +93,6 @@ fun MemScope.meta__generatePrintInt(
 		builder = builder,
 		int8PtrType = int8PtrType,
 		intType = int64Type,
-		functionsAndTypes = functionsAndTypes,
 		num = "64",
 		headersOnly = headersOnly
 	)
@@ -105,7 +104,6 @@ fun MemScope.generatePrintInt(
 	builder: LLVMBuilderRef,
 	int8PtrType: LLVMTypeRef,
 	intType: LLVMTypeRef,
-	functionsAndTypes: DeclaredFunctionsAndTypes,
 	num: String,
 	headersOnly: Boolean,
 ) {
@@ -116,17 +114,16 @@ fun MemScope.generatePrintInt(
 		/*isVarArg =*/ FALSE
 	)!!
 	val printIntFunction: LLVMValueRef = LLVMAddFunction(module, "printI$num", printIntFunctionType)!!
-	functionsAndTypes.first["printI$num"] = printIntFunctionType
-	functionsAndTypes.second["printI$num"] = printIntFunction
 
 	if (headersOnly) return
 
 	val entry: LLVMBasicBlockRef = LLVMAppendBasicBlockInContext(context, printIntFunction, "entry")!!
 	LLVMPositionBuilderAtEnd(builder, entry)
+	val (printfFunction: LLVMValueRef, printfFunctionType: LLVMTypeRef) = module.getFunctionAndType("printf")
 	LLVMBuildCall2(
 		builder,
-		functionsAndTypes.first["printf"]!!,
-		functionsAndTypes.second["printf"]!!,
+		printfFunctionType,
+		printfFunction,
 		allocArrayOf(
 			LLVMBuildPointerCast(
 				builder,
