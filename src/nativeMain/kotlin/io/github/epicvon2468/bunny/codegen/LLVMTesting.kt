@@ -21,15 +21,19 @@ import llvm.LLVMConstInt
 import llvm.LLVMContextRef
 import llvm.LLVMCreateBuilderInContext
 import llvm.LLVMFunctionType
+import llvm.LLVMGetNamedFunction
 import llvm.LLVMGetParam
+import llvm.LLVMGlobalGetValueType
 import llvm.LLVMInt32TypeInContext
 import llvm.LLVMInt64TypeInContext
 import llvm.LLVMInt8TypeInContext
 import llvm.LLVMModuleRef
 import llvm.LLVMPointerType
 import llvm.LLVMPositionBuilderAtEnd
+import llvm.LLVMPrintTypeToString
 import llvm.LLVMStructCreateNamed
 import llvm.LLVMStructSetBody
+import llvm.LLVMTypeOf
 import llvm.LLVMTypeRef
 import llvm.LLVMValueRef
 
@@ -152,10 +156,7 @@ fun MemScope.another() = CodeGen.withModule("testTwo") { context: LLVMContextRef
 
 fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
-		val (
-			functionTypes: Map<String, LLVMTypeRef>,
-			functions: Map<String, LLVMValueRef>
-		) = this@hello.generateStandardIO(
+		this@hello.generateStandardIO(
 			context = context,
 			module = this,
 			builder = builder
@@ -193,18 +194,22 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 			/*NumArgs =*/ 1u,
 			/*Name =*/ "i"
 		)
+		val printI32Function: LLVMValueRef = LLVMGetNamedFunction(this, "printI32")!!
+		val printI32FunctionType: LLVMTypeRef = LLVMGlobalGetValueType(printI32Function)!!
 		LLVMBuildCall2(
 			builder,
-			functionTypes["printI32"]!!,
-			functions["printI32"]!!,
+			printI32FunctionType,
+			printI32Function,
 			allocArrayOf(LLVMConstInt(int32Type, 42u, FALSE)),
 			1u,
 			""
 		)
+		val printI64Function: LLVMValueRef = LLVMGetNamedFunction(this, "printI64")!!
+		val printI64FunctionType: LLVMTypeRef = LLVMGlobalGetValueType(printI64Function)!!
 		LLVMBuildCall2(
 			builder,
-			functionTypes["printI64"]!!,
-			functions["printI64"]!!,
+			printI64FunctionType,
+			printI64Function,
 			allocArrayOf(LLVMConstInt(int64Type, 42u, FALSE)),
 			1u,
 			""

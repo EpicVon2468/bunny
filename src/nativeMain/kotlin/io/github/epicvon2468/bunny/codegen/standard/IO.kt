@@ -37,7 +37,7 @@ fun MemScope.generateStandardIO(
 	module: LLVMModuleRef,
 	builder: LLVMBuilderRef,
 	headersOnly: Boolean = true
-): DeclaredFunctionsAndTypes {
+) {
 	val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!
 	val int8PtrType: LLVMTypeRef = LLVMPointerType(int8Type, 0u)!! // String is 'char*'
 	val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
@@ -65,8 +65,6 @@ fun MemScope.generateStandardIO(
 		functionsAndTypes,
 		headersOnly,
 	)
-
-	return functionsAndTypes
 }
 
 fun MemScope.meta__generatePrintInt(
