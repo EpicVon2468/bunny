@@ -21,9 +21,7 @@ import llvm.LLVMConstInt
 import llvm.LLVMContextRef
 import llvm.LLVMCreateBuilderInContext
 import llvm.LLVMFunctionType
-import llvm.LLVMGetNamedFunction
 import llvm.LLVMGetParam
-import llvm.LLVMGlobalGetValueType
 import llvm.LLVMInt32TypeInContext
 import llvm.LLVMInt64TypeInContext
 import llvm.LLVMInt8TypeInContext
