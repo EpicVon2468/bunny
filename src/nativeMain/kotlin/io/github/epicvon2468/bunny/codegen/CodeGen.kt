@@ -31,17 +31,14 @@ data object CodeGen {
 
 	fun getFreeModuleID(base: String): String = if (base !in this.modules) base else this.getFreeModuleID("_$base")
 
-	val TARGET_MACHINE: LLVMTargetMachineRef
-	val PASS_BUILDER_OPTIONS: LLVMPassBuilderOptionsRef = LLVMCreatePassBuilderOptions()!!
-
-	init {
-		LLVMInitialiseNativeTarget()
-		this.TARGET_MACHINE = LLVMCreateTargetMachineWithOptions(
+	val TARGET_MACHINE: LLVMTargetMachineRef = LLVMInitialiseNativeTarget().run {
+		LLVMCreateTargetMachineWithOptions(
 			LLVMGetFirstTarget(),
 			LLVMGetDefaultTargetTriple()!!.toKString(),
 			LLVMCreateTargetMachineOptions()
 		)!!
 	}
+	val PASS_BUILDER_OPTIONS: LLVMPassBuilderOptionsRef = LLVMCreatePassBuilderOptions()!!
 
 	fun dispose() {
 		LLVMContextDispose(this.CONTEXT)

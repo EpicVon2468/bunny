@@ -2,6 +2,7 @@
 package io.github.epicvon2468.bunny.codegen
 
 import io.github.epicvon2468.bunny.codegen.standard.generateStandardIO
+
 import kotlinx.cinterop.*
 
 import llvm.LLVMAddFunction
@@ -11,10 +12,8 @@ import llvm.LLVMBuildAdd
 import llvm.LLVMBuildAlloca
 import llvm.LLVMBuildCall2
 import llvm.LLVMBuildGlobalString
-import llvm.LLVMBuildLoad2
 import llvm.LLVMBuildPointerCast
 import llvm.LLVMBuildRet
-import llvm.LLVMBuildRetVoid
 import llvm.LLVMBuildStore
 import llvm.LLVMBuildStructGEP2
 import llvm.LLVMBuilderRef
@@ -24,14 +23,15 @@ import llvm.LLVMCreateBuilderInContext
 import llvm.LLVMFunctionType
 import llvm.LLVMGetParam
 import llvm.LLVMInt32TypeInContext
+import llvm.LLVMInt64TypeInContext
 import llvm.LLVMInt8TypeInContext
+import llvm.LLVMModuleRef
 import llvm.LLVMPointerType
 import llvm.LLVMPositionBuilderAtEnd
 import llvm.LLVMStructCreateNamed
 import llvm.LLVMStructSetBody
 import llvm.LLVMTypeRef
 import llvm.LLVMValueRef
-import llvm.LLVMVoidTypeInContext
 
 // FIXME: It was `.toKString()`. Report this to JetBrains via YouTrack / Slack.
 // TODO: Using `Name = "i"` is causing variables to be named `7` and breaking references to them. `%i` is valid, so this shouldn't be happening.
@@ -116,16 +116,7 @@ fun MemScope.struct() = CodeGen.withModule("testThree") { context: LLVMContextRe
 			FALSE
 		)
 
-		val mainFunctionType: LLVMTypeRef = LLVMFunctionType(
-			/*ReturnType =*/ int32Type,
-			/*ParamTypes =*/ null,
-			/*ParamCount =*/ 0u,
-			/*IsVarArg =*/ FALSE
-		)!!
-		val mainFunction: LLVMValueRef = LLVMAddFunction(this, "main", mainFunctionType)!!
-
-		val entry: LLVMBasicBlockRef = LLVMAppendBasicBlockInContext(context, mainFunction, "entry")!!
-		LLVMPositionBuilderAtEnd(builder, entry)
+		generateMainFunction(int32Type, context, builder)
 
 		val struct: LLVMValueRef = LLVMBuildAlloca(builder, structType, "instance")!!
 		val structField1Ptr: LLVMValueRef = LLVMBuildStructGEP2(builder, structType, struct, 0u, "instance_0")!!
@@ -173,6 +164,7 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 		val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!
 		val int8TypePtr: LLVMTypeRef = LLVMPointerType(int8Type, 0u)!! // String is 'char*'
 		val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
+		val int64Type: LLVMTypeRef = LLVMInt64TypeInContext(context)!!
 
 		// Puts function
 		val putsFunctionType: LLVMTypeRef = LLVMFunctionType(
@@ -184,45 +176,58 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 		val putsFunction: LLVMValueRef = LLVMAddFunction(this, "puts", putsFunctionType)!!
 		// end
 
-		// Main function
-		val mainFunctionType: LLVMTypeRef = LLVMFunctionType(
-			/*ReturnType =*/ int32Type,
-			/*ParamTypes =*/ null,
-			/*ParamCount =*/ 0u,
-			/*IsVarArg =*/ FALSE
-		)!!
-		val mainFunction: LLVMValueRef = LLVMAddFunction(this, "main", mainFunctionType)!!
-
-		val entry: LLVMBasicBlockRef = LLVMAppendBasicBlockInContext(context, mainFunction, "entry")!!
-		LLVMPositionBuilderAtEnd(builder, entry)
-
-		val putsFunctionArgs: CArrayPointer<CPointerVarOf<LLVMValueRef>> = allocArrayOf(
-			LLVMBuildPointerCast(
-				/*arg0 =*/ builder,
-				/*Val =*/ LLVMBuildGlobalString(builder, "Hello, world!", "hello"),
-				/*DestTy =*/ int8TypePtr,
-				/*Name =*/ ""
-			)
-		)
+		generateMainFunction(int32Type, context, builder)
 
 		LLVMBuildCall2(
 			/*arg0 =*/ builder,
 			/*arg1 =*/ putsFunctionType,
 			/*Fn =*/ putsFunction,
-			/*Args =*/ putsFunctionArgs,
+			/*Args =*/ allocArrayOf(
+				LLVMBuildPointerCast(
+					/*arg0 =*/ builder,
+					/*Val =*/ LLVMBuildGlobalString(builder, "Hello, world!", "hello"),
+					/*DestTy =*/ int8TypePtr,
+					/*Name =*/ ""
+				)
+			),
 			/*NumArgs =*/ 1u,
 			/*Name =*/ "i"
 		)
-
 		LLVMBuildCall2(
 			builder,
-			functionTypes["printInt"]!!,
-			functions["printInt"]!!,
+			functionTypes["printI32"]!!,
+			functions["printI32"]!!,
 			allocArrayOf(LLVMConstInt(int32Type, 42u, FALSE)),
 			1u,
 			""
 		)
+		LLVMBuildCall2(
+			builder,
+			functionTypes["printI64"]!!,
+			functions["printI64"]!!,
+			allocArrayOf(LLVMConstInt(int64Type, 42u, FALSE)),
+			1u,
+			""
+		)
+
 		builder.buildIntReturn0(int32Type)
 		// end
 	}
+}
+
+private fun LLVMModuleRef.generateMainFunction(
+	int32Type: LLVMTypeRef,
+	context: LLVMContextRef,
+	builder: LLVMBuilderRef
+) {
+	val mainFunctionType: LLVMTypeRef = LLVMFunctionType(
+		/*ReturnType =*/ int32Type,
+		/*ParamTypes =*/ null,
+		/*ParamCount =*/ 0u,
+		/*IsVarArg =*/ FALSE
+	)!!
+	val mainFunction: LLVMValueRef = LLVMAddFunction(this, "main", mainFunctionType)!!
+
+	val entry: LLVMBasicBlockRef = LLVMAppendBasicBlockInContext(context, mainFunction, "entry")!!
+	LLVMPositionBuilderAtEnd(builder, entry)
 }
