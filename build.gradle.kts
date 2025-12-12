@@ -22,7 +22,7 @@ kotlin {
 					"-lc++",
 					"--allow-shlib-undefined",
 					"--unresolved-symbols=ignore-all",
-					"--warn-unresolved-symbols",
+					"--warn-unresolved-symbols"
 				)
 			}
 		}

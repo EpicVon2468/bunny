@@ -60,7 +60,7 @@ fun MemScope.generateStandardIO(
 		int8PtrType,
 		int32Type,
 		int64Type,
-		headersOnly,
+		headersOnly
 	)
 }
 
@@ -100,15 +100,18 @@ fun MemScope.generatePrintInt(
 	int8PtrType: LLVMTypeRef,
 	intType: LLVMTypeRef,
 	num: String,
-	headersOnly: Boolean,
+	headersOnly: Boolean
 ) {
-	val printIntFunctionType: LLVMTypeRef = LLVMFunctionType(
-		/*returnType =*/ LLVMVoidTypeInContext(context),
-		/*paramType =*/ allocArrayOf(intType),
-		/*paramCount =*/ 1u,
-		/*isVarArg =*/ FALSE
+	val printIntFunction: LLVMValueRef = LLVMAddFunction(
+		module,
+		"printI$num",
+		LLVMFunctionType(
+			/*returnType =*/ LLVMVoidTypeInContext(context),
+			/*paramType =*/ allocArrayOf(intType),
+			/*paramCount =*/ 1u,
+			/*isVarArg =*/ FALSE
+		)!!
 	)!!
-	val printIntFunction: LLVMValueRef = LLVMAddFunction(module, "printI$num", printIntFunctionType)!!
 
 	if (headersOnly) return
 

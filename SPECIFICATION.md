@@ -16,13 +16,13 @@ behaviour over compiler behaviour.
 
 ## Code Guidelines
 
-- All input files **must** be encoded in UTF-8. UTF-16 & UTF-32 will not be tolerated (supporting ligature characters in
+- All input files **must** be encoded in UTF-8 only. All other encodings, even UTF-16 & UTF-32 are unsupported (supporting ligature characters in
 	these encodings is problematic).
 - Input files may use `\r\n` or `\n` for newlines. Legacy macOS newlines (`\r`) are not supported.
 - Input files may contain a mixture of spaces and tabs for indentation, alongside trailing whitespace; However, the
 	recommended behaviour is tabs with no trailing whitespace.
 - British English is **strongly** recommended, as the standard library will be written with this in mind (Colour vs
-	Color, Maths vs Math, Initialise vs Initialize, etc).
+	"Color", Maths vs "Math", Initialise vs "Initialize", etc).
 
 ## Syntax
 
@@ -52,3 +52,5 @@ behaviour over compiler behaviour.
 #### Semantics:
 
 - A statement/expression is considered terminated when a newline character is read;
+
+## Symbol (De)mangling
