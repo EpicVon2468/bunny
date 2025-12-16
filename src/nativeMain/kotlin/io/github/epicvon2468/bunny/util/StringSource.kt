@@ -16,7 +16,7 @@ data class StringSource(val underlying: String) {
 	var index: Int = -1
 		private set
 
-	fun hasNext(): Boolean = index in -1..lastIndex
+	fun hasNext(): Boolean = index in -1..<lastIndex
 
 	operator fun get(index: Int): Option<Char> = underlying.getOrNull(index).toOption()
 

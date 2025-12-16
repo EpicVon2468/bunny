@@ -60,17 +60,17 @@ fun <T : Any, U : Any> Option<T>.mapOr(default: U, f: (T) -> U): U = if (isSome(
 
 fun <T : Any, U : Any> Option<T>.mapOrElse(default: () -> U, f: (T) -> U): U = if (isSome()) f(value) else default()
 
-fun <T : Any, U : Any> Option<T>.and(optb: Option<U>): Option<U> = if (isSome()) optb else None()
+infix fun <T : Any, U : Any> Option<T>.and(optb: Option<U>): Option<U> = if (isSome()) optb else None()
 
 fun <T : Any, U : Any> Option<T>.andThen(f: (T) -> Option<U>): Option<U> = if (isSome()) f(value) else None()
 
 fun <T : Any> Option<T>.filter(predicate: (T) -> Boolean): Option<T> = if (isSome() && predicate(value)) this else None()
 
-fun <T : Any> Option<T>.or(optb: Option<T>): Option<T> = if (isSome()) this else optb
+infix fun <T : Any> Option<T>.or(optb: Option<T>): Option<T> = if (isSome()) this else optb
 
 fun <T : Any> Option<T>.orElse(f: () -> Option<T>): Option<T> = if (isSome()) this else f()
 
-fun <T : Any> Option<T>.xor(optb: Option<T>): Option<T> = when {
+infix fun <T : Any> Option<T>.xor(optb: Option<T>): Option<T> = when {
 	this.isSome() && optb.isNone() -> this
 	this.isNone() && optb.isSome() -> optb
 	else -> None()
