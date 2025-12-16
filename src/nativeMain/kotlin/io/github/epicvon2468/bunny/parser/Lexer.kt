@@ -42,7 +42,7 @@ data class Lexer(val input: Source) {
 		if (uncertain) checkNotEOF()
 
 		input.require(13) // "VERSION M M R".  Bare minimum amount of bytes needed.  Could be more due to multi-digit numbers
-		val version: Version = Version.parse(input.readLine()!!.substringAfter("VERSION "))
+		val version = Version(input.readLine()!!.substringAfter("VERSION "))
 		if (version > Version.CURRENT)
 			error("Cannot use newer version: $version!  Current supported version is: ${Version.CURRENT}")
 	}

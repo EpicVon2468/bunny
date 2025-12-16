@@ -17,7 +17,7 @@ data class Version(val major: Int, val minor: Int, val revision: Int) {
 
 	companion object {
 
-		fun parse(input: String): Version {
+		operator fun invoke(input: String): Version {
 			val versions: List<String> = input.split(" ")
 			if (versions.size != 3) error("Expected list of three elements, but got: $versions!  (original input: \"$input\")")
 			return Version(versions[0].toInt(), versions[1].toInt(), versions[2].toInt())
