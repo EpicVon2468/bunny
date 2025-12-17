@@ -26,7 +26,7 @@ data class StringSource(val underlying: String) {
 	inline fun readCodePoint(): Option<Int> = readChar().map(Char::code)
 	inline fun peekCodePoint(): Option<Int> = peekChar().map(Char::code)
 
-	fun skip(length: Int) {
+	fun skip(length: Int = 1) {
 		if (length == 0) return
 		index += length
 	}
@@ -34,24 +34,16 @@ data class StringSource(val underlying: String) {
 	fun readLine(baseOutputCapacity: Int = 16): Option<String> {
 		if (!hasNext()) return None()
 		if (peekChar().isSomeAnd { it == '\n' }) {
-			skip(1)
+			skip()
 			return None()
 		}
 		val output = StringBuilder(baseOutputCapacity)
 		while (hasNext()) {
-			val next: Char = (peekChar() or '\u0000'.toSome()).unwrap()
-			if (
-				when (next) {
-					'\n' -> true
-					'\u0000' -> break
-					else -> false
-				}
-			) {
-				skip(1)
-				break
+			when (val next: Char = readChar().unwrap()) {
+				'\n' -> break
+				'\r' -> continue
+				else -> output.append(next)
 			}
-			if (next != '\r') output.append(next)
-			skip(1)
 		}
 		return output.toString().toSome()
 	}
