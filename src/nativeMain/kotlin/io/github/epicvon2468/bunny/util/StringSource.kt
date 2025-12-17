@@ -49,9 +49,8 @@ data class StringSource(val underlying: String) {
 
 	fun readRemaining(): Option<String> {
 		if (!hasNext()) return None()
-		val output = StringBuilder(lastIndex - index)
-		while (hasNext()) output.append(readChar().unwrap())
-		return output.toString().toSome()
+		// FIXME: Move index to correct position.
+		return underlying.substring(index + 1).toSome()
 	}
 
 	fun require(length: Int): Option<IOException> {

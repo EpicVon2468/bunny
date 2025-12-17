@@ -33,26 +33,26 @@ class StringSourceTests {
 	fun read__0() {
 		val output = StringBuilder(source.size)
 		while (source.hasNext()) output.append(source.readChar().unwrap())
+		println("read__0: '$output'")
 		assertEquals(source.underlying, output.toString())
-		println("read__0: $output")
 	}
 
 	@Test
 	fun readLine__0() {
 		val output: String = source.readLine(source.size).unwrap()
+		println("readLine__0: '$output'")
 		assertEquals(source.underlying, output)
-		println("readLine__0: $output")
 	}
 
 	@Test
 	fun readLine__1() {
 		val source: StringSource = source + "\r\n" + source
 		val output: String = source.readLine(SENTENCE.length).unwrap()
+		println("readLine__1: '$output'")
 		assertEquals(SENTENCE, output)
-		println("readLine__1: $output")
-		val output2 = source.readRemaining().expect("Expected another sentence still!")
+		val output2 = source.readLine().expect("Expected another sentence!")
+		println("readLine__1: '$output2'")
 		assertEquals(SENTENCE, output2)
-		println("readLine__1: $output2")
 	}
 
 	@Test
