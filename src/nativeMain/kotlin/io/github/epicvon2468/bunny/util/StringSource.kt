@@ -1,4 +1,5 @@
 @file:Suppress("FunctionName", "NOTHING_TO_INLINE")
+
 package io.github.epicvon2468.bunny.util
 
 import io.github.epicvon2468.bunny.util.option.*
@@ -33,17 +34,15 @@ data class StringSource(val underlying: String) {
 
 	fun readLine(baseOutputCapacity: Int = 16): Option<String> {
 		if (!hasNext()) return None()
-		if (peekChar().isSomeAnd { it == '\n' }) {
+		if (peekChar().isSomeAnd('\n'::equals)) {
 			skip()
 			return None()
 		}
 		val output = StringBuilder(baseOutputCapacity)
-		while (hasNext()) {
-			when (val next: Char = readChar().unwrap()) {
-				'\n' -> break
-				'\r' -> continue
-				else -> output.append(next)
-			}
+		while (hasNext()) when (val next: Char = readChar().unwrap()) {
+			'\n' -> break
+			'\r' -> continue
+			else -> output.append(next)
 		}
 		return output.toString().toSome()
 	}
@@ -70,7 +69,6 @@ data class StringSource(val underlying: String) {
 	inline operator fun plus(other: StringSource): StringSource = StringSource(this.underlying + other.underlying)
 	inline operator fun plus(other: String): StringSource = StringSource(this.underlying + other)
 
-	override fun toString(): String {
-		return "StringSource { underlying = \"$underlying\", index = $index, hasNext = ${hasNext()} }"
-	}
+	override fun toString(): String =
+		"StringSource { underlying = \"$underlying\", index = $index, hasNext = ${hasNext()} }"
 }
