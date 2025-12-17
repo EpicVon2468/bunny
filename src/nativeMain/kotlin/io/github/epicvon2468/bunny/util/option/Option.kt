@@ -32,7 +32,7 @@ fun <T : Any> Option<T>.isSome(): Boolean {
 	return this is Some
 }
 
-fun <T : Any> Option<T>.isSomeAnd(f: (T) -> Boolean): Boolean = isSome() && f(value)
+inline fun <T : Any> Option<T>.isSomeAnd(f: (T) -> Boolean): Boolean = isSome() && f(value)
 
 fun <T : Any> Option<T>.isNone(): Boolean {
 	contract {
@@ -42,7 +42,7 @@ fun <T : Any> Option<T>.isNone(): Boolean {
 	return this is None
 }
 
-fun <T : Any> Option<T>.isNoneOr(f: (T) -> Boolean): Boolean = if (isNone()) true else f(value)
+inline fun <T : Any> Option<T>.isNoneOr(f: (T) -> Boolean): Boolean = if (isNone()) true else f(value)
 
 fun <T : Any> Option<T>.expect(msg: String): T = if (isSome()) value else error(msg)
 
@@ -50,25 +50,25 @@ fun <T : Any> Option<T>.unwrap(): T = if (isSome()) value else error("Called Opt
 
 fun <T : Any> Option<T>.unwrapOr(default: T): T = if (isSome()) value else default
 
-fun <T : Any> Option<T>.unwrapOrElse(f: () -> T): T = if (isSome()) value else f()
+inline fun <T : Any> Option<T>.unwrapOrElse(f: () -> T): T = if (isSome()) value else f()
 
-fun <T : Any, U : Any> Option<T>.map(f: (T) -> U): Option<U> = if (isSome()) Some(f(value)) else None()
+inline fun <T : Any, U : Any> Option<T>.map(f: (T) -> U): Option<U> = if (isSome()) Some(f(value)) else None()
 
-fun <T : Any> Option<T>.inspect(f: (T) -> Unit): Option<T> = this.apply { if (isSome()) f(value) }
+inline fun <T : Any> Option<T>.inspect(f: (T) -> Unit): Option<T> = this.apply { if (isSome()) f(value) }
 
-fun <T : Any, U : Any> Option<T>.mapOr(default: U, f: (T) -> U): U = if (isSome()) f(value) else default
+inline fun <T : Any, U : Any> Option<T>.mapOr(default: U, f: (T) -> U): U = if (isSome()) f(value) else default
 
-fun <T : Any, U : Any> Option<T>.mapOrElse(default: () -> U, f: (T) -> U): U = if (isSome()) f(value) else default()
+inline fun <T : Any, U : Any> Option<T>.mapOrElse(default: () -> U, f: (T) -> U): U = if (isSome()) f(value) else default()
 
 infix fun <T : Any, U : Any> Option<T>.and(optb: Option<U>): Option<U> = if (isSome()) optb else None()
 
 fun <T : Any, U : Any> Option<T>.andThen(f: (T) -> Option<U>): Option<U> = if (isSome()) f(value) else None()
 
-fun <T : Any> Option<T>.filter(predicate: (T) -> Boolean): Option<T> = if (isSome() && predicate(value)) this else None()
+inline fun <T : Any> Option<T>.filter(predicate: (T) -> Boolean): Option<T> = if (isSome() && predicate(value)) this else None()
 
 infix fun <T : Any> Option<T>.or(optb: Option<T>): Option<T> = if (isSome()) this else optb
 
-fun <T : Any> Option<T>.orElse(f: () -> Option<T>): Option<T> = if (isSome()) this else f()
+inline fun <T : Any> Option<T>.orElse(f: () -> Option<T>): Option<T> = if (isSome()) this else f()
 
 infix fun <T : Any> Option<T>.xor(optb: Option<T>): Option<T> = when {
 	this.isSome() && optb.isNone() -> this
