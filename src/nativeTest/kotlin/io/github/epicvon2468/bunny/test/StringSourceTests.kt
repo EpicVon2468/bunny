@@ -2,6 +2,7 @@
 package io.github.epicvon2468.bunny.test
 
 import io.github.epicvon2468.bunny.util.StringSource
+import io.github.epicvon2468.bunny.util.option.expect
 import io.github.epicvon2468.bunny.util.option.unwrap
 
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -30,20 +31,33 @@ class StringSourceTests {
 	}
 
 	@Test
-	fun read() {
-		val output = StringBuilder(SENTENCE.length)
-		while (this.source.hasNext()) output.append(this.source.readChar().unwrap())
-		assertEquals(output.toString(), SENTENCE)
-		println("output: $output")
+	fun read__0() {
+		val output = StringBuilder(source.size)
+		while (source.hasNext()) output.append(source.readChar().unwrap())
+		assertEquals(source.underlying, output.toString())
+		println("read__0: $output")
+	}
+
+	@Test
+	fun readLine__0() {
+		val output: String = source.readLine(source.size)
+		assertEquals(source.underlying, output)
+		println("readLine__0: $output")
 	}
 
 	@Test
 	fun readLine__1() {
-		println(this.source.readLine(SENTENCE.length))
+		val source: StringSource = source + "\r\n" + source
+		val output: String = source.readLine(SENTENCE.length)
+		assertEquals(SENTENCE, output)
+		println("readLine__1: $output")
+		val output2 = source.readRemaining().expect("Expected another sentence still!")
+		assertEquals(SENTENCE, output2)
+		println("readLine__1: $output2")
 	}
 
 	@Test
-	fun require() {
+	fun require__0() {
 
 	}
 

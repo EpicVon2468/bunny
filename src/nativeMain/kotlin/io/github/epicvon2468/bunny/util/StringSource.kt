@@ -33,7 +33,7 @@ data class StringSource(val underlying: String) {
 
 	fun readLine(baseOutputCapacity: Int = 16): String {
 		val output = StringBuilder(baseOutputCapacity)
-		while (this.hasNext()) {
+		while (hasNext()) {
 			val next: Char = (peekChar() or '\u0000'.toSome()).unwrap()
 			if (
 				when (next) {
@@ -56,6 +56,13 @@ data class StringSource(val underlying: String) {
 		return output.toString()
 	}
 
+	fun readRemaining(): Option<String> {
+		if (!hasNext()) return None()
+		val output = StringBuilder(lastIndex - index)
+		while (hasNext()) output.append(readChar().unwrap())
+		return output.toString().toSome()
+	}
+
 	fun require(length: Int): Option<IOException> {
 		val actualIndex: Int = index + length
 		if (actualIndex == 0) return None()
@@ -68,6 +75,10 @@ data class StringSource(val underlying: String) {
 		this.index = -1
 	}
 
-	operator fun plus(other: StringSource): StringSource = StringSource(this.underlying + other.underlying)
-	operator fun plus(other: String): StringSource = StringSource(this.underlying + other)
+	inline operator fun plus(other: StringSource): StringSource = StringSource(this.underlying + other.underlying)
+	inline operator fun plus(other: String): StringSource = StringSource(this.underlying + other)
+
+	override fun toString(): String {
+		return "StringSource { underlying = \"$underlying\", index = $index, hasNext = ${hasNext()} }"
+	}
 }
