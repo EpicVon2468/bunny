@@ -2,8 +2,7 @@
 package io.github.epicvon2468.bunny.test
 
 import io.github.epicvon2468.bunny.util.StringSource
-import io.github.epicvon2468.bunny.util.option.expect
-import io.github.epicvon2468.bunny.util.option.unwrap
+import io.github.epicvon2468.bunny.util.option.*
 
 import kotlinx.cinterop.ExperimentalForeignApi
 
@@ -40,7 +39,7 @@ class StringSourceTests {
 
 	@Test
 	fun readLine__0() {
-		val output: String = source.readLine(source.size)
+		val output: String = source.readLine(source.size).unwrap()
 		assertEquals(source.underlying, output)
 		println("readLine__0: $output")
 	}
@@ -48,7 +47,7 @@ class StringSourceTests {
 	@Test
 	fun readLine__1() {
 		val source: StringSource = source + "\r\n" + source
-		val output: String = source.readLine(SENTENCE.length)
+		val output: String = source.readLine(SENTENCE.length).unwrap()
 		assertEquals(SENTENCE, output)
 		println("readLine__1: $output")
 		val output2 = source.readRemaining().expect("Expected another sentence still!")

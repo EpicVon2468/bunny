@@ -31,29 +31,29 @@ data class StringSource(val underlying: String) {
 		index += length
 	}
 
-	fun readLine(baseOutputCapacity: Int = 16): String {
+	fun readLine(baseOutputCapacity: Int = 16): Option<String> {
+		if (!hasNext()) return None()
+		if (peekChar().isSomeAnd { it == '\n' }) {
+			skip(1)
+			return None()
+		}
 		val output = StringBuilder(baseOutputCapacity)
 		while (hasNext()) {
 			val next: Char = (peekChar() or '\u0000'.toSome()).unwrap()
 			if (
 				when (next) {
-					'\n', '\r' -> true
+					'\n' -> true
 					'\u0000' -> break
 					else -> false
 				}
 			) {
-				skip(
-					length = if (
-						next == '\r' &&
-						this[index + 2].isSomeAnd { it == '\n' || error("Expected \\r to be followed by \\n!") }
-					) 2 else 1
-				)
+				skip(1)
 				break
 			}
-			output.append(next)
+			if (next != '\r') output.append(next)
 			skip(1)
 		}
-		return output.toString()
+		return output.toString().toSome()
 	}
 
 	fun readRemaining(): Option<String> {
