@@ -19,6 +19,8 @@ class StringSourceTests {
 
 	val source: StringSource = StringSource(SENTENCE)
 
+	val duplicatedSource: StringSource = source + "\r\n" + source
+
 	@BeforeTest
 	fun beforeEachTest() {
 		this.source.reset()
@@ -35,6 +37,7 @@ class StringSourceTests {
 		while (source.hasNext()) output.append(source.readChar().unwrap())
 		println("read__0: '$output'")
 		assertEquals(source.underlying, output.toString())
+		println("read__0: ${source.index}, ${source.lastIndex}, ${source.size}")
 	}
 
 	@Test
@@ -46,13 +49,23 @@ class StringSourceTests {
 
 	@Test
 	fun readLine__1() {
-		val source: StringSource = source + "\r\n" + source
+		val source: StringSource = duplicatedSource
 		val output: String = source.readLine(SENTENCE.length).unwrap()
 		println("readLine__1: '$output'")
 		assertEquals(SENTENCE, output)
-		val output2 = source.readLine().expect("Expected another sentence!")
+		val output2 = source.readLine(SENTENCE.length).expect("Expected another sentence!")
 		println("readLine__1: '$output2'")
 		assertEquals(SENTENCE, output2)
+	}
+
+	@Test
+	fun readRemaining__0() {
+		val source: StringSource = duplicatedSource
+		source.skip(SENTENCE.length + 2) // + 2 for the "\r\n"
+		val output: String = source.readRemaining().expect("Expected another sentence!")
+		println("readRemaining__0: '$output'")
+		assertEquals(SENTENCE, output)
+		println("readRemaining__0: ${source.index}, ${source.lastIndex}, ${source.size}")
 	}
 
 	@Test

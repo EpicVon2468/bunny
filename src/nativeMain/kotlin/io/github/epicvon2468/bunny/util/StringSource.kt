@@ -1,5 +1,4 @@
 @file:Suppress("FunctionName", "NOTHING_TO_INLINE")
-
 package io.github.epicvon2468.bunny.util
 
 import io.github.epicvon2468.bunny.util.option.*
@@ -28,7 +27,7 @@ data class StringSource(val underlying: String) {
 	inline fun peekCodePoint(): Option<Int> = peekChar().map(Char::code)
 
 	fun skip(length: Int = 1) {
-		if (length == 0) return
+		if (length <= 0) return
 		index += length
 	}
 
@@ -38,7 +37,7 @@ data class StringSource(val underlying: String) {
 			skip()
 			return None()
 		}
-		val output = StringBuilder(baseOutputCapacity)
+		val output = StringBuilder(baseOutputCapacity.coerceAtLeast(1))
 		while (hasNext()) when (val next: Char = readChar().unwrap()) {
 			'\n' -> break
 			'\r' -> continue
@@ -49,14 +48,15 @@ data class StringSource(val underlying: String) {
 
 	fun readRemaining(): Option<String> {
 		if (!hasNext()) return None()
-		// FIXME: Move index to correct position.
-		return underlying.substring(index + 1).toSome()
+		return underlying.substring(index + 1).toSome().apply { index = lastIndex }
 	}
 
+	// TODO: Change return type
 	fun require(length: Int): Option<IOException> {
+		if (length <= 0) return None()
 		val actualIndex: Int = index + length
 		if (actualIndex == 0) return None()
-		if (actualIndex !in 1..size) EOFException("Requested $length more chars, but only ${lastIndex - (index + length)}!").toSome()
+		if (actualIndex !in 1..lastIndex) return EOFException("Requested $length more chars, but only ${lastIndex - (index + length)}!").toSome()
 		this[actualIndex].expect("TODO good log message")
 		return None() // no need to actually check
 	}
