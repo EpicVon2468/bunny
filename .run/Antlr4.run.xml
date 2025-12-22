@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Antlr4" type="JarApplication">
+    <option name="JAR_PATH" value="/usr/java/packages/lib/antlr-4.13.2-complete.jar" />
+    <option name="PROGRAM_PARAMETERS" value="antlr/TestLexer.g4 -o src/jvmMain/java/generated" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="ALTERNATIVE_JRE_PATH" value="jbr-25" />
+    <method v="2" />
+  </configuration>
+</component>

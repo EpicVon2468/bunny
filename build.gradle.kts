@@ -10,6 +10,8 @@ repositories {
 }
 
 kotlin {
+	jvm()
+	jvmToolchain(25)
 	linuxX64 {
 		binaries {
 			executable {
@@ -58,6 +60,9 @@ kotlin {
 		nativeMain.dependencies {
 			implementation(libs.kotlinx.io)
 			implementation(fileTree("${rootDir}/src/nativeInterop/cinterop/llvm.klib"))
+		}
+		jvmMain.dependencies {
+			implementation(libs.antlr4)
 		}
 	}
 }
