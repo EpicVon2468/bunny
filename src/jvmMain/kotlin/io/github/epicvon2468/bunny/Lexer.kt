@@ -9,6 +9,10 @@ import org.antlr.v4.runtime.Token
 val INPUT: String =
 	"""
 		fun main() {
+			Type type = new Type();
+			1 == 2;
+			Type type =new Type();
+			1==2;
 		}
 	""".trimIndent()
 
@@ -18,7 +22,9 @@ fun main(args: Array<String>) {
 	while (true) {
 		val token: Token = lexer.nextToken()
 		if (token.type == Token.EOF) break
-		println("token: '${token.text}', ${lexer.vocabulary.getSymbolicName(token.type)}")
+		println("token: '${token.text}', ${token.type.getName()}")
 	}
 	println("Got out of loop!")
 }
+
+fun Int.getName(): String = TestLexer.VOCABULARY.getSymbolicName(this)
