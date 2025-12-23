@@ -1,3 +1,6 @@
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+
 plugins {
 	alias(libs.plugins.kotlin.multiplatform)
 }
@@ -10,7 +13,17 @@ repositories {
 }
 
 kotlin {
-	jvm()
+	jvm {
+		binaries {
+			executable {
+				// This isn't adding the `Main-Class` attribute?!
+				mainClass.set("io.github.epicvon2468.bunny.LexerKt")
+			}
+		}
+		mainRun {
+			mainClass.set("io.github.epicvon2468.bunny.LexerKt")
+		}
+	}
 	jvmToolchain(25)
 	linuxX64 {
 		binaries {
