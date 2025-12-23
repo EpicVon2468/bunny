@@ -9,13 +9,15 @@ import org.antlr.v4.runtime.Token
 val INPUT: String =
 	"""
 		fun main() {
+			thismightﬀbreakit;
 			Type type = new Type();
 			1 == 2;
-			Type type =new Type();
+			Type type=new Type();
 			1==2;
 		}
 	""".trimIndent()
 
+// to simplify function prototype parsing: `fun abc(a: String)` `abc(a: "")` ?
 fun main(args: Array<String>) {
 	println("Hello, world!")
 	val lexer = TestLexer(CharStreams.fromString(INPUT, "<anonymous>"))
