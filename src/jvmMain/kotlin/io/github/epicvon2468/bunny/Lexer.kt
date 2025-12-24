@@ -1,12 +1,11 @@
 package io.github.epicvon2468.bunny
 
-import TestLexer
+import PrimaryLexer
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.Token
 
-@JvmField
-val INPUT: String =
+const val INPUT: String =
 	"""
 		fun main() {
 			thismightﬀbreakit;
@@ -14,13 +13,16 @@ val INPUT: String =
 			1 == 2;
 			Type type=new Type();
 			1==2;
+			"foobar";
 		}
-	""".trimIndent()
+		fun abc(d: String, e: String, f: String) {}
+	"""
 
-// to simplify function prototype parsing: `fun abc(a: String)` `abc(a: "")` ?
+// https://tomassetti.me/antlr-mega-tutorial/#chapter23
+// https://github.com/antlr/antlr4/blob/dev/doc/wildcard.md
 fun main(args: Array<String>) {
 	println("Hello, world!")
-	val lexer = TestLexer(CharStreams.fromString(INPUT, "<anonymous>"))
+	val lexer = PrimaryLexer(CharStreams.fromString(INPUT, "<anonymous>"))
 	while (true) {
 		val token: Token = lexer.nextToken()
 		if (token.type == Token.EOF) break
@@ -29,4 +31,4 @@ fun main(args: Array<String>) {
 	println("Got out of loop!")
 }
 
-fun Int.getName(): String = TestLexer.VOCABULARY.getSymbolicName(this)
+fun Int.getName(): String = PrimaryLexer.VOCABULARY.getSymbolicName(this)

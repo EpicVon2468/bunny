@@ -21,6 +21,7 @@ kotlin {
 			}
 		}
 		mainRun {
+			args("-XX:+UseCompactObjectHeaders")
 			mainClass.set("io.github.epicvon2468.bunny.LexerKt")
 		}
 	}
