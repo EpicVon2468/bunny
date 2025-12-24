@@ -48,12 +48,14 @@ data object CodeGen {
 
 	fun withModule(
 		moduleID: String,
+		optimise: Boolean = true,
+		passes: String = "default<O3>",
 		context: LLVMContextRef = this.CONTEXT,
 		block: LLVMModuleRef.(LLVMContextRef) -> Unit
 	) = LLVMModuleCreateWithNameInContext(moduleID, context)!!.let { module: LLVMModuleRef ->
 		module.block(context)
 		val safeID: String = this.getFreeModuleID(moduleID)
-		LLVMRunPasses(module, "default<O3>", this.TARGET_MACHINE, this.PASS_BUILDER_OPTIONS)
+		if (optimise) LLVMRunPasses(module, passes, this.TARGET_MACHINE, this.PASS_BUILDER_OPTIONS)
 		LLVMPrintModuleToFile(module, "output/$safeID.ll", null)
 		this.modules += safeID
 		LLVMDisposeModule(module)

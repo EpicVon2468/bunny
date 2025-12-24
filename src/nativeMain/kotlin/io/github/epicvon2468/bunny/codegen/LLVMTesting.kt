@@ -12,6 +12,8 @@ import llvm.LLVMBuildAdd
 import llvm.LLVMBuildAlloca
 import llvm.LLVMBuildCall2
 import llvm.LLVMBuildGlobalString
+import llvm.LLVMBuildIntCast
+import llvm.LLVMBuildLoad2
 import llvm.LLVMBuildPointerCast
 import llvm.LLVMBuildRet
 import llvm.LLVMBuildStore
@@ -89,7 +91,7 @@ fun MemScope.standardIO() = CodeGen.withModule("standard__IO") { context: LLVMCo
 	}
 }
 
-fun MemScope.struct() = CodeGen.withModule("testThree") { context: LLVMContextRef ->
+fun MemScope.struct() = CodeGen.withModule(moduleID = "testThree", optimise = false) { context: LLVMContextRef ->
 	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
 		val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
 		val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!
@@ -120,8 +122,23 @@ fun MemScope.struct() = CodeGen.withModule("testThree") { context: LLVMContextRe
 
 		val struct: LLVMValueRef = LLVMBuildAlloca(builder, structType, "instance")!!
 		val structField1Ptr: LLVMValueRef = LLVMBuildStructGEP2(builder, structType, struct, 0u, "instance_0")!!
+		val structField2Ptr: LLVMValueRef = LLVMBuildStructGEP2(builder, structType, struct, 1u, "instance_1")!!
 		LLVMBuildStore(builder, LLVMConstInt(int8Type, 5u, FALSE), structField1Ptr)
-		builder.buildIntReturn0(int32Type)
+		LLVMBuildStore(builder, LLVMConstInt(int8Type, 10u, FALSE), structField2Ptr)
+		LLVMBuildRet(
+			builder,
+			LLVMBuildIntCast(
+				builder,
+				LLVMBuildAdd(
+					builder,
+					LLVMBuildLoad2(builder, int8Type, structField1Ptr, "a"),
+					LLVMBuildLoad2(builder, int8Type, structField2Ptr, "b"),
+					"c"
+				),
+				int32Type,
+				"d"
+			)
+		)
 	}
 }
 

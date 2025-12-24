@@ -15,7 +15,7 @@ COMPARISON : EQUALS EQUALS ;
 
 STRING_LITERAL : '"' ('\\"' | .)*? '"';
 
-NORMAL_COMMENT : '//' .*? NEWLINE ;
+COMMENT : '//' .*? NEWLINE ;
 DOCUMENTATION_COMMENT : '///' .*? NEWLINE ;
 SECTION_COMMENT : '/*' *.? '*/' ;
 
@@ -23,9 +23,10 @@ TERMINATION : ';' ;
 
 NUMBER : DIGIT+ ([.,] DIGIT+)? ;
 
-FUNCTION : 'fun' ;
+FUNCTION : 'funct' ;
+VARIABLE :  'define' ;
 
-TYPE_SPECIFIER: ':' ' '? ;
+TYPE_SPECIFIER: ':';
 
 IDENTIFIER : (LOWERCASE | UPPERCASE | '_')+ ;
 

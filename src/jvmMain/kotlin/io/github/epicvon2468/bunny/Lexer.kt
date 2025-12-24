@@ -7,15 +7,15 @@ import org.antlr.v4.runtime.Token
 
 const val INPUT: String =
 	"""
-		fun main() {
+		funct main() {
 			thismightﬀbreakit;
-			Type type = new Type();
+			define type : Type = new Type();
 			1 == 2;
-			Type type=new Type();
+			define type:Type=new Type();
 			1==2;
 			"foobar";
 		}
-		fun abc(d: String, e: String, f: String) {}
+		funct abc(d: String, e: String, f: String) {}
 	"""
 
 // https://tomassetti.me/antlr-mega-tutorial/#chapter23
