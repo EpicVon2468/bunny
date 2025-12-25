@@ -11,14 +11,18 @@ OPEN_BRACE : '{' ;
 CLOSE_BRACE : '}' ;
 
 ARGUMENT_SEPARATOR : ',' ;
+MEMBER_REFERENCE : '.' ;
+
+ASTERISK : '*' ; // ptr || multiplication
+VARARG : '...' ;
 
 ASSIGNMENT : EQUALS ;
 COMPARISON : EQUALS EQUALS ;
 
 STRING_LITERAL : '"' ('\\"' | .)*? '"';
 
-COMMENT : '//' .*? NEWLINE ;
-DOCUMENTATION_COMMENT : '///' .*? NEWLINE ;
+COMMENT : ('//' | '#') .*? (NEWLINE | EOF) ;
+DOCUMENTATION_COMMENT : '///' .*? (NEWLINE | EOF) ;
 SECTION_COMMENT : '/*' *.? '*/' ;
 
 TERMINATION : ';' ;
@@ -27,14 +31,26 @@ NUMBER : DIGIT+ ([.,] DIGIT+)? ;
 
 FUNCTION : 'funct' ;
 VARIABLE : 'define' ;
+STRUCT : 'type' ;
+SINGLETON : 'singleton' ;
 RETURN : 'return' ;
 
-STATIC_KEYWORD_REFERENCE : '::' ;
-STATIC_KEYWORD__NEW : 'new' ;
+STATIC_KEYWORD_NEW : '::new' ;
+STATIC_KEYWORD_INSTANCE : '::instance()' ;
+STATIC_KEYWORD_DESTROY : '::destroy()' ;
 
 TYPE_SPECIFIER: ':';
 
-IDENTIFIER : (LOWERCASE | UPPERCASE | '_')+ ;
+IDENTIFIER
+	: (LOWERCASE | UPPERCASE | '_')+
+	| '`' FUNCTION '`'
+	| '`' VARIABLE '`'
+	| '`' STRUCT '`'
+	| '`' SINGLETON '`'
+	| '`' RETURN '`'
+	;
+
+VERSION_DECLARATION : 'VERSION ' DIGIT WHITESPACE+ DIGIT WHITESPACE+ DIGIT WHITESPACE* NEWLINE ;
 
 WHITESPACE : (' ' | '\t') ;
 NEWLINE : ('\r'? '\n')+ ;

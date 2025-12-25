@@ -1,0 +1,57 @@
+VERSION 0 0 0
+
+type FILE {
+	define unused: i32;
+}
+
+fun remove(__filename: *u8): i32;
+fun rename(__filename: *u8, __new: *u8): i32;
+fun fclose(__stream: *FILE): i32;
+fun tmpfile(): *FILE;
+fun fflush(__stream: *FILE): i32;
+
+fun fopen(__filename: *u8, __modes: *u8): *FILE;
+fun freopen(__filename: *u8, __modes: *u8, __stream: *FILE): *FILE;
+fun fdopen(__fd: i32, __modes: *u8): *FILE;
+
+fun setbuf(__stream: *FILE, __buf: *u8);
+fun setvbuf(__stream: *FILE, __buf: *u8, __modes: i32, __n: i32 /*size_t*/);
+
+fun fprintf(__stream: *FILE, __format: *u8, ...): i32;
+fun printf(__format: *u8): i32;
+fun sprintf(__s: *u8, __format: *u8, ...): i32;
+fun vfprintf(__s: *FILE, __format: *u8, ...): i32;
+fun vprintf(__format: *u8, ...): i32;
+fun vsprintf(__s: *u8, __format: *u8, ...): i32;
+
+fun fscanf(__stream: *FILE, __format: *u8, ...): i32;
+fun scanf(__format: *u8, ...): i32;
+fun sscanf(__s: *u8, __format: *u8, ...): i32;
+
+fun fgetc(__stream: *FILE): i32;
+fun getc(__stream: *FILE): i32;
+fun getchar(): i32;
+
+fun fputc(__c: i32, __stream: *FILE): i32;
+fun putc(__c: i32, __stream: *FILE): i32;
+fun putchar(__c: i32): i32;
+fun fputs(__s: *u8, __stream: *FILE): i32;
+fun puts(__s: *u8): i32;
+
+fun ungetc(__c: i32, __stream: *FILE): i32;
+
+fun fread(__ptr: *void, __size: i32 /*size_t*/, __n: i32 /*size_t*/, __stream: *FILE): i32 /*size_t*/;
+fun fwrite(__ptr: *void, __size: i32 /*size_t*/, __n: i32 /*size_t*/, __s: *FILE): i32 /*size_t*/;
+fun fseek(__stream: *FILE, __off: i64, __whence: i32): i32;
+fun ftell(__stream: *FILE): i64;
+fun rewind(__stream: *FILE);
+
+// TODO: fgetpos && fsetpos
+
+fun clearerr(__stream: *FILE);
+fun feof(__stream: *FILE): i32;
+fun ferror(__stream: *FILE): i32;
+fun perror(__s: *u8);
+
+fun fileno(__stream: *FILE): i32;
+fun ctermid(__s: *u8): *u8;

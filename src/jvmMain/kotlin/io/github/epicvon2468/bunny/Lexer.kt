@@ -7,15 +7,30 @@ import org.antlr.v4.runtime.Token
 
 const val INPUT: String =
 	"""
+		VERSION 0 0 0
+
+		type String {
+
+			fun abc() {}
+		}
+
+		singleton type Blah {
+
+			fun abc(str: String) {}
+		}
+
 		funct main(): i32 {
 			//thismightﬀbreakit
-			define type: Type = Type::new();
+			define str: String = String::new();
 			1 == 2;
-			define type:Type=Type::new();
+			define str2:String=String::new();
 			1==2;
 			"foobar";
+			define blah: Blah = Blah::instance();
+			blah.abc(str2);
 			return 0;
 		}
+
 		funct abc(d: String, e: String, f: String) {}
 	"""
 
@@ -27,7 +42,7 @@ fun main(args: Array<String>) {
 	while (true) {
 		val token: Token = lexer.nextToken()
 		if (token.type == Token.EOF) break
-		println("token: '${token.text}', ${token.type.getName()}")
+		println("token: '${token.text.replace("\n", "\\n")}', ${token.type.getName()}")
 	}
 	println("Got out of loop!")
 }

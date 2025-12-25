@@ -28,7 +28,7 @@ import llvm.LLVMInt32TypeInContext
 import llvm.LLVMInt64TypeInContext
 import llvm.LLVMInt8TypeInContext
 import llvm.LLVMModuleRef
-import llvm.LLVMPointerType
+import llvm.LLVMPointerTypeInContext
 import llvm.LLVMPositionBuilderAtEnd
 import llvm.LLVMStructCreateNamed
 import llvm.LLVMStructSetBody
@@ -175,15 +175,14 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 			builder = builder
 		)
 
-		val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!
-		val int8TypePtr: LLVMTypeRef = LLVMPointerType(int8Type, 0u)!! // String is 'char*'
+		val ptrType: LLVMTypeRef = LLVMPointerTypeInContext(context, 0u)!! // String is 'char*'
 		val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
 		val int64Type: LLVMTypeRef = LLVMInt64TypeInContext(context)!!
 
 		// Puts function
 		val putsFunctionType: LLVMTypeRef = LLVMFunctionType(
 			/*ReturnType =*/ int32Type,
-			/*ParamTypes =*/ allocArrayOf(int8TypePtr),
+			/*ParamTypes =*/ allocArrayOf(ptrType),
 			/*ParamCount =*/ 1u,
 			/*IsVarArg =*/ FALSE
 		)!!
@@ -200,14 +199,14 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 				LLVMBuildPointerCast(
 					/*arg0 =*/ builder,
 					/*Val =*/ LLVMBuildGlobalString(builder, "Hello, world!", "hello"),
-					/*DestTy =*/ int8TypePtr,
+					/*DestTy =*/ ptrType,
 					/*Name =*/ ""
 				)
 			),
 			/*NumArgs =*/ 1u,
 			/*Name =*/ "i"
 		)
-		val (printI32Function: LLVMValueRef, printI32FunctionType: LLVMTypeRef) = this.getFunctionAndType("printI32")
+		val (printI32Function: LLVMValueRef, printI32FunctionType: LLVMTypeRef) = this.getFunctionAndType("print_i32")
 		LLVMBuildCall2(
 			builder,
 			printI32FunctionType,
@@ -216,7 +215,7 @@ fun MemScope.hello() = CodeGen.withModule("bunny") { context: LLVMContextRef ->
 			1u,
 			""
 		)
-		val (printI64Function: LLVMValueRef, printI64FunctionType: LLVMTypeRef) = this.getFunctionAndType("printI64")
+		val (printI64Function: LLVMValueRef, printI64FunctionType: LLVMTypeRef) = this.getFunctionAndType("print_i64")
 		LLVMBuildCall2(
 			builder,
 			printI64FunctionType,

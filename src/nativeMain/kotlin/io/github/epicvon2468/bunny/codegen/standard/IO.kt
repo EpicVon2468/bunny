@@ -23,9 +23,8 @@ import llvm.LLVMFunctionType
 import llvm.LLVMGetParam
 import llvm.LLVMInt32TypeInContext
 import llvm.LLVMInt64TypeInContext
-import llvm.LLVMInt8TypeInContext
 import llvm.LLVMModuleRef
-import llvm.LLVMPointerType
+import llvm.LLVMPointerTypeInContext
 import llvm.LLVMPositionBuilderAtEnd
 import llvm.LLVMTypeRef
 import llvm.LLVMValueRef
@@ -37,8 +36,7 @@ fun MemScope.generateStandardIO(
 	builder: LLVMBuilderRef,
 	headersOnly: Boolean = true
 ) {
-	val int8Type: LLVMTypeRef = LLVMInt8TypeInContext(context)!!
-	val int8PtrType: LLVMTypeRef = LLVMPointerType(int8Type, 0u)!! // String is 'char*'
+	val ptrType: LLVMTypeRef = LLVMPointerTypeInContext(context, 0u)!! // String is 'char*'
 	val int32Type: LLVMTypeRef = LLVMInt32TypeInContext(context)!!
 	val int64Type: LLVMTypeRef = LLVMInt64TypeInContext(context)!!
 
@@ -47,7 +45,7 @@ fun MemScope.generateStandardIO(
 		"printf",
 		LLVMFunctionType(
 			/*returnType =*/ int32Type,
-			/*paramTypes =*/ allocArrayOf(int8PtrType),
+			/*paramTypes =*/ allocArrayOf(ptrType),
 			/*paramCount =*/ 1u,
 			/*isVarArg =*/ TRUE
 		)!!
@@ -57,7 +55,7 @@ fun MemScope.generateStandardIO(
 		context,
 		module,
 		builder,
-		int8PtrType,
+		ptrType,
 		int32Type,
 		int64Type,
 		headersOnly
@@ -68,7 +66,7 @@ fun MemScope.meta__generatePrintInt(
 	context: LLVMContextRef,
 	module: LLVMModuleRef,
 	builder: LLVMBuilderRef,
-	int8PtrType: LLVMTypeRef,
+	ptrType: LLVMTypeRef,
 	int32Type: LLVMTypeRef,
 	int64Type: LLVMTypeRef,
 	headersOnly: Boolean
@@ -77,7 +75,7 @@ fun MemScope.meta__generatePrintInt(
 		context = context,
 		module = module,
 		builder = builder,
-		int8PtrType = int8PtrType,
+		ptrType = ptrType,
 		intType = int32Type,
 		num = "32",
 		headersOnly = headersOnly
@@ -86,7 +84,7 @@ fun MemScope.meta__generatePrintInt(
 		context = context,
 		module = module,
 		builder = builder,
-		int8PtrType = int8PtrType,
+		ptrType = ptrType,
 		intType = int64Type,
 		num = "64",
 		headersOnly = headersOnly
@@ -97,14 +95,14 @@ fun MemScope.generatePrintInt(
 	context: LLVMContextRef,
 	module: LLVMModuleRef,
 	builder: LLVMBuilderRef,
-	int8PtrType: LLVMTypeRef,
+	ptrType: LLVMTypeRef,
 	intType: LLVMTypeRef,
 	num: String,
 	headersOnly: Boolean
 ) {
 	val printIntFunction: LLVMValueRef = LLVMAddFunction(
 		module,
-		"printI$num",
+		"print_i$num",
 		LLVMFunctionType(
 			/*returnType =*/ LLVMVoidTypeInContext(context),
 			/*paramType =*/ allocArrayOf(intType),
@@ -125,8 +123,8 @@ fun MemScope.generatePrintInt(
 		allocArrayOf(
 			LLVMBuildPointerCast(
 				builder,
-				LLVMBuildGlobalString(builder, "%d\n", "printIntStr"),
-				int8PtrType,
+				LLVMBuildGlobalString(builder, "%d\n", "print_int_str"),
+				ptrType,
 				""
 			),
 			LLVMGetParam(printIntFunction, 0u)
