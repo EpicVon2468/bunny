@@ -31,6 +31,7 @@ NUMBER : DIGIT+ ([.,] DIGIT+)? ;
 
 FUNCTION : 'funct' ;
 VARIABLE : 'define' ;
+CONSTANT : 'constant' ;
 STRUCT : 'type' ;
 SINGLETON : 'singleton' ;
 RETURN : 'return' ;
@@ -38,6 +39,9 @@ RETURN : 'return' ;
 STATIC_KEYWORD_NEW : '::new' ;
 STATIC_KEYWORD_INSTANCE : '::instance()' ;
 STATIC_KEYWORD_DESTROY : '::destroy()' ;
+
+TRUE : 'true' ;
+FALSE : 'false' ;
 
 TYPE_SPECIFIER: ':';
 

@@ -9,6 +9,8 @@ const val INPUT: String =
 	"""
 		VERSION 0 0 0
 
+		define constant BLEH: Boolean = true
+
 		type String {
 
 			fun abc() {}
