@@ -10,6 +10,8 @@ CLOSE_PAREN : ')' ;
 OPEN_BRACE : '{' ;
 CLOSE_BRACE : '}' ;
 
+ARGUMENT_SEPARATOR : ',' ;
+
 ASSIGNMENT : EQUALS ;
 COMPARISON : EQUALS EQUALS ;
 
@@ -24,7 +26,11 @@ TERMINATION : ';' ;
 NUMBER : DIGIT+ ([.,] DIGIT+)? ;
 
 FUNCTION : 'funct' ;
-VARIABLE :  'define' ;
+VARIABLE : 'define' ;
+RETURN : 'return' ;
+
+STATIC_KEYWORD_REFERENCE : '::' ;
+STATIC_KEYWORD__NEW : 'new' ;
 
 TYPE_SPECIFIER: ':';
 
