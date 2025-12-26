@@ -1,7 +1,6 @@
 @file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 package io.github.epicvon2468.bunny.shared
 
-import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable as Serialisable
 
 actual interface Token {
@@ -13,35 +12,35 @@ actual interface Token {
 	actual fun getLine(): Int
 
 	actual fun getCharPositionInLine(): Int
+}
 
-	companion object {
+@Serialisable
+actual sealed interface SerialisableToken : Token {
 
-		@Serialisable
-		sealed interface NativeToken : Token {
+	actual val text: String
 
-			val text: String
+	actual val type: Int
 
-			val type: Int
+	actual val line: Int
 
-			val line: Int
+	actual val linePos: Int
 
-			val linePos: Int
+	actual override fun getText(): String = this.text
 
-			override fun getText(): String = this.text
+	actual override fun getType(): Int = this.type
 
-			override fun getType(): Int = this.type
+	actual override fun getLine(): Int = this.line
 
-			override fun getLine(): Int = this.line
+	actual override fun getCharPositionInLine(): Int = this.linePos
 
-			override fun getCharPositionInLine(): Int = this.linePos
-		}
+	actual companion object {
 
 		@Serialisable
 		data class Variable(
 			override val type: Int,
 			override val line: Int,
 			override val linePos: Int
-		) : NativeToken {
+		) : SerialisableToken {
 
 			override val text: String = "variable"
 		}
@@ -51,7 +50,7 @@ actual interface Token {
 			override val type: Int,
 			override val line: Int,
 			override val linePos: Int
-		) : NativeToken {
+		) : SerialisableToken {
 
 			override val text: String = "mutable"
 		}
@@ -62,6 +61,6 @@ actual interface Token {
 			override val type: Int,
 			override val line: Int,
 			override val linePos: Int
-		): NativeToken
+		): SerialisableToken
 	}
 }
