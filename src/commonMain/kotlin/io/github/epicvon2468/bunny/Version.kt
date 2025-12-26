@@ -4,21 +4,21 @@ data class Version(val major: Int, val minor: Int, val revision: Int) {
 
 	operator fun compareTo(other: Version): Int {
 		if (this == other) return 0
-		when (val it = this.major.compareTo(other.major)) {
-			0 -> Unit
-			else -> return it
+		this.major.compareTo(other.major).let {
+			if (it != 0) return@compareTo it
 		}
-		when (val it = this.minor.compareTo(other.minor)) {
-			0 -> Unit
-			else -> return it
+		this.minor.compareTo(other.minor).let {
+			if (it != 0) return@compareTo it
 		}
 		return this.revision.compareTo(other.revision)
 	}
 
+	override fun toString(): String = "v$major.$minor.$revision"
+
 	companion object {
 
 		operator fun invoke(input: String): Version {
-			val versions: List<String> = input.split(" ")
+			val versions: List<String> = input.split(' ', '\t').filterNot(CharSequence::isBlank)
 			if (versions.size != 3) error("Expected list of three elements, but got: $versions!  (original input: \"$input\")")
 			return Version(versions[0].toInt(), versions[1].toInt(), versions[2].toInt())
 		}

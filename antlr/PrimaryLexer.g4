@@ -13,6 +13,13 @@ CLOSE_BRACE : '}' ;
 ARGUMENT_SEPARATOR : ',' ;
 MEMBER_REFERENCE : '.' ;
 
+// Brackets, Exponents, Division, Multiplication, Addition, Subtraction
+
+DIV : '/' ;
+//MUL : '*' ;
+ADD : '+' ;
+SUB : '-' ;
+
 ASTERISK : '*' ; // ptr || multiplication
 VARARG : '...' ;
 
@@ -23,7 +30,7 @@ STRING_LITERAL : '"' ('\\"' | .)*? '"';
 
 COMMENT : ('//' | '#') .*? (NEWLINE | EOF) ;
 DOCUMENTATION_COMMENT : '///' .*? (NEWLINE | EOF) ;
-SECTION_COMMENT : '/*' *.? '*/' ;
+SECTION_COMMENT : '/*' .*? '*/' ;
 
 TERMINATION : ';' ;
 
@@ -31,6 +38,7 @@ NUMBER : DIGIT+ ([.,] DIGIT+)? ;
 
 FUNCTION : 'funct' ;
 VARIABLE : 'define' ;
+MUTABLE : 'mutable' ;
 CONSTANT : 'constant' ;
 STRUCT : 'type' ;
 SINGLETON : 'singleton' ;
@@ -49,6 +57,7 @@ IDENTIFIER
 	: (LOWERCASE | UPPERCASE | '_')+
 	| '`' FUNCTION '`'
 	| '`' VARIABLE '`'
+	| '`' MUTABLE '`'
 	| '`' STRUCT '`'
 	| '`' SINGLETON '`'
 	| '`' RETURN '`'
