@@ -20,7 +20,7 @@ const val INPUT: String =
 //			fun abc(str: String) {}
 //		}
 
-		funct main(arg_count: i32, args: **u8): i32 {
+		funct main(/*arg_count: i32, args: **u8*/): i32 {
 			define a: i32 = 5;
 			define mutable b: i32 = 10;
 			b = a + b
