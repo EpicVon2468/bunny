@@ -11,6 +11,7 @@ actual typealias Token = Antlr4Token
 actual typealias TokenSource = Antlr4TokenSource
 actual typealias CharStream = Antlr4CharStream
 
+actual fun getTerminationType(): Int = PrimaryLexer.TERMINATION
 actual fun getFunctionType(): Int = PrimaryLexer.FUNCTION
 actual fun getVariableType(): Int = PrimaryLexer.VARIABLE
 actual fun getMutableType(): Int = PrimaryLexer.MUTABLE

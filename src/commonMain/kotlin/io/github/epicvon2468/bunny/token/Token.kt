@@ -1,4 +1,4 @@
-@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING", "RedundantModalityModifier")
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 package io.github.epicvon2468.bunny.token
 
 import kotlinx.serialization.Serializable as Serialisable
@@ -56,6 +56,21 @@ expect interface CharStream
 
 @Serialisable
 @ConsistentCopyVisibility
+data class Termination private constructor(
+	override val _line: Int,
+	override val linePos: Int,
+	override val _type: Int
+): SerialisableToken {
+
+	constructor(line: Int, linePos: Int) : this(line, linePos, getTerminationType())
+
+	override val _text: String = ":"
+}
+
+expect fun getTerminationType(): Int
+
+@Serialisable
+@ConsistentCopyVisibility
 data class Function private constructor(
 	override val _line: Int,
 	override val linePos: Int,
@@ -109,7 +124,7 @@ data class TypeSpecifier private constructor(
 
 	constructor(line: Int, linePos: Int) : this(line, linePos, getTypeSpecifierType())
 
-	override val _text: String = "mutable"
+	override val _text: String = ":"
 }
 
 expect fun getTypeSpecifierType(): Int

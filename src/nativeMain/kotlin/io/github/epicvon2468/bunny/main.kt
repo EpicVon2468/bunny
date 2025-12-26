@@ -2,8 +2,6 @@ package io.github.epicvon2468.bunny
 
 import io.github.epicvon2468.bunny.codegen.*
 import io.github.epicvon2468.bunny.parser.Lexer
-import io.github.epicvon2468.bunny.token.Identifier
-import io.github.epicvon2468.bunny.token.Variable
 
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CArrayPointer
@@ -19,7 +17,6 @@ import kotlinx.io.files.FileNotFoundException
 import kotlinx.io.files.FileSystem
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import kotlinx.serialization.json.Json
 
 import platform.posix.PATH_MAX
 import platform.posix.fflush
@@ -37,10 +34,9 @@ import platform.posix.exit as _exit
 // 	https://github.com/MWGuy/llvm-hello/blob/master/main.cpp
 // 	https://mapping-high-level-constructs-to-llvm-ir.readthedocs.io/en/latest/index.html
 @OptIn(ShutUpAndLetMeUseCCode::class)
-fun main() {
+fun main(args: Array<String>) {
 	println("Hello, world!")
-	println(Json.encodeToString(Variable(-1, -1)))
-	println(Json.encodeToString(Identifier("test", -1, -1)))
+	if (args.getOrNull(0) != null) return io.github.epicvon2468.bunny.codegen.main(args)
 	val isDebug: Boolean = memScoped {
 		val str: CArrayPointer<ByteVar> = allocArray<ByteVar>(PATH_MAX + 1)
 		val length: ssize_t = readlink("/proc/self/exe", str, PATH_MAX.convert())

@@ -6,6 +6,7 @@ import io.github.epicvon2468.bunny.token.Function
 import io.github.epicvon2468.bunny.token.Identifier
 import io.github.epicvon2468.bunny.token.Mutable
 import io.github.epicvon2468.bunny.token.SerialisableToken
+import io.github.epicvon2468.bunny.token.Termination
 import io.github.epicvon2468.bunny.token.Token
 import io.github.epicvon2468.bunny.token.TypeSpecifier
 import io.github.epicvon2468.bunny.token.Variable
@@ -70,6 +71,7 @@ fun main(args: Array<String>) {
 		}
 		println("token: '${token.text.replace("\n", "\\n").replace("\t", "\\t")}', ${token.type.getName()}")
 		val func: (Int, Int) -> SerialisableToken = when (token.type) {
+			PrimaryLexer.TERMINATION -> ::Termination
 			PrimaryLexer.FUNCTION -> ::Function
 			PrimaryLexer.VARIABLE -> ::Variable
 			PrimaryLexer.MUTABLE -> ::Mutable
@@ -87,6 +89,9 @@ fun main(args: Array<String>) {
 	val restored: List<SerialisableToken> = Json.decodeFromString(result)
 	println(restored)
 	println(output == restored)
+	val process: Process = ProcessBuilder("./build/bin/linuxX64/debugExecutable/bunny.kexe", result).inheritIO().start()
+	process.waitFor()
+	println("Escaped LLVM IR compiler!")
 }
 
 fun PrimaryLexer.nextAsVersion(): Version = if (nextToken().type == PrimaryLexer.VERSION_DECLARATION) Version(

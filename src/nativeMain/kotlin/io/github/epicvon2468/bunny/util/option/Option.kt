@@ -24,6 +24,14 @@ fun <T : Any> T?.toOption(): Option<T> = this?.toSome() ?: None()
 
 fun <T : Any> T.toSome(): Some<T> = Some(this)
 
+fun <T : Any> Option<T>.unwrapOrNull(): T? {
+	contract {
+		returnsNotNull() implies (this@unwrapOrNull is Some<T>)
+		returns(null) implies (this@unwrapOrNull is None)
+	}
+	return if (isSome()) value else null
+}
+
 fun <T : Any> Option<T>.isSome(): Boolean {
 	contract {
 		returns(true) implies (this@isSome is Some<T>)
