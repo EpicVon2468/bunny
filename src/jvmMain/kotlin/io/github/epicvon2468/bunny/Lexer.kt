@@ -2,8 +2,17 @@ package io.github.epicvon2468.bunny
 
 import PrimaryLexer
 
+import io.github.epicvon2468.bunny.token.Function
+import io.github.epicvon2468.bunny.token.Identifier
+import io.github.epicvon2468.bunny.token.Mutable
+import io.github.epicvon2468.bunny.token.SerialisableToken
+import io.github.epicvon2468.bunny.token.Token
+import io.github.epicvon2468.bunny.token.TypeSpecifier
+import io.github.epicvon2468.bunny.token.Variable
+
 import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.Token
+
+import kotlinx.serialization.json.Json
 
 const val INPUT: String =
 	"""VERSION 0 0 0
@@ -52,6 +61,7 @@ fun main(args: Array<String>) {
 	val version: Version = lexer.nextAsVersion()
 	if (version > Version.CURRENT) error("Unsupported newer version $version was provided; Maximum supported version was ${Version.CURRENT}!")
 	println("Compiling valid version $version with compiler ${Version.CURRENT}!")
+	val output: MutableList<SerialisableToken> = mutableListOf()
 	while (true) {
 		val token: Token = lexer.nextToken()
 		when (token.type) {
@@ -59,8 +69,24 @@ fun main(args: Array<String>) {
 			PrimaryLexer.COMMENT, PrimaryLexer.DOCUMENTATION_COMMENT, PrimaryLexer.SECTION_COMMENT, PrimaryLexer.WHITESPACE, PrimaryLexer.NEWLINE -> continue
 		}
 		println("token: '${token.text.replace("\n", "\\n").replace("\t", "\\t")}', ${token.type.getName()}")
+		val func: (Int, Int) -> SerialisableToken = when (token.type) {
+			PrimaryLexer.FUNCTION -> ::Function
+			PrimaryLexer.VARIABLE -> ::Variable
+			PrimaryLexer.MUTABLE -> ::Mutable
+			PrimaryLexer.TYPE_SPECIFIER -> ::TypeSpecifier
+			PrimaryLexer.IDENTIFIER -> { line: Int, linePos: Int ->
+				Identifier(token.text, line, linePos)
+			}
+			else -> continue
+		}
+		output += func(token.line, token.charPositionInLine)
 	}
 	println("Got out of loop!")
+	val result: String = Json.encodeToString(output)
+	println(result)
+	val restored: List<SerialisableToken> = Json.decodeFromString(result)
+	println(restored)
+	println(output == restored)
 }
 
 fun PrimaryLexer.nextAsVersion(): Version = if (nextToken().type == PrimaryLexer.VERSION_DECLARATION) Version(
