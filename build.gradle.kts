@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
 	alias(libs.plugins.kotlin.multiplatform)
+	alias(libs.plugins.kotlin.serialisation)
 }
 
 group = "io.github.epicvon2468.bunny"
@@ -71,6 +72,9 @@ kotlin {
 		}
 	}
 	sourceSets {
+		commonMain.dependencies {
+			implementation(libs.kotlinx.serialisation)
+		}
 		nativeMain.dependencies {
 			implementation(libs.kotlinx.io)
 			implementation(fileTree("${rootDir}/src/nativeInterop/cinterop/llvm.klib"))
