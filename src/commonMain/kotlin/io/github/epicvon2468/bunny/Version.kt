@@ -1,5 +1,8 @@
 package io.github.epicvon2468.bunny
 
+import kotlinx.serialization.Serializable as Serialisable
+
+@Serialisable
 data class Version(val major: Int, val minor: Int, val revision: Int) {
 
 	operator fun compareTo(other: Version): Int {

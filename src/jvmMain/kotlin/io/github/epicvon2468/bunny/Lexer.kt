@@ -49,11 +49,9 @@ const val INPUT: String =
 fun main(args: Array<String>) {
 	println("Hello, world!")
 	val lexer = PrimaryLexer(CharStreams.fromString(INPUT, "<anonymous>"))
-	if (lexer.nextToken().type == PrimaryLexer.VERSION_DECLARATION) {
-		val version: Version = lexer.token.text.substringAfter("VERSION").trim().let(Version::invoke)
-		if (version > Version.CURRENT) error("Unsupported newer version $version was provided; Maximum supported version was ${Version.CURRENT}!")
-		println("Compiling valid version $version with compiler ${Version.CURRENT}!")
-	} else error("Expected version declaration, instead got ${lexer.token.type.getName()}")
+	val version: Version = lexer.nextAsVersion()
+	if (version > Version.CURRENT) error("Unsupported newer version $version was provided; Maximum supported version was ${Version.CURRENT}!")
+	println("Compiling valid version $version with compiler ${Version.CURRENT}!")
 	while (true) {
 		val token: Token = lexer.nextToken()
 		when (token.type) {
@@ -64,5 +62,9 @@ fun main(args: Array<String>) {
 	}
 	println("Got out of loop!")
 }
+
+fun PrimaryLexer.nextAsVersion(): Version = if (nextToken().type == PrimaryLexer.VERSION_DECLARATION) Version(
+	token.text.substringAfter("VERSION").trim()
+) else error("Expected version declaration, instead got ${token.type.getName()}")
 
 fun Int.getName(): String = PrimaryLexer.VOCABULARY.getSymbolicName(this)
