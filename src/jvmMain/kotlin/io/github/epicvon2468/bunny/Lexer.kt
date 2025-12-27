@@ -56,6 +56,7 @@ const val INPUT: String =
 //		funct abc(d: String, e: String, f: String) {}
 	"""
 
+// https://plugins.jetbrains.com/docs/intellij/custom-language-support-tutorial.html
 // https://tomassetti.me/antlr-mega-tutorial/#chapter23
 // https://github.com/antlr/antlr4/blob/dev/doc/wildcard.md
 fun main(args: Array<String>) {
