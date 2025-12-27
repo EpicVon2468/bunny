@@ -1,0 +1,8 @@
+VERSION 0 0 0
+
+funct main(arg_count: i32, args: u8): i32 {
+	define a: i32 = 2;
+	define mutable b: i32 = 2;
+	b = a + b;
+	return b;
+}

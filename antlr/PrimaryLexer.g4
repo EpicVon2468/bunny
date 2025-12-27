@@ -28,9 +28,9 @@ COMPARISON : EQUALS EQUALS ;
 
 STRING_LITERAL : '"' ('\\"' | .)*? '"';
 
-COMMENT : ('//' | '#') .*? (NEWLINE | EOF) ;
-DOCUMENTATION_COMMENT : '///' .*? (NEWLINE | EOF) ;
-SECTION_COMMENT : '/*' .*? '*/' ;
+COMMENT : ('//' | '#') .*? (NEWLINE | EOF) -> skip ;
+DOCUMENTATION_COMMENT : '///' .*? (NEWLINE | EOF) -> skip ;
+SECTION_COMMENT : '/*' .*? '*/' -> skip ;
 
 TERMINATION : ';' ;
 
@@ -54,7 +54,7 @@ FALSE : 'false' ;
 TYPE_SPECIFIER: ':';
 
 IDENTIFIER
-	: (LOWERCASE | UPPERCASE | '_')+
+	: (LOWERCASE | UPPERCASE) (LOWERCASE | UPPERCASE | '_' | DIGIT)+
 	| '`' FUNCTION '`'
 	| '`' VARIABLE '`'
 	| '`' MUTABLE '`'
@@ -65,5 +65,5 @@ IDENTIFIER
 
 VERSION_DECLARATION : 'VERSION ' DIGIT WHITESPACE+ DIGIT WHITESPACE+ DIGIT WHITESPACE* NEWLINE ;
 
-WHITESPACE : (' ' | '\t') ;
-NEWLINE : ('\r'? '\n')+ ;
+WHITESPACE : (' ' | '\t') -> skip ;
+NEWLINE : ('\r'? '\n') -> skip ;
