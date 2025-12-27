@@ -10,8 +10,10 @@ import PrimaryLexer;
 
 primary :
 	version
-	(functionDefinition | typeDefinition)*
+	(topLevel)*
 	;
+
+topLevel : functionDefinition | typeDefinition;
 
 version : VERSION_DECLARATION ;
 
@@ -19,11 +21,11 @@ functionDefinition :
 	FUNCTION IDENTIFIER
 
 	OPEN_PAREN
-	IDENTIFIER TYPE_SPECIFIER IDENTIFIER (ARGUMENT_SEPARATOR IDENTIFIER TYPE_SPECIFIER IDENTIFIER)*
+	parameterList?
 	CLOSE_PAREN
 
 	TYPE_SPECIFIER
-	IDENTIFIER
+	type
 
 	(
 		TERMINATION
@@ -34,6 +36,9 @@ functionDefinition :
 	)
 	;
 
-typeDefinition :
-	STRUCT IDENTIFIER TERMINATION
-	;
+typeDefinition : STRUCT IDENTIFIER TERMINATION ;
+
+parameterList : IDENTIFIER TYPE_SPECIFIER type (ARGUMENT_SEPARATOR IDENTIFIER TYPE_SPECIFIER type)* ;
+
+type : IDENTIFIER | pointerType ;
+pointerType : '*'+ IDENTIFIER ;
