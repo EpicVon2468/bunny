@@ -56,6 +56,36 @@ expect interface CharStream
 
 @Serialisable
 @ConsistentCopyVisibility
+data class Addition private constructor(
+	override val _line: Int,
+	override val linePos: Int,
+	override val _type: Int
+): SerialisableToken {
+
+	constructor(line: Int, linePos: Int) : this(line, linePos, getAdditionType())
+
+	override val _text: String = "+"
+}
+
+expect fun getAdditionType(): Int
+
+@Serialisable
+@ConsistentCopyVisibility
+data class Assignment private constructor(
+	override val _line: Int,
+	override val linePos: Int,
+	override val _type: Int
+): SerialisableToken {
+
+	constructor(line: Int, linePos: Int) : this(line, linePos, getAssignmentType())
+
+	override val _text: String = "="
+}
+
+expect fun getAssignmentType(): Int
+
+@Serialisable
+@ConsistentCopyVisibility
 data class Termination private constructor(
 	override val _line: Int,
 	override val linePos: Int,
@@ -64,7 +94,7 @@ data class Termination private constructor(
 
 	constructor(line: Int, linePos: Int) : this(line, linePos, getTerminationType())
 
-	override val _text: String = ":"
+	override val _text: String = ";"
 }
 
 expect fun getTerminationType(): Int

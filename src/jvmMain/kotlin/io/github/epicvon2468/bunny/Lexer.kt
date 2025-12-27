@@ -2,6 +2,8 @@ package io.github.epicvon2468.bunny
 
 import PrimaryLexer
 
+import io.github.epicvon2468.bunny.token.Addition
+import io.github.epicvon2468.bunny.token.Assignment
 import io.github.epicvon2468.bunny.token.Function
 import io.github.epicvon2468.bunny.token.Identifier
 import io.github.epicvon2468.bunny.token.Mutable
@@ -33,7 +35,7 @@ const val INPUT: String =
 		funct main(/*arg_count: i32, args: **u8*/): i32 {
 			define a: i32 = 5;
 			define mutable b: i32 = 10;
-			b = a + b
+			b = a + b;
 			return b;
 		}
 
@@ -71,6 +73,8 @@ fun main(args: Array<String>) {
 		}
 		println("token: '${token.text.replace("\n", "\\n").replace("\t", "\\t")}', ${token.type.getName()}")
 		val func: (Int, Int) -> SerialisableToken = when (token.type) {
+			PrimaryLexer.ADD -> ::Addition
+			PrimaryLexer.ASSIGNMENT -> ::Assignment
 			PrimaryLexer.TERMINATION -> ::Termination
 			PrimaryLexer.FUNCTION -> ::Function
 			PrimaryLexer.VARIABLE -> ::Variable

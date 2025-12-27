@@ -22,6 +22,8 @@ actual interface Token {
 actual interface TokenSource
 actual interface CharStream
 
+actual fun getAdditionType(): Int = -1
+actual fun getAssignmentType(): Int = -1
 actual fun getTerminationType(): Int = -1
 actual fun getFunctionType(): Int = -1
 actual fun getVariableType(): Int = -1

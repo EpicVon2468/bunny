@@ -12,7 +12,6 @@ import llvm.LLVMBuilderRef
 import llvm.LLVMContextRef
 import llvm.LLVMCreateBuilderInContext
 import llvm.LLVMFunctionType
-import llvm.LLVMGetTypeByName
 import llvm.LLVMGetTypeByName2
 
 fun main(args: Array<String>) = memScoped {
