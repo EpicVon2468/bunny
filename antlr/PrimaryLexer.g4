@@ -3,6 +3,8 @@ lexer grammar PrimaryLexer;
 fragment LOWERCASE : [a-z] ;
 fragment UPPERCASE : [A-Z] ;
 fragment DIGIT : [0-9] ;
+fragment GREATER : '>' ;
+fragment LESS : '<' ;
 fragment EQUALS : '=' ;
 
 OPEN_PAREN : '(' ;
@@ -19,12 +21,18 @@ DIV : '/' ;
 //MUL : '*' ;
 ADD : '+' ;
 SUB : '-' ;
+NOT : '!' ;
 
 ASTERISK : '*' ; // ptr || multiplication
 VARARG : '...' ;
 
 ASSIGNMENT : EQUALS ;
-COMPARISON : EQUALS EQUALS ;
+COMPARISON_EQUALS : EQUALS EQUALS ;
+COMPARISON_NOT_EQUALS : EQUALS EQUALS ;
+COMPARISON_GREATER : GREATER ;
+COMPARISON_GREATER_THAN : GREATER EQUALS ;
+COMPARISON_LESS : LESS ;
+COMPARISON_LESS_THAN : LESS EQUALS ;
 
 STRING_LITERAL : '"' ('\\"' | .)*? '"';
 

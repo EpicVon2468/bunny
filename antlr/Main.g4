@@ -8,7 +8,7 @@ import PrimaryLexer;
 
 //whitespace : (WHITESPACE | NEWLINE)* ;
 
-primary :
+top :
 	version
 	topLevel*
 	;
@@ -56,33 +56,14 @@ assignmentExpression : IDENTIFIER ASSIGNMENT expression TERMINATION ;
 
 returnExpression : RETURN expression? TERMINATION ;
 
-expression :
-	(
-		IDENTIFIER
-		|
-		NUMBER
-		|
-		STRING_LITERAL
-	)
-	(
-		(
-			DIV
-			|
-			ASTERISK // MUL
-			|
-			ADD
-			|
-			SUB
-		)
-		(
-			IDENTIFIER
-			|
-			NUMBER
-			|
-			STRING_LITERAL
-		)
-	)*
-	;
+// https://craftinginterpreters.com/parsing-expressions.html
+expression : equalityExpression ;
+equalityExpression : comparisonExpression ((COMPARISON_NOT_EQUALS | COMPARISON_EQUALS) comparisonExpression)* ;
+comparisonExpression : termExpression ((COMPARISON_GREATER | COMPARISON_GREATER_THAN | COMPARISON_LESS | COMPARISON_LESS_THAN) termExpression)* ;
+termExpression : factorExpression ((SUB | ADD) factorExpression)* ;
+factorExpression : unaryExpression ((DIV | ASTERISK) unaryExpression)* ;
+unaryExpression : (NOT | SUB) unaryExpression | primaryExpression;
+primaryExpression : NUMBER | STRING_LITERAL | TRUE | FALSE | IDENTIFIER | OPEN_PAREN expression CLOSE_PAREN ;
 
 parameterList :
 	IDENTIFIER TYPE_SPECIFIER type
