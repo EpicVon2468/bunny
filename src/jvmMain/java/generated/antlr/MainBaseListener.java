@@ -67,13 +67,13 @@ public class MainBaseListener implements MainListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterTypeDefinition(MainParser.TypeDefinitionContext ctx) { }
+	@Override public void enterStructDefinition(MainParser.StructDefinitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitTypeDefinition(MainParser.TypeDefinitionContext ctx) { }
+	@Override public void exitStructDefinition(MainParser.StructDefinitionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

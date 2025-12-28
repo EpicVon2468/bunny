@@ -13,9 +13,9 @@ top :
 	topLevel*
 	;
 
-topLevel : functionDefinition | typeDefinition;
+topLevel : functionDefinition | structDefinition;
 
-version : VERSION_DECLARATION ;
+version : VERSION NUMBER NUMBER NUMBER ;
 
 functionDefinition :
 	FUNCTION IDENTIFIER
@@ -42,7 +42,20 @@ functionDefinition :
 	)
 	;
 
-typeDefinition : STRUCT IDENTIFIER TERMINATION ;
+structDefinition :
+	STRUCT IDENTIFIER
+	(
+		TERMINATION
+		|
+		OPEN_BRACE
+		(
+			variableDefinition
+			|
+			functionDefinition
+		)*
+		CLOSE_BRACE
+	)
+	;
 
 variableDefinition :
 	VARIABLE MUTABLE?

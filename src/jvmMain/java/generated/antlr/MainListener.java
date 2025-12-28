@@ -50,15 +50,15 @@ public interface MainListener extends ParseTreeListener {
 	 */
 	void exitFunctionDefinition(MainParser.FunctionDefinitionContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MainParser#typeDefinition}.
+	 * Enter a parse tree produced by {@link MainParser#structDefinition}.
 	 * @param ctx the parse tree
 	 */
-	void enterTypeDefinition(MainParser.TypeDefinitionContext ctx);
+	void enterStructDefinition(MainParser.StructDefinitionContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link MainParser#typeDefinition}.
+	 * Exit a parse tree produced by {@link MainParser#structDefinition}.
 	 * @param ctx the parse tree
 	 */
-	void exitTypeDefinition(MainParser.TypeDefinitionContext ctx);
+	void exitStructDefinition(MainParser.StructDefinitionContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link MainParser#variableDefinition}.
 	 * @param ctx the parse tree

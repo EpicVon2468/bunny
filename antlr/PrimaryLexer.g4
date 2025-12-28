@@ -34,7 +34,7 @@ COMPARISON_GREATER_THAN : GREATER EQUALS ;
 COMPARISON_LESS : LESS ;
 COMPARISON_LESS_THAN : LESS EQUALS ;
 
-STRING_LITERAL : '"' ('\\"' | .)*? '"';
+STRING_LITERAL : '"' ('\\"' | .)*? '"' ;
 
 COMMENT : ('//' | '#') .*? (NEWLINE | EOF) -> skip ;
 DOCUMENTATION_COMMENT : '///' .*? (NEWLINE | EOF) -> skip ;
@@ -59,7 +59,9 @@ STATIC_KEYWORD_DESTROY : '::destroy()' ;
 TRUE : 'true' ;
 FALSE : 'false' ;
 
-TYPE_SPECIFIER: ':';
+TYPE_SPECIFIER: ':' ;
+
+VERSION : 'VERSION' ;
 
 IDENTIFIER
 	: (LOWERCASE | UPPERCASE) (LOWERCASE | UPPERCASE | '_' | DIGIT)*
@@ -69,9 +71,8 @@ IDENTIFIER
 	| '`' STRUCT '`'
 	| '`' SINGLETON '`'
 	| '`' RETURN '`'
+	| '`' VERSION '`'
 	;
-
-VERSION_DECLARATION : 'VERSION ' DIGIT WHITESPACE+ DIGIT WHITESPACE+ DIGIT WHITESPACE* NEWLINE ;
 
 WHITESPACE : (' ' | '\t') -> skip ;
 NEWLINE : ('\r'? '\n') -> skip ;
