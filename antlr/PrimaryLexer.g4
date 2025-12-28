@@ -34,7 +34,7 @@ SECTION_COMMENT : '/*' .*? '*/' -> skip ;
 
 TERMINATION : ';' ;
 
-NUMBER : DIGIT+ ([.,] DIGIT+)? ;
+NUMBER : DIGIT+ ('.' DIGIT+)? ;
 
 FUNCTION : 'funct' ;
 VARIABLE : 'define' ;
@@ -54,7 +54,7 @@ FALSE : 'false' ;
 TYPE_SPECIFIER: ':';
 
 IDENTIFIER
-	: (LOWERCASE | UPPERCASE) (LOWERCASE | UPPERCASE | '_' | DIGIT)+
+	: (LOWERCASE | UPPERCASE) (LOWERCASE | UPPERCASE | '_' | DIGIT)*
 	| '`' FUNCTION '`'
 	| '`' VARIABLE '`'
 	| '`' MUTABLE '`'
