@@ -7,7 +7,7 @@ funct main(arg_count: i32, args: **u8): i32 {
 	return b;
 }
 
-funct abc(def: ...) {
+funct abc(...) {
 }
 
-funct ghi();
+funct def();

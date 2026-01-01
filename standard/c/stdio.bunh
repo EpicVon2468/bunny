@@ -38,7 +38,7 @@ funct putchar(__c: i32): i32;
 funct fputs(__s: *u8, __stream: *FILE): i32;
 funct puts(__s: *u8): i32;
 
-fun ungetc(__c: i32, __stream: *FILE): i32;
+funct ungetc(__c: i32, __stream: *FILE): i32;
 
 funct fread(__ptr: *void, __size: i32 /*size_t*/, __n: i32 /*size_t*/, __stream: *FILE): i32 /*size_t*/;
 funct fwrite(__ptr: *void, __size: i32 /*size_t*/, __n: i32 /*size_t*/, __s: *FILE): i32 /*size_t*/;

@@ -81,14 +81,15 @@ parameterList :
 	(
 		identifierWithType
 		(ARGUMENT_SEPARATOR identifierWithType)*
-		(ARGUMENT_SEPARATOR identifierWithVararg)?
+		(ARGUMENT_SEPARATOR VARARG)?
 	)
 	|
-	identifierWithVararg
+	VARARG
 	;
 
 identifierWithType : IDENTIFIER TYPE_SPECIFIER type ;
-identifierWithVararg : IDENTIFIER TYPE_SPECIFIER VARARG ;
+// TODO: Allow this?
+//identifierWithVararg : IDENTIFIER TYPE_SPECIFIER VARARG ;
 
 type : IDENTIFIER | pointerType ;
 pointerType : ASTERISK+ IDENTIFIER ;

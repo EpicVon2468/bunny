@@ -63,8 +63,11 @@ TYPE_SPECIFIER: ':' ;
 
 VERSION : 'VERSION' ;
 
+// prevents identifiers named '_'
+RESERVED : '_' ;
+
 IDENTIFIER
-	: (LOWERCASE | UPPERCASE) (LOWERCASE | UPPERCASE | '_' | DIGIT)*
+	: (LOWERCASE | UPPERCASE | '_') (LOWERCASE | UPPERCASE | '_' | DIGIT)*
 	| '`' FUNCTION '`'
 	| '`' VARIABLE '`'
 	| '`' MUTABLE '`'
