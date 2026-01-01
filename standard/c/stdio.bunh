@@ -1,8 +1,6 @@
 VERSION 0 0 0
 
-type FILE {
-	define unused: i32;
-}
+type FILE {}
 
 funct remove(__filename: *u8): i32;
 funct rename(__filename: *u8, __new: *u8): i32;

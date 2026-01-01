@@ -59,8 +59,7 @@ structDefinition :
 variableDefinition :
 	VARIABLE MUTABLE?
 	identifierWithType
-	ASSIGNMENT
-	expression
+	(ASSIGNMENT	expression)?
 	TERMINATION
 	;
 

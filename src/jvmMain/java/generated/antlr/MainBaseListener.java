@@ -223,18 +223,6 @@ public class MainBaseListener implements MainListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterIdentifierWithVararg(MainParser.IdentifierWithVarargContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitIdentifierWithVararg(MainParser.IdentifierWithVarargContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterType(MainParser.TypeContext ctx) { }
 	/**
 	 * {@inheritDoc}

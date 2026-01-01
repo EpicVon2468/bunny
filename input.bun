@@ -11,3 +11,10 @@ funct abc(...) {
 }
 
 funct def();
+
+type ghi {
+	define jkl: i32;
+}
+
+// use empty brackets instead of semicolon to avoid confusion between empty structs and undefined structs
+type mno {}

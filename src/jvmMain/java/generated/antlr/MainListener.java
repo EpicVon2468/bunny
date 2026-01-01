@@ -180,16 +180,6 @@ public interface MainListener extends ParseTreeListener {
 	 */
 	void exitIdentifierWithType(MainParser.IdentifierWithTypeContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link MainParser#identifierWithVararg}.
-	 * @param ctx the parse tree
-	 */
-	void enterIdentifierWithVararg(MainParser.IdentifierWithVarargContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link MainParser#identifierWithVararg}.
-	 * @param ctx the parse tree
-	 */
-	void exitIdentifierWithVararg(MainParser.IdentifierWithVarargContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link MainParser#type}.
 	 * @param ctx the parse tree
 	 */
