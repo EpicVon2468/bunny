@@ -6,3 +6,8 @@ funct main(arg_count: i32, args: **u8): i32 {
 	b = a + b;
 	return b;
 }
+
+funct abc(def: ...) {
+}
+
+funct ghi();

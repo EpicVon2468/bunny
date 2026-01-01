@@ -24,8 +24,7 @@ functionDefinition :
 	parameterList?
 	CLOSE_PAREN
 
-	TYPE_SPECIFIER
-	type
+	(TYPE_SPECIFIER type)?
 
 	(
 		TERMINATION
@@ -59,7 +58,7 @@ structDefinition :
 
 variableDefinition :
 	VARIABLE MUTABLE?
-	IDENTIFIER TYPE_SPECIFIER type
+	identifierWithType
 	ASSIGNMENT
 	expression
 	TERMINATION
@@ -79,10 +78,17 @@ unaryExpression : (NOT | SUB) unaryExpression | primaryExpression;
 primaryExpression : NUMBER | STRING_LITERAL | TRUE | FALSE | IDENTIFIER | OPEN_PAREN expression CLOSE_PAREN ;
 
 parameterList :
-	IDENTIFIER TYPE_SPECIFIER type
-	(ARGUMENT_SEPARATOR IDENTIFIER TYPE_SPECIFIER type)*
-	(ARGUMENT_SEPARATOR IDENTIFIER TYPE_SPECIFIER VARARG)?
+	(
+		identifierWithType
+		(ARGUMENT_SEPARATOR identifierWithType)*
+		(ARGUMENT_SEPARATOR identifierWithVararg)?
+	)
+	|
+	identifierWithVararg
 	;
+
+identifierWithType : IDENTIFIER TYPE_SPECIFIER type ;
+identifierWithVararg : IDENTIFIER TYPE_SPECIFIER VARARG ;
 
 type : IDENTIFIER | pointerType ;
 pointerType : ASTERISK+ IDENTIFIER ;

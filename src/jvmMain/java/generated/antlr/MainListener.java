@@ -170,6 +170,26 @@ public interface MainListener extends ParseTreeListener {
 	 */
 	void exitParameterList(MainParser.ParameterListContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link MainParser#identifierWithType}.
+	 * @param ctx the parse tree
+	 */
+	void enterIdentifierWithType(MainParser.IdentifierWithTypeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MainParser#identifierWithType}.
+	 * @param ctx the parse tree
+	 */
+	void exitIdentifierWithType(MainParser.IdentifierWithTypeContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MainParser#identifierWithVararg}.
+	 * @param ctx the parse tree
+	 */
+	void enterIdentifierWithVararg(MainParser.IdentifierWithVarargContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MainParser#identifierWithVararg}.
+	 * @param ctx the parse tree
+	 */
+	void exitIdentifierWithVararg(MainParser.IdentifierWithVarargContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link MainParser#type}.
 	 * @param ctx the parse tree
 	 */
