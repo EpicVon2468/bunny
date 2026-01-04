@@ -94,5 +94,8 @@ kotlin {
 			implementation(libs.antlr4)
 			implementation(project(":generated"))
 		}
+		all {
+			languageSettings.enableLanguageFeature("ContextParameters")
+		}
 	}
 }
