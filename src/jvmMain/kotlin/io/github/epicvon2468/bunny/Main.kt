@@ -7,8 +7,9 @@ import generated.antlr.MainParser
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 
-fun main() {
-	println("Hello, world!")
+fun main(args: Array<String>) {
+	println("Got args: ${args.contentToString()}")
+	test()
 	val parser = MainParser(CommonTokenStream(MainLexer(CharStreams.fromFileName("input.bun"))))
 	parser.addParseListener(Main(parser))
 	parser.top()

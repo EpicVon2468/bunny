@@ -13,17 +13,27 @@ repositories {
 	mavenCentral()
 }
 
+// This is... the only working and effective way to do it...
+tasks.all {
+	if (this.name != "jvmRun") return@all
+	println("Gotcha :)")
+	this as JavaExec
+	jvmArgs("-XX:+UseCompactObjectHeaders", "--enable-native-access=ALL-UNNAMED")
+}
+
 kotlin {
+	kotlinDaemonJvmArgs = listOf("-XX:+UseCompactObjectHeaders", "--enable-native-access=ALL-UNNAMED")
 	jvm {
 		binaries {
 			executable {
 				applicationDefaultJvmArgs.add("-XX:+UseCompactObjectHeaders")
+				applicationDefaultJvmArgs.add("--enable-native-access=ALL-UNNAMED")
 				// This isn't adding the `Main-Class` attribute?!
 				mainClass.set("io.github.epicvon2468.bunny.MainKt")
 			}
 		}
 		mainRun {
-			args("-XX:+UseCompactObjectHeaders")
+			//args("-XX:+UseCompactObjectHeaders", "--enable-native-access=ALL-UNNAMED")
 			mainClass.set("io.github.epicvon2468.bunny.MainKt")
 		}
 	}
@@ -82,6 +92,7 @@ kotlin {
 		}
 		jvmMain.dependencies {
 			implementation(libs.antlr4)
+			implementation(project(":generated"))
 		}
 	}
 }

@@ -6,3 +6,4 @@ pluginManagement {
 }
 
 rootProject.name = "bunny"
+include("generated")
