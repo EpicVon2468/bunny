@@ -17,13 +17,14 @@ kotlin {
 	jvm {
 		binaries {
 			executable {
+				applicationDefaultJvmArgs.add("-XX:+UseCompactObjectHeaders")
 				// This isn't adding the `Main-Class` attribute?!
-				mainClass.set("io.github.epicvon2468.bunny.LexerKt")
+				mainClass.set("io.github.epicvon2468.bunny.MainKt")
 			}
 		}
 		mainRun {
 			args("-XX:+UseCompactObjectHeaders")
-			mainClass.set("io.github.epicvon2468.bunny.LexerKt")
+			mainClass.set("io.github.epicvon2468.bunny.MainKt")
 		}
 	}
 	jvmToolchain(25)
