@@ -45,38 +45,34 @@ data class Main(
 	val module: MemorySegment = LLVMModuleCreateWithNameInContext(arena.allocateFrom(name), context)
 	val builder: MemorySegment = LLVMCreateBuilderInContext(context)
 
-	override fun enterTop(ctx: MainParser.TopContext) {
-		println("Entered top: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
+	var topLevel: TopLevel = TopLevel.NONE
+
+	override fun enterVersion(ctx: MainParser.VersionContext) {
+		topLevel = TopLevel.VERSION
 	}
 
-	override fun exitTop(ctx: MainParser.TopContext) {
-		println("Exited top: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
-	}
-
-	override fun enterTopLevel(ctx: MainParser.TopLevelContext) {
-		println("Entered topLevel: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
-	}
-
-	override fun exitTopLevel(ctx: MainParser.TopLevelContext) {
-		println("Exited topLevel: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
+	override fun exitVersion(ctx: MainParser.VersionContext) {
+		topLevel = TopLevel.NONE
 	}
 
 	override fun enterFunctionDefinition(ctx: MainParser.FunctionDefinitionContext) {
 		println("Entered funct: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
-		println(ctx.IDENTIFIER())
+		topLevel = TopLevel.FUNCTION
 	}
 
 	override fun exitFunctionDefinition(ctx: MainParser.FunctionDefinitionContext) {
 		println("Exited funct: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
-		println(ctx.IDENTIFIER())
+		topLevel = TopLevel.NONE
 	}
 
 	override fun enterStructDefinition(ctx: MainParser.StructDefinitionContext) {
 		println("Entered struct: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
+		topLevel = TopLevel.STRUCT
 	}
 
 	override fun exitStructDefinition(ctx: MainParser.StructDefinitionContext) {
 		println("Exited struct: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
+		topLevel = TopLevel.NONE
 	}
 
 	override fun close() {
@@ -88,12 +84,12 @@ data class Main(
 
 	// uncalled...
 	override fun visit(tree: ParseTree) {
-		println("Got tree: '${tree.text}' :: ${tree.childCount}")
+		println("Got tree: '${tree.text}'  ::  ${tree.childCount}")
 	}
 
 	override fun visitChildren(node: RuleNode) {
+		println("visitChildren")
 		//println("Got node: '${node.text}', ${node::class.simpleName} :: ${node.childCount}")
-		if (node.childCount <= 0) visit(node)
 		var current = 0
 		while (current < node.childCount) {
 			node.getChild(current).accept(this)
@@ -102,10 +98,17 @@ data class Main(
 	}
 
 	override fun visitTerminal(node: TerminalNode) {
-		println("Got terminal: '${node.text}' :: ${node.javaClass.simpleName}")
+		println("Got terminal: '${node.text}'  ::  ${node.javaClass.simpleName}")
 	}
 
 	override fun visitErrorNode(node: ErrorNode) {
-		println("Got error: '${node.text}' :: ${node.childCount}")
+		println("Got error: '${node.text}'  ::  ${node.childCount}")
 	}
+}
+
+enum class TopLevel {
+	VERSION,
+	FUNCTION,
+	STRUCT,
+	NONE
 }
