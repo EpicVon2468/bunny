@@ -6,6 +6,11 @@ import generated.antlr.MainParser
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ErrorNode
+import org.antlr.v4.runtime.tree.ParseTree
+import org.antlr.v4.runtime.tree.ParseTreeVisitor
+import org.antlr.v4.runtime.tree.RuleNode
+import org.antlr.v4.runtime.tree.TerminalNode
 
 import org.llvm.Core_h.*
 
@@ -25,12 +30,17 @@ fun main(args: Array<String>) {
 		val parser = MainParser(CommonTokenStream(MainLexer(CharStreams.fromFileName("minimal.bun"))))
 		Main(parser, arena, LLVMContextCreate(), "test").use { main: Main ->
 			parser.addParseListener(main)
-			parser.top()
+			parser.top()//.accept(main)
 		}
 	}
 }
 
-class Main(val parser: MainParser, val arena: Arena, val context: MemorySegment, name: String) : MainBaseListener(), AutoCloseable {
+data class Main(
+	val parser: MainParser,
+	val arena: Arena,
+	val context: MemorySegment,
+	val name: String
+) : MainBaseListener(), ParseTreeVisitor<Unit>, AutoCloseable {
 
 	val module: MemorySegment = LLVMModuleCreateWithNameInContext(arena.allocateFrom(name), context)
 	val builder: MemorySegment = LLVMCreateBuilderInContext(context)
@@ -74,5 +84,28 @@ class Main(val parser: MainParser, val arena: Arena, val context: MemorySegment,
 		println("'''\n${LLVMPrintModuleToString(module).getString(0)}'''")
 		LLVMDisposeModule(module)
 		LLVMContextDispose(context)
+	}
+
+	// uncalled...
+	override fun visit(tree: ParseTree) {
+		println("Got tree: '${tree.text}' :: ${tree.childCount}")
+	}
+
+	override fun visitChildren(node: RuleNode) {
+		//println("Got node: '${node.text}', ${node::class.simpleName} :: ${node.childCount}")
+		if (node.childCount <= 0) visit(node)
+		var current = 0
+		while (current < node.childCount) {
+			node.getChild(current).accept(this)
+			current++
+		}
+	}
+
+	override fun visitTerminal(node: TerminalNode) {
+		println("Got terminal: '${node.text}' :: ${node.javaClass.simpleName}")
+	}
+
+	override fun visitErrorNode(node: ErrorNode) {
+		println("Got error: '${node.text}' :: ${node.childCount}")
 	}
 }
