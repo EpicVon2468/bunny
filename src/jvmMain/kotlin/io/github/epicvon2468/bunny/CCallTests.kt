@@ -12,12 +12,12 @@ fun test() {
 	System.setProperty("java.library.path", "${System.getProperty("java.library.path")}:${System.getenv("LIB_LLVM_LOCATION")}/lib")
 	println("Java library path: ${System.getProperty("java.library.path")}")
 	Arena.ofShared().use { arena: Arena ->
-		val context: MemorySegment = LLVMContextCreate()!!
-		val module: MemorySegment = LLVMModuleCreateWithNameInContext(arena.allocateFrom("test"), context)!!
-		val builder: MemorySegment = LLVMCreateBuilderInContext(context)!!
+		val context: MemorySegment = LLVMContextCreate()
+		val module: MemorySegment = LLVMModuleCreateWithNameInContext(arena.allocateFrom("test"), context)
+		val builder: MemorySegment = LLVMCreateBuilderInContext(context)
 
-		val ptrType: MemorySegment = LLVMPointerTypeInContext(context, 0)!!
-		val int32Type: MemorySegment = LLVMInt32TypeInContext(context)!!
+		val ptrType: MemorySegment = LLVMPointerTypeInContext(context, 0)
+		val int32Type: MemorySegment = LLVMInt32TypeInContext(context)
 
 		LLVMAddFunction(
 			module,
@@ -27,8 +27,8 @@ fun test() {
 				arena.allocateArray(LLVMTypeRef, ptrType),
 				1,
 				0
-			)!!
-		)!!
+			)
+		)
 
 		val printIntFunction: MemorySegment /*= LLVMValueRef*/ = LLVMAddFunction(
 			module,
