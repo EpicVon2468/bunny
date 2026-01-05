@@ -8,9 +8,6 @@ import java.lang.foreign.MemorySegment
 import java.lang.foreign.SequenceLayout
 
 fun test() {
-	println("Java library path: ${System.getProperty("java.library.path")}")
-	System.setProperty("java.library.path", "${System.getProperty("java.library.path")}:${System.getenv("LIB_LLVM_LOCATION")}/lib")
-	println("Java library path: ${System.getProperty("java.library.path")}")
 	Arena.ofShared().use { arena: Arena ->
 		val context: MemorySegment = LLVMContextCreate()
 		val module: MemorySegment = LLVMModuleCreateWithNameInContext(arena.allocateFrom("test"), context)
