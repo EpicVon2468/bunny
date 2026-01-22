@@ -17,6 +17,7 @@ import org.llvm.Core_h.*
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 
+// void* generics https://discord.com/channels/448959983657156608/448959983657156612/1458013565091971202
 // https://llvm.org/doxygen/group__LLVMCCoreType.html
 // https://llvm.org/doxygen/group__LLVMCCoreContext.html
 fun main(args: Array<String>) {
@@ -102,7 +103,7 @@ data class Main(
 	}
 
 	override fun visitErrorNode(node: ErrorNode) {
-		println("Got error: '${node.text}'  ::  ${node.childCount}")
+		println("Got error: '${node.text}'")
 	}
 }
 
