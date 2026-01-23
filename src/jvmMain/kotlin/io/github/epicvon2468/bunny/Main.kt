@@ -112,7 +112,6 @@ data class MainVisitor<T>(
 	val module: MemorySegment = main.module
 	val builder: MemorySegment = main.builder
 
-	// uncalled...
 	override fun visit(tree: ParseTree): T? {
 		val tree: ParserRuleContext = tree as ParserRuleContext
 		return null
@@ -121,7 +120,7 @@ data class MainVisitor<T>(
 	override fun visitChildren(node: RuleNode): T? {
 		val node: ParserRuleContext = node as ParserRuleContext
 		visit(node)
-		for (i: Int in 0..<node.childCount) node.getChild(i).accept(this)
+		for (child: ParseTree in node.children) child.accept(this)
 		return null
 	}
 
