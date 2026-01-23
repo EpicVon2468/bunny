@@ -6,6 +6,7 @@ import generated.antlr.MainParser
 
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.ParseTreeVisitor
@@ -30,8 +31,8 @@ fun main(args: Array<String>) {
 	Arena.ofShared().use { arena: Arena ->
 		val parser = MainParser(CommonTokenStream(MainLexer(CharStreams.fromFileName("minimal.bun"))))
 		Main(parser, arena, LLVMContextCreate(), "test").use { main: Main ->
-			parser.addParseListener(main)
-			parser.top()//.accept(main)
+			//parser.addParseListener(main)
+			parser.top().accept(MainVisitor<Unit>(main))
 		}
 	}
 }
@@ -41,7 +42,7 @@ data class Main(
 	val arena: Arena,
 	val context: MemorySegment,
 	val name: String
-) : MainBaseListener(), ParseTreeVisitor<Unit>, AutoCloseable {
+) : MainBaseListener(), AutoCloseable {
 
 	val module: MemorySegment = LLVMModuleCreateWithNameInContext(arena.allocateFrom(name), context)
 	val builder: MemorySegment = LLVMCreateBuilderInContext(context)
@@ -91,23 +92,45 @@ data class Main(
 		LLVMContextDispose(context)
 	}
 
-	// uncalled...
-	override fun visit(tree: ParseTree) {
-		println("Got tree: '${tree.text}'  ::  ${tree.childCount}")
-	}
-
-	override fun visitChildren(node: RuleNode) {
-		println("visitChildren")
-		//println("Got node: '${node.text}', ${node::class.simpleName} :: ${node.childCount}")
-		for (i: Int in 0..<node.childCount) node.getChild(i).accept(this)
-	}
-
 	override fun visitTerminal(node: TerminalNode) {
 		println("Got terminal: '${node.text}'  ::  ${node.javaClass.simpleName}")
 	}
 
 	override fun visitErrorNode(node: ErrorNode) {
 		println("Got error: '${node.text}'")
+	}
+}
+
+data class MainVisitor<T>(
+	val main: Main,
+	val parser: MainParser = main.parser,
+	val arena: Arena = main.arena,
+	val context: MemorySegment = main.context,
+	val name: String = main.name
+) : ParseTreeVisitor<T> {
+
+	val module: MemorySegment = main.module
+	val builder: MemorySegment = main.builder
+
+	// uncalled...
+	override fun visit(tree: ParseTree): T? {
+		val tree: ParserRuleContext = tree as ParserRuleContext
+		return null
+	}
+
+	override fun visitChildren(node: RuleNode): T? {
+		val node: ParserRuleContext = node as ParserRuleContext
+		visit(node)
+		for (i: Int in 0..<node.childCount) node.getChild(i).accept(this)
+		return null
+	}
+
+	override fun visitTerminal(node: TerminalNode): T? {
+		return null
+	}
+
+	override fun visitErrorNode(node: ErrorNode): T? {
+		return null
 	}
 }
 

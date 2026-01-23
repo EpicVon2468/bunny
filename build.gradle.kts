@@ -19,6 +19,7 @@ tasks.all {
 	println("Gotcha :)")
 	this as JavaExec
 	jvmArgs("-XX:+UseCompactObjectHeaders", "--enable-native-access=ALL-UNNAMED")
+	//systemProperty("jextract.trace.downcalls", "true")
 }
 
 kotlin {
