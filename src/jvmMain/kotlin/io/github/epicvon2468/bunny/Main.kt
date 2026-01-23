@@ -66,6 +66,14 @@ data class Main(
 		topLevel = TopLevel.NONE
 	}
 
+	override fun enterFunctionBody(ctx: MainParser.FunctionBodyContext) {
+		println("Entered funct body: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
+	}
+
+	override fun exitFunctionBody(ctx: MainParser.FunctionBodyContext) {
+		println("Exited funct body: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
+	}
+
 	override fun enterStructDefinition(ctx: MainParser.StructDefinitionContext) {
 		println("Entered struct: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
 		topLevel = TopLevel.STRUCT
@@ -91,11 +99,7 @@ data class Main(
 	override fun visitChildren(node: RuleNode) {
 		println("visitChildren")
 		//println("Got node: '${node.text}', ${node::class.simpleName} :: ${node.childCount}")
-		var current = 0
-		while (current < node.childCount) {
-			node.getChild(current).accept(this)
-			current++
-		}
+		for (i: Int in 0..<node.childCount) node.getChild(i).accept(this)
 	}
 
 	override fun visitTerminal(node: TerminalNode) {

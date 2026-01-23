@@ -30,16 +30,12 @@ functionDefinition :
 		TERMINATION
 		|
 		OPEN_BRACE
-		(
-			variableDefinition
-			|
-			assignmentExpression
-			|
-			returnExpression
-		)*
+		functionBody
 		CLOSE_BRACE
 	)
 	;
+
+functionBody : (variableDefinition | assignmentExpression | returnExpression)*;
 
 structDefinition :
 	STRUCT IDENTIFIER
