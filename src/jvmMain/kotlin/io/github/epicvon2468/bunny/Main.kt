@@ -1,6 +1,5 @@
 package io.github.epicvon2468.bunny
 
-import generated.antlr.MainBaseListener
 import generated.antlr.MainLexer
 import generated.antlr.MainParser
 
@@ -30,87 +29,19 @@ fun main(args: Array<String>) {
 	println("Starting parser-based codegen")
 	Arena.ofShared().use { arena: Arena ->
 		val parser = MainParser(CommonTokenStream(MainLexer(CharStreams.fromFileName("minimal.bun"))))
-		Main(parser, arena, LLVMContextCreate(), "test").use { main: Main ->
-			//parser.addParseListener(main)
-			parser.top().accept(MainVisitor<Unit>(main))
-		}
-	}
-}
-
-data class Main(
-	val parser: MainParser,
-	val arena: Arena,
-	val context: MemorySegment,
-	val name: String
-) : MainBaseListener(), AutoCloseable {
-
-	val module: MemorySegment = LLVMModuleCreateWithNameInContext(arena.allocateFrom(name), context)
-	val builder: MemorySegment = LLVMCreateBuilderInContext(context)
-
-	var topLevel: TopLevel = TopLevel.NONE
-
-	override fun enterVersion(ctx: MainParser.VersionContext) {
-		topLevel = TopLevel.VERSION
-	}
-
-	override fun exitVersion(ctx: MainParser.VersionContext) {
-		topLevel = TopLevel.NONE
-	}
-
-	override fun enterFunctionDefinition(ctx: MainParser.FunctionDefinitionContext) {
-		println("Entered funct: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
-		topLevel = TopLevel.FUNCTION
-	}
-
-	override fun exitFunctionDefinition(ctx: MainParser.FunctionDefinitionContext) {
-		println("Exited funct: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
-		topLevel = TopLevel.NONE
-	}
-
-	override fun enterFunctionBody(ctx: MainParser.FunctionBodyContext) {
-		println("Entered funct body: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
-	}
-
-	override fun exitFunctionBody(ctx: MainParser.FunctionBodyContext) {
-		println("Exited funct body: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
-	}
-
-	override fun enterStructDefinition(ctx: MainParser.StructDefinitionContext) {
-		println("Entered struct: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
-		topLevel = TopLevel.STRUCT
-	}
-
-	override fun exitStructDefinition(ctx: MainParser.StructDefinitionContext) {
-		println("Exited struct: ${ctx.toInfoString(parser)}  ::  [${ctx.childCount}]")
-		topLevel = TopLevel.NONE
-	}
-
-	override fun close() {
-		LLVMDisposeBuilder(builder)
-		println("'''\n${LLVMPrintModuleToString(module).getString(0)}'''")
-		LLVMDisposeModule(module)
-		LLVMContextDispose(context)
-	}
-
-	override fun visitTerminal(node: TerminalNode) {
-		println("Got terminal: '${node.text}'  ::  ${node.javaClass.simpleName}")
-	}
-
-	override fun visitErrorNode(node: ErrorNode) {
-		println("Got error: '${node.text}'")
+		MainVisitor<Unit>(parser, arena, LLVMContextCreate(), "test").use(parser.top()::accept)
 	}
 }
 
 data class MainVisitor<T>(
-	val main: Main,
-	val parser: MainParser = main.parser,
-	val arena: Arena = main.arena,
-	val context: MemorySegment = main.context,
-	val name: String = main.name
-) : ParseTreeVisitor<T> {
+	val parser: MainParser,
+	val arena: Arena,
+	val context: MemorySegment,
+	val name: String
+) : ParseTreeVisitor<T>, AutoCloseable {
 
-	val module: MemorySegment = main.module
-	val builder: MemorySegment = main.builder
+	val module: MemorySegment = LLVMModuleCreateWithNameInContext(arena.allocateFrom(name), context)
+	val builder: MemorySegment = LLVMCreateBuilderInContext(context)
 
 	override fun visit(tree: ParseTree): T? {
 		val tree: ParserRuleContext = tree as ParserRuleContext
@@ -176,10 +107,11 @@ data class MainVisitor<T>(
 
 	fun bodyImpl(input: ParserRuleContext): Unit = when (input) {
 		is MainParser.ReturnExpressionContext -> {
-			if (input.expression() == null) LLVMBuildRetVoid(builder)
+			val expression: MainParser.ExpressionContext? = input.expression()
+			if (expression == null) LLVMBuildRetVoid(builder)
 			else LLVMBuildRet(
 				builder,
-				evaluateExpression(input.expression())
+				evaluateExpression(expression)
 			)
 			return
 		}
@@ -193,12 +125,16 @@ data class MainVisitor<T>(
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> {
-				expr.getChild(MainParser.EqualityExpressionContext::class.java, 0)
+				evaluateExpression(expr.getChild(MainParser.EqualityExpressionContext::class.java, 0))
 			}
 			else -> {
 			}
 		}
 		TODO()
+	}
+
+	fun evaluateExpression(expr: MainParser.EqualityExpressionContext) {
+
 	}
 
 	override fun visitTerminal(node: TerminalNode): T? {
@@ -207,6 +143,13 @@ data class MainVisitor<T>(
 
 	override fun visitErrorNode(node: ErrorNode): T? {
 		return null
+	}
+
+	override fun close() {
+		LLVMDisposeBuilder(builder)
+		println("'''\n${LLVMPrintModuleToString(module).getString(0)}'''")
+		LLVMDisposeModule(module)
+		LLVMContextDispose(context)
 	}
 }
 
@@ -245,11 +188,4 @@ fun determineLLVMType(
 			TODO("Get type from a cache of known types? '$identifier'")
 		}
 	}
-}
-
-enum class TopLevel {
-	VERSION,
-	FUNCTION,
-	STRUCT,
-	NONE
 }
