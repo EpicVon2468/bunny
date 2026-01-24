@@ -127,8 +127,7 @@ data class MainVisitor<T>(
 		println(node.version().children.joinToString(separator = " ", transform = ParseTree::getText))
 		val topLevelEntries: List<MainParser.TopLevelContext> = node.topLevel()
 		topLevelEntries.forEach {
-			val declaration: ParserRuleContext = it.functionDefinition() ?: it.structDefinition()
-			when (declaration) {
+			when (val declaration: ParserRuleContext = it.functionDefinition() ?: it.structDefinition()) {
 				is MainParser.FunctionDefinitionContext -> visitFunctionDefinition(declaration)
 				is MainParser.StructDefinitionContext -> TODO()
 			}
@@ -139,9 +138,11 @@ data class MainVisitor<T>(
 	fun visitFunctionDefinition(funct: MainParser.FunctionDefinitionContext) {
 		val paramList: MainParser.ParameterListContext? = funct.parameterList()
 		val params: List<MainParser.IdentifierWithTypeContext>? = paramList?.identifierWithType()
-		val function: MemorySegment /*= LLVMValueRef*/ = LLVMAddFunction(
+		val nativeName: MemorySegment = arena.allocateFrom(funct.IDENTIFIER().text)
+		// Retrieve or create if not found.
+		val function: MemorySegment /*= LLVMValueRef*/ = LLVMGetNamedFunction(module, nativeName).jvmNull() ?: LLVMAddFunction(
 			/*M =*/ module,
-			/*Name =*/ arena.allocateFrom(funct.IDENTIFIER().text),
+			/*Name =*/ nativeName,
 			/*FunctionTy =*/ LLVMFunctionType(
 				/*ReturnType =*/ determineLLVMType(funct.type(), context),
 				/*ParamTypes =*/ determineLLVMParamTypes(
@@ -149,7 +150,7 @@ data class MainVisitor<T>(
 					paramList,
 					params,
 					context
-				) ?: MemorySegment.NULL,
+				).nativeNull(),
 				/*ParamCount =*/ params?.size ?: 0,
 				/*IsVarArg =*/ paramList?.VARARG()?.let { 1 } ?: 0
 			)
@@ -182,10 +183,21 @@ data class MainVisitor<T>(
 			)
 			return
 		}
+		is MainParser.VariableDefinitionContext -> {
+			return
+		}
 		else -> {}
 	}
 
 	fun evaluateExpression(expr: MainParser.ExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+		when (expr.childCount) {
+			0 -> error("No children for expression '$expr'!")
+			1 -> {
+				expr.getChild(MainParser.EqualityExpressionContext::class.java, 0)
+			}
+			else -> {
+			}
+		}
 		TODO()
 	}
 
@@ -197,6 +209,9 @@ data class MainVisitor<T>(
 		return null
 	}
 }
+
+fun MemorySegment.jvmNull(): MemorySegment? = if (this == MemorySegment.NULL) null else this
+fun MemorySegment?.nativeNull(): MemorySegment = this ?: MemorySegment.NULL
 
 fun determineLLVMParamTypes(
 	arena: Arena,
