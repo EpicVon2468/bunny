@@ -154,6 +154,39 @@ data class MainVisitor<T>(
 				/*IsVarArg =*/ paramList?.VARARG()?.let { 1 } ?: 0
 			)
 		)
+		val body: MainParser.FunctionBodyContext = funct.functionBody() ?: return
+		visitFunctionBody(body, function)
+	}
+
+	fun visitFunctionBody(
+		body: MainParser.FunctionBodyContext,
+		function: MemorySegment /*= LLVMValueRef*/
+	) {
+		LLVMPositionBuilderAtEnd(
+			builder,
+			LLVMAppendBasicBlockInContext(
+				context,
+				function,
+				arena.allocateFrom("entry")
+			)
+		)
+		body.children.map { it as ParserRuleContext }.forEach(::bodyImpl)
+	}
+
+	fun bodyImpl(input: ParserRuleContext): Unit = when (input) {
+		is MainParser.ReturnExpressionContext -> {
+			if (input.expression() == null) LLVMBuildRetVoid(builder)
+			else LLVMBuildRet(
+				builder,
+				evaluateExpression(input.expression())
+			)
+			return
+		}
+		else -> {}
+	}
+
+	fun evaluateExpression(expr: MainParser.ExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+		TODO()
 	}
 
 	override fun visitTerminal(node: TerminalNode): T? {
@@ -176,9 +209,10 @@ fun determineLLVMParamTypes(
 }
 
 fun determineLLVMType(
-	type: MainParser.TypeContext,
+	type: MainParser.TypeContext?,
 	context: MemorySegment /*= LLVMContextRef*/
 ): MemorySegment /*= LLVMTypeRef*/ {
+	if (type == null) return LLVMVoidTypeInContext(context)
 	if (type.pointerType() != null) return LLVMPointerTypeInContext(context, 0)
 	// TODO: Cache the number types into fields?
 	return when (val identifier: String = type.IDENTIFIER()!!.text) {
@@ -191,6 +225,7 @@ fun determineLLVMType(
 		"i128", "u128" -> LLVMInt128TypeInContext(context)
 		"f32", "float" -> LLVMFloatTypeInContext(context)
 		"f64", "double" -> LLVMDoubleTypeInContext(context)
+		"void" -> LLVMVoidTypeInContext(context)
 		else -> {
 			TODO("Get type from a cache of known types? '$identifier'")
 		}
