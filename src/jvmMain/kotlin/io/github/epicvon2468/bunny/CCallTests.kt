@@ -83,7 +83,9 @@ context(arena: Arena) fun MemorySegment /*= LLVMModuleRef*/.getFunctionAndType(
 		it to LLVMGlobalGetValueType(it)
 	}
 
-fun Arena.allocateArray(elementLayout: MemoryLayout, vararg values: Any): MemorySegment {
+fun List<Any?>.toNativeArray(arena: Arena, elementLayout: MemoryLayout): MemorySegment = arena.allocateArray(elementLayout, toTypedArray())
+
+fun Arena.allocateArray(elementLayout: MemoryLayout, vararg values: Any?): MemorySegment {
 	val layout: SequenceLayout = MemoryLayout.sequenceLayout(values.size.toLong(), elementLayout)
 	val array: MemorySegment = allocate(layout)
 	var current = 0

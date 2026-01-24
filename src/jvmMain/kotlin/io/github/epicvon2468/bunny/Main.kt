@@ -126,7 +126,34 @@ data class MainVisitor<T>(
 		}
 		println(node.version().children.joinToString(separator = " ", transform = ParseTree::getText))
 		val topLevelEntries: List<MainParser.TopLevelContext> = node.topLevel()
+		topLevelEntries.forEach {
+			val declaration: ParserRuleContext = it.functionDefinition() ?: it.structDefinition()
+			when (declaration) {
+				is MainParser.FunctionDefinitionContext -> visitFunctionDefinition(declaration)
+				is MainParser.StructDefinitionContext -> TODO()
+			}
+		}
 		return null
+	}
+
+	fun visitFunctionDefinition(funct: MainParser.FunctionDefinitionContext) {
+		val paramList: MainParser.ParameterListContext? = funct.parameterList()
+		val params: List<MainParser.IdentifierWithTypeContext>? = paramList?.identifierWithType()
+		val function: MemorySegment /*= LLVMValueRef*/ = LLVMAddFunction(
+			/*M =*/ module,
+			/*Name =*/ arena.allocateFrom(funct.IDENTIFIER().text),
+			/*FunctionTy =*/ LLVMFunctionType(
+				/*ReturnType =*/ determineLLVMType(funct.type(), context),
+				/*ParamTypes =*/ determineLLVMParamTypes(
+					arena,
+					paramList,
+					params,
+					context
+				) ?: MemorySegment.NULL,
+				/*ParamCount =*/ params?.size ?: 0,
+				/*IsVarArg =*/ paramList?.VARARG()?.let { 1 } ?: 0
+			)
+		)
 	}
 
 	override fun visitTerminal(node: TerminalNode): T? {
@@ -135,6 +162,38 @@ data class MainVisitor<T>(
 
 	override fun visitErrorNode(node: ErrorNode): T? {
 		return null
+	}
+}
+
+fun determineLLVMParamTypes(
+	arena: Arena,
+	paramList: MainParser.ParameterListContext?,
+	params: List<MainParser.IdentifierWithTypeContext>?,
+	context: MemorySegment /*= LLVMContextRef*/
+): MemorySegment? /*= Pointer<LLVMTypeRef>*/ {
+	if (paramList == null) return null
+	return params!!.map { determineLLVMType(it.type(), context) }.toNativeArray(arena, LLVMTypeRef)
+}
+
+fun determineLLVMType(
+	type: MainParser.TypeContext,
+	context: MemorySegment /*= LLVMContextRef*/
+): MemorySegment /*= LLVMTypeRef*/ {
+	if (type.pointerType() != null) return LLVMPointerTypeInContext(context, 0)
+	// TODO: Cache the number types into fields?
+	return when (val identifier: String = type.IDENTIFIER()!!.text) {
+		"" -> error("Empty identifier!")
+		"boolean", "bool" -> LLVMInt1TypeInContext(context)
+		"i8", "u8" -> LLVMInt8TypeInContext(context)
+		"i16", "u16" -> LLVMInt16TypeInContext(context)
+		"i32", "u32" -> LLVMInt32TypeInContext(context)
+		"i64", "u64" -> LLVMInt64TypeInContext(context)
+		"i128", "u128" -> LLVMInt128TypeInContext(context)
+		"f32", "float" -> LLVMFloatTypeInContext(context)
+		"f64", "double" -> LLVMDoubleTypeInContext(context)
+		else -> {
+			TODO("Get type from a cache of known types? '$identifier'")
+		}
 	}
 }
 
