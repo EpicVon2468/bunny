@@ -5,6 +5,10 @@ import kotlinx.serialization.Serializable as Serialisable
 @Serialisable
 data class Version(val major: Int, val minor: Int, val revision: Int) {
 
+	constructor(major: String, minor: String, revision: String) : this(major.toInt(), minor.toInt(), revision.toInt())
+
+	constructor(major: Char, minor: Char, revision: Char) : this(major.digitToInt(), minor.digitToInt(), revision.digitToInt())
+
 	operator fun compareTo(other: Version): Int {
 		if (this == other) return 0
 		this.major.compareTo(other.major).let {

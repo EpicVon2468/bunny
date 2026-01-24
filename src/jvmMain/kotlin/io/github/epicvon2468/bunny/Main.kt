@@ -119,8 +119,13 @@ data class MainVisitor<T>(
 
 	override fun visitChildren(node: RuleNode): T? {
 		val node: ParserRuleContext = node as ParserRuleContext
-		visit(node)
-		for (child: ParseTree in node.children) child.accept(this)
+		if (node !is MainParser.TopContext) {
+			visit(node)
+			for (child: ParseTree in node.children) child.accept(this)
+			return null
+		}
+		println(node.version().children.joinToString(separator = " ", transform = ParseTree::getText))
+		val topLevelEntries: List<MainParser.TopLevelContext> = node.topLevel()
 		return null
 	}
 
