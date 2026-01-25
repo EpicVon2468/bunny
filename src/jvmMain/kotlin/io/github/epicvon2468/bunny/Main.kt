@@ -56,8 +56,8 @@ data class Env private constructor(
 		parent
 	)
 
-	fun lookupTypeOrNull(name: String): MemorySegment? = typeLookup[name] ?: parent?.lookupTypeOrNull(name)
 	fun lookupType(name: String): MemorySegment = lookupTypeOrNull(name) ?: error("Couldn't find type with name '$name' in lookup!")
+	fun lookupTypeOrNull(name: String): MemorySegment? = typeLookup[name] ?: parent?.lookupTypeOrNull(name)
 
 	companion object {
 
@@ -245,10 +245,10 @@ data class MainVisitor<T>(
 			TODO("Grouped expression")
 		}
 		expr.NUM_INT()?.let {
-			return LLVMConstInt(LLVMInt64TypeInContext(context), it.text.toLong(), 0)
+			return LLVMConstInt(env.lookupType("i64"), it.text.toLong(), 0)
 		}
 		expr.NUM_FLOAT()?.let {
-			return LLVMConstReal(LLVMDoubleTypeInContext(context), it.text.toDouble())
+			return LLVMConstReal(env.lookupType("f64"), it.text.toDouble())
 		}
 		expr.STRING_LITERAL()?.let {
 			return LLVMBuildGlobalString(
@@ -262,10 +262,10 @@ data class MainVisitor<T>(
 			)
 		}
 		expr.TRUE()?.let {
-			return LLVMConstInt(LLVMInt1TypeInContext(context), 1L, 0)
+			return LLVMConstInt(env.lookupType("bool"), 1L, 0)
 		}
 		expr.FALSE()?.let {
-			return LLVMConstInt(LLVMInt1TypeInContext(context), 0L, 0)
+			return LLVMConstInt(env.lookupType("bool"), 0L, 0)
 		}
 		TODO("Identifier for variable.")
 	}
@@ -301,7 +301,7 @@ fun determineLLVMParamTypes(
 }
 
 fun determineLLVMType(type: MainParser.TypeContext?, env: Env): MemorySegment /*= LLVMTypeRef*/ {
-	if (type == null) return env.lookupType("void")
+	if (type == null) return env.lookupType("")
 	if (type.pointerType() != null) return env.lookupType("ptr")
 	return env.lookupType(type.IDENTIFIER()!!.text)
 }
