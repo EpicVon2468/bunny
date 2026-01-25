@@ -33,6 +33,16 @@ fun main(args: Array<String>) {
 	}
 }
 
+data class Env(
+	val parent: Env?,
+	val types: Map<String, MemorySegment>,
+	// TODO: variable map for local & global variables :o
+	val returnType: MemorySegment?
+) {
+
+	operator fun get(name: String): MemorySegment? = types[name] ?: parent?.get(name)
+}
+
 data class MainVisitor<T>(
 	val parser: MainParser,
 	val arena: Arena,
@@ -70,29 +80,34 @@ data class MainVisitor<T>(
 		val paramList: MainParser.ParameterListContext? = funct.parameterList()
 		val params: List<MainParser.IdentifierWithTypeContext>? = paramList?.identifierWithType()
 		val nativeName: MemorySegment = arena.allocateFrom(funct.IDENTIFIER().text)
+		val returnType: MemorySegment /*= LLVMTypeRef*/ = determineLLVMType(funct.type(), context)
 		// Retrieve or create if not found.
 		val function: MemorySegment /*= LLVMValueRef*/ = LLVMGetNamedFunction(module, nativeName).jvmNull() ?: LLVMAddFunction(
 			/*M =*/ module,
 			/*Name =*/ nativeName,
 			/*FunctionTy =*/ LLVMFunctionType(
-				/*ReturnType =*/ determineLLVMType(funct.type(), context),
+				/*ReturnType =*/ returnType,
 				/*ParamTypes =*/ determineLLVMParamTypes(
 					arena,
 					paramList,
 					params,
 					context
-				).nativeNull(),
+				),
 				/*ParamCount =*/ params?.size ?: 0,
 				/*IsVarArg =*/ paramList?.VARARG()?.let { 1 } ?: 0
 			)
 		)
-		val body: MainParser.FunctionBodyContext = funct.functionBody() ?: return
-		visitFunctionBody(body, function)
+		visitFunctionBody(
+			funct.functionBody() ?: return,
+			function,
+			returnType
+		)
 	}
 
 	fun visitFunctionBody(
 		body: MainParser.FunctionBodyContext,
-		function: MemorySegment /*= LLVMValueRef*/
+		function: MemorySegment /*= LLVMValueRef*/,
+		returnType: MemorySegment /*= LLVMTypeRef*/
 	) {
 		LLVMPositionBuilderAtEnd(
 			builder,
@@ -102,10 +117,13 @@ data class MainVisitor<T>(
 				arena.allocateFrom("entry")
 			)
 		)
-		body.children.map { it as ParserRuleContext }.forEach(::bodyImpl)
+		body.children.forEach { bodyImpl(it as ParserRuleContext, returnType) }
 	}
 
-	fun bodyImpl(input: ParserRuleContext): Unit = when (input) {
+	fun bodyImpl(
+		input: ParserRuleContext,
+		returnType: MemorySegment /*= LLVMTypeRef*/
+	): Unit = when (input) {
 		is MainParser.ReturnExpressionContext -> {
 			val expression: MainParser.ExpressionContext? = input.expression()
 			if (expression == null) LLVMBuildRetVoid(builder)
@@ -235,8 +253,8 @@ fun determineLLVMParamTypes(
 	paramList: MainParser.ParameterListContext?,
 	params: List<MainParser.IdentifierWithTypeContext>?,
 	context: MemorySegment /*= LLVMContextRef*/
-): MemorySegment? /*= Pointer<LLVMTypeRef>*/ {
-	if (paramList == null) return null
+): MemorySegment /*= Pointer<LLVMTypeRef>*/ {
+	if (paramList == null) return MemorySegment.NULL
 	return params!!.map { determineLLVMType(it.type(), context) }.toNativeArray(arena, LLVMTypeRef)
 }
 
