@@ -124,17 +124,90 @@ data class MainVisitor<T>(
 	fun evaluateExpression(expr: MainParser.ExpressionContext): MemorySegment /*= LLVMValueRef*/ {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> {
-				evaluateExpression(expr.getChild(MainParser.EqualityExpressionContext::class.java, 0))
-			}
+			1 -> return evaluateExpression(expr.getChild(MainParser.EqualityExpressionContext::class.java, 0))
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.EqualityExpressionContext) {
+	fun evaluateExpression(expr: MainParser.EqualityExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+		when (expr.childCount) {
+			0 -> error("No children for expression '$expr'!")
+			1 -> return evaluateExpression(expr.getChild(MainParser.ComparisonExpressionContext::class.java, 0))
+			else -> {
+			}
+		}
+		TODO()
+	}
 
+	fun evaluateExpression(expr: MainParser.ComparisonExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+		when (expr.childCount) {
+			0 -> error("No children for expression '$expr'!")
+			1 -> return evaluateExpression(expr.getChild(MainParser.TermExpressionContext::class.java, 0))
+			else -> {
+			}
+		}
+		TODO()
+	}
+
+	fun evaluateExpression(expr: MainParser.TermExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+		when (expr.childCount) {
+			0 -> error("No children for expression '$expr'!")
+			1 -> return evaluateExpression(expr.getChild(MainParser.FactorExpressionContext::class.java, 0))
+			else -> {
+			}
+		}
+		TODO()
+	}
+
+	fun evaluateExpression(expr: MainParser.FactorExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+		when (expr.childCount) {
+			0 -> error("No children for expression '$expr'!")
+			1 -> return evaluateExpression(expr.getChild(MainParser.UnaryExpressionContext::class.java, 0))
+			else -> {
+			}
+		}
+		TODO()
+	}
+
+	fun evaluateExpression(expr: MainParser.UnaryExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+		when (expr.childCount) {
+			0 -> error("No children for expression '$expr'!")
+			1 -> return evaluateExpression(expr.getChild(MainParser.PrimaryExpressionContext::class.java, 0))
+			else -> {
+			}
+		}
+		TODO()
+	}
+
+	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+		if (expr.expression() != null) {
+			TODO("Grouped expression")
+		}
+		expr.NUMBER()?.let {
+			val text: String = it.text
+			return if ('.' in text) LLVMConstReal(LLVMDoubleTypeInContext(context), text.toDouble())
+			else LLVMConstInt(LLVMInt64TypeInContext(context), text.toLong(), 0)
+		}
+		expr.STRING_LITERAL()?.let {
+			return LLVMBuildGlobalString(
+				builder,
+				arena.allocateFrom(
+					it.text
+						.drop(1) // Drop first '"'
+						.dropLast(1) // Drop last '"'
+				),
+				arena.allocateFrom("")
+			)
+		}
+		expr.TRUE()?.let {
+			LLVMConstInt(LLVMInt1TypeInContext(context), 1L, 0)
+		}
+		expr.FALSE()?.let {
+			LLVMConstInt(LLVMInt1TypeInContext(context), 0L, 0)
+		}
+		TODO("Identifier for variable.")
 	}
 
 	override fun visitTerminal(node: TerminalNode): T? {
