@@ -185,10 +185,11 @@ data class MainVisitor<T>(
 		if (expr.expression() != null) {
 			TODO("Grouped expression")
 		}
-		expr.NUMBER()?.let {
-			val text: String = it.text
-			return if ('.' in text) LLVMConstReal(LLVMDoubleTypeInContext(context), text.toDouble())
-			else LLVMConstInt(LLVMInt64TypeInContext(context), text.toLong(), 0)
+		expr.NUM_INT()?.let {
+			return LLVMConstInt(LLVMInt64TypeInContext(context), it.text.toLong(), 0)
+		}
+		expr.NUM_FLOAT()?.let {
+			return LLVMConstReal(LLVMDoubleTypeInContext(context), it.text.toDouble())
 		}
 		expr.STRING_LITERAL()?.let {
 			return LLVMBuildGlobalString(
@@ -202,10 +203,10 @@ data class MainVisitor<T>(
 			)
 		}
 		expr.TRUE()?.let {
-			LLVMConstInt(LLVMInt1TypeInContext(context), 1L, 0)
+			return LLVMConstInt(LLVMInt1TypeInContext(context), 1L, 0)
 		}
 		expr.FALSE()?.let {
-			LLVMConstInt(LLVMInt1TypeInContext(context), 0L, 0)
+			return LLVMConstInt(LLVMInt1TypeInContext(context), 0L, 0)
 		}
 		TODO("Identifier for variable.")
 	}

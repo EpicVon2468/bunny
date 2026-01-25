@@ -15,7 +15,7 @@ top :
 
 topLevel : functionDefinition | structDefinition;
 
-version : VERSION NUMBER NUMBER NUMBER ;
+version : VERSION NUM_INT NUM_INT NUM_INT ;
 
 functionDefinition :
 	FUNCTION IDENTIFIER
@@ -70,7 +70,7 @@ comparisonExpression : termExpression ((COMPARISON_GREATER | COMPARISON_GREATER_
 termExpression : factorExpression ((SUB | ADD) factorExpression)* ;
 factorExpression : unaryExpression ((DIV | ASTERISK) unaryExpression)* ;
 unaryExpression : (NOT | SUB) unaryExpression | primaryExpression;
-primaryExpression : NUMBER | STRING_LITERAL | TRUE | FALSE | IDENTIFIER | OPEN_PAREN expression CLOSE_PAREN ;
+primaryExpression : NUM_INT | NUM_FLOAT | STRING_LITERAL | TRUE | FALSE | IDENTIFIER | OPEN_PAREN expression CLOSE_PAREN ;
 
 parameterList :
 	(

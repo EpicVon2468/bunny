@@ -42,7 +42,8 @@ SECTION_COMMENT : '/*' .*? '*/' -> skip ;
 
 TERMINATION : ';' ;
 
-NUMBER : DIGIT+ ('.' DIGIT+)? ;
+NUM_INT : DIGIT+ ;
+NUM_FLOAT : NUM_INT ('.' DIGIT+)? 'f';
 
 FUNCTION : 'funct' ;
 VARIABLE : 'define' ;
