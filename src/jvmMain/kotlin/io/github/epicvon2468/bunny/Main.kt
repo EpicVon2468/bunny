@@ -41,6 +41,8 @@ data class Env private constructor(
 	val parent: Env? = null
 ) {
 
+	// TODO: copy parameters of a function (via LLVM) into new copies w/ alloca, then store in a map here
+
 	fun newEnv(
 		addedTypes: Map<String, MemorySegment>? = null,
 		returnType: MemorySegment = this.returnType,
@@ -48,9 +50,7 @@ data class Env private constructor(
 	): Env = Env(
 		this.typeLookup.let {
 			if (addedTypes == null) return@let it
-			val newMap: MutableMap<String, MemorySegment> = it.toMutableMap()
-			newMap += addedTypes
-			newMap
+			it.toMutableMap().apply { putAll(addedTypes) }
 		},
 		returnType,
 		parent
