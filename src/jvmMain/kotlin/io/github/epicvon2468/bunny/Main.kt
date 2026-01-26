@@ -241,8 +241,7 @@ data class MainVisitor<T>(
 // TODO: Use this for "auto"-like keyword, so we can just infer info about the type by evaluating the expression literally.
 fun ParseTree.isLiteralExpression(): Boolean {
 	tailrec fun recurseThrough(tree: ParseTree): Boolean {
-		val childCount: Int = tree.childCount
-		if (childCount != 1) return false
+		if (tree.childCount != 1) return false
 		if (tree !is MainParser.PrimaryExpressionContext) return recurseThrough(tree.getChild(0))
 		return true
 	}
@@ -254,7 +253,10 @@ inline fun <reified T : ParseTree> ParserRuleContext.getChild(i: Int): T = this.
 
 fun MemorySegment.jvmNull(): MemorySegment? = if (this == MemorySegment.NULL) null else this
 fun MemorySegment?.nativeNull(): MemorySegment = this ?: MemorySegment.NULL
+// This always evaluates 'other' (even if inlined)
 infix fun MemorySegment.elvis(other: MemorySegment): MemorySegment = this.jvmNull() ?: other
+// This version does not have the same problem, but might not always want braces
+infix fun MemorySegment.elvis(other: () -> MemorySegment): MemorySegment = this.jvmNull() ?: other()
 
 fun determineLLVMParamTypes(
 	arena: Arena,

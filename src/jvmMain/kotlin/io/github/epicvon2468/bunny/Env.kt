@@ -50,6 +50,14 @@ data class Env private constructor(
 					"bool", "boolean"
 				))
 				put(Type(
+					LLVMIntTypeInContext(context, 2),
+					"i2", "u2"
+				))
+				put(Type(
+					LLVMIntTypeInContext(context, 4),
+					"i4", "u4"
+				))
+				put(Type(
 					LLVMInt8TypeInContext(context),
 					"i8", "u8"
 				))
@@ -68,6 +76,14 @@ data class Env private constructor(
 				put(Type(
 					LLVMInt128TypeInContext(context),
 					"i128", "u128"
+				))
+				put(Type(
+					LLVMIntTypeInContext(context, 256),
+					"i256", "u256"
+				))
+				put(Type(
+					LLVMIntTypeInContext(context, 512),
+					"i512", "u512"
 				))
 				put(Type(
 					LLVMFloatTypeInContext(context),
