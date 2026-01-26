@@ -33,36 +33,51 @@ fun main(args: Array<String>) {
 	}
 }
 
+typealias LLVMValueRef = MemorySegment
+typealias LLVMTypeRef = MemorySegment
+typealias LLVMContextRef = MemorySegment
+
 data class MutableVariable(
 	// name of the address variable created with alloca
 	val name: String,
 	val type: Type,
 	// the representation of the variable created with alloca
-	val addressVariable: MemorySegment /*= LLVMValueRef*/
+	val addressVariable: LLVMValueRef
 )
 
 data class Type(
-	val llvmTYpe: MemorySegment /*= LLVMTypeRef*/,
-	val name: String
-)
+	val llvmType: LLVMTypeRef,
+	val names: List<String>
+) {
+
+	init {
+		require(names.isNotEmpty()) { "No name(s) were provided for a Type!" }
+	}
+
+	/**
+	 * The primary name of this type.
+	 */
+	val name: String = names.first()
+
+	constructor(llvmType: LLVMTypeRef, vararg names: String) : this(llvmType, names.toList())
+}
 
 @ConsistentCopyVisibility
 data class Env private constructor(
-	// TODO: Replace with new Type class
-	val typeLookup: Map<String, MemorySegment>,
+	val typeLookup: Map<String, Type>,
 	// TODO: variable map for local & global variables :o
-	val returnType: MemorySegment = MemorySegment.NULL,
+	val returnType: LLVMTypeRef = MemorySegment.NULL,
 	val parent: Env? = null
 ) {
 
 	// TODO: copy parameters of a function (via LLVM) into new copies w/ alloca, then store in a map here (see also: MutableVariable, Type)
 
 	fun newEnv(
-		addedTypes: Map<String, MemorySegment>? = null,
-		returnType: MemorySegment = this.returnType,
+		addedTypes: Map<String, Type>? = null,
+		returnType: LLVMTypeRef = this.returnType,
 		parent: Env? = this.parent
 	): Env = Env(
-		this.typeLookup.let { lookup: Map<String, MemorySegment> ->
+		this.typeLookup.let { lookup: Map<String, Type> ->
 			return@let if (addedTypes == null) lookup
 			else lookup.toMutableMap().apply { putAll(addedTypes) }
 		},
@@ -70,28 +85,60 @@ data class Env private constructor(
 		parent
 	)
 
-	fun lookupType(name: String): MemorySegment = lookupTypeOrNull(name) ?: error("Couldn't find type with name '$name' in lookup!")
-	fun lookupTypeOrNull(name: String): MemorySegment? = typeLookup[name] ?: parent?.lookupTypeOrNull(name)
+	fun lookupType(name: String): Type = lookupTypeOrNull(name) ?: error("No such key '$name' in lookup!")
+	fun lookupTypeOrNull(name: String): Type? = typeLookup[name] ?: parent?.lookupTypeOrNull(name)
 
 	companion object {
 
 		// ONLY FOR TOP-LEVEL/ROOT ENV CREATION!!!
 		@JvmStatic
-		fun newEnv(context: MemorySegment) = Env(
-			typeLookup = mutableMapOf<String, MemorySegment>().apply {
+		fun newEnv(context: LLVMContextRef) = Env(
+			typeLookup = mutableMapOf<String, Type>().apply {
 				fun <K, V> MutableMap<K, V>.put(vararg keys: K, value: V) {
 					for (key in keys) this[key] = value
 				}
-				put("", "void", value = LLVMVoidTypeInContext(context))
-				put("boolean", "bool", value = LLVMInt1TypeInContext(context))
-				put("i8", "u8", value = LLVMInt8TypeInContext(context))
-				put("i16", "u16", value = LLVMInt16TypeInContext(context))
-				put("i32", "u32", value = LLVMInt32TypeInContext(context))
-				put("i64", "u64", value = LLVMInt64TypeInContext(context))
-				put("i128", "u128", value = LLVMInt128TypeInContext(context))
-				put("f32", "float", value = LLVMFloatTypeInContext(context))
-				put("f64", "double", value = LLVMDoubleTypeInContext(context))
-				put("ptr", "pointer", value = LLVMPointerTypeInContext(context, /*AddressSpace =*/ 0))
+				fun MutableMap<String, Type>.put(value: Type) = put(*value.names.toTypedArray(), value = value)
+
+				put(Type(
+					LLVMVoidTypeInContext(context),
+					"", "void"
+				))
+				put(Type(
+					LLVMInt1TypeInContext(context),
+					"bool", "boolean"
+				))
+				put(Type(
+					LLVMInt8TypeInContext(context),
+					"i8", "u8"
+				))
+				put(Type(
+					LLVMInt16TypeInContext(context),
+					"i16", "u16"
+				))
+				put(Type(
+					LLVMInt32TypeInContext(context),
+					"i32", "u32"
+				))
+				put(Type(
+					LLVMInt64TypeInContext(context),
+					"i64", "u64"
+				))
+				put(Type(
+					LLVMInt128TypeInContext(context),
+					"i128", "u128"
+				))
+				put(Type(
+					LLVMFloatTypeInContext(context),
+					"f32", "float"
+				))
+				put(Type(
+					LLVMDoubleTypeInContext(context),
+					"f64", "double"
+				))
+				put(Type(
+					LLVMPointerTypeInContext(context, /*AddressSpace =*/ 0),
+					"ptr", "pointer"
+				))
 			}
 		)
 	}
@@ -101,7 +148,7 @@ data class Env private constructor(
 data class MainVisitor<T>(
 	val parser: MainParser,
 	val arena: Arena,
-	val context: MemorySegment,
+	val context: LLVMContextRef,
 	val name: String
 ) : ParseTreeVisitor<T>, AutoCloseable {
 
@@ -137,9 +184,9 @@ data class MainVisitor<T>(
 		val paramList: MainParser.ParameterListContext? = funct.parameterList()
 		val params: List<MainParser.IdentifierWithTypeContext>? = paramList?.identifierWithType()
 		val nativeName: MemorySegment = arena.allocateFrom(funct.IDENTIFIER().text)
-		val returnType: MemorySegment /*= LLVMTypeRef*/ = determineLLVMType(funct.type(), env)
+		val returnType: LLVMTypeRef = determineLLVMType(funct.type(), env)
 		// Retrieve or create if not found.
-		val function: MemorySegment /*= LLVMValueRef*/ = LLVMGetNamedFunction(module, nativeName).jvmNull() ?: LLVMAddFunction(
+		val function: LLVMValueRef = LLVMGetNamedFunction(module, nativeName).jvmNull() ?: LLVMAddFunction(
 			/*M =*/ module,
 			/*Name =*/ nativeName,
 			/*FunctionTy =*/ LLVMFunctionType(
@@ -163,8 +210,8 @@ data class MainVisitor<T>(
 
 	fun visitFunctionBody(
 		body: MainParser.FunctionBodyContext,
-		function: MemorySegment /*= LLVMValueRef*/,
-		returnType: MemorySegment /*= LLVMTypeRef*/
+		function: LLVMValueRef,
+		returnType: LLVMTypeRef
 	) {
 		LLVMPositionBuilderAtEnd(
 			builder,
@@ -179,7 +226,7 @@ data class MainVisitor<T>(
 
 	fun bodyImpl(
 		input: ParserRuleContext,
-		returnType: MemorySegment /*= LLVMTypeRef*/
+		returnType: LLVMTypeRef
 	): Unit = when (input) {
 		is MainParser.ReturnExpressionContext -> {
 			val expression: MainParser.ExpressionContext? = input.expression()
@@ -196,7 +243,7 @@ data class MainVisitor<T>(
 		else -> {}
 	}
 
-	fun evaluateExpression(expr: MainParser.ExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.ExpressionContext, env: Env = this.env): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.EqualityExpressionContext>(0), env)
@@ -206,7 +253,7 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.EqualityExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.EqualityExpressionContext, env: Env = this.env): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.ComparisonExpressionContext>(0), env)
@@ -216,7 +263,7 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.ComparisonExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.ComparisonExpressionContext, env: Env = this.env): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.TermExpressionContext>(0), env)
@@ -226,7 +273,7 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.TermExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.TermExpressionContext, env: Env = this.env): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), env)
@@ -236,7 +283,7 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.FactorExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.FactorExpressionContext, env: Env = this.env): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(0), env)
@@ -246,7 +293,7 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, env: Env = this.env): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.PrimaryExpressionContext>(0), env)
@@ -256,15 +303,15 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, env: Env = this.env): LLVMValueRef {
 		if (expr.expression() != null) {
 			TODO("Grouped expression")
 		}
 		expr.NUM_INT()?.let {
-			return LLVMConstInt(env.lookupType("i64"), it.text.toLong(), 0)
+			return LLVMConstInt(env.lookupType("i64").llvmType, it.text.toLong(), 0)
 		}
 		expr.NUM_FLOAT()?.let {
-			return LLVMConstReal(env.lookupType("f64"), it.text.toDouble())
+			return LLVMConstReal(env.lookupType("f64").llvmType, it.text.toDouble())
 		}
 		expr.STRING_LITERAL()?.let {
 			return LLVMBuildGlobalString(
@@ -278,10 +325,10 @@ data class MainVisitor<T>(
 			)
 		}
 		expr.TRUE()?.let {
-			return LLVMConstInt(env.lookupType("bool"), 1L, 0)
+			return LLVMConstInt(env.lookupType("bool").llvmType, 1L, 0)
 		}
 		expr.FALSE()?.let {
-			return LLVMConstInt(env.lookupType("bool"), 0L, 0)
+			return LLVMConstInt(env.lookupType("bool").llvmType, 0L, 0)
 		}
 		TODO("Identifier for variable.")
 	}
@@ -319,8 +366,8 @@ fun determineLLVMParamTypes(
 	return params!!.map { determineLLVMType(it.type(), env) }.toNativeArray(arena, LLVMTypeRef)
 }
 
-fun determineLLVMType(type: MainParser.TypeContext?, env: Env): MemorySegment /*= LLVMTypeRef*/ {
-	if (type == null) return env.lookupType("")
-	if (type.pointerType() != null) return env.lookupType("ptr")
-	return env.lookupType(type.IDENTIFIER()!!.text)
+fun determineLLVMType(type: MainParser.TypeContext?, env: Env): LLVMTypeRef {
+	if (type == null) return env.lookupType("").llvmType
+	if (type.pointerType() != null) return env.lookupType("ptr").llvmType
+	return env.lookupType(type.IDENTIFIER()!!.text).llvmType
 }
