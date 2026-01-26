@@ -238,6 +238,17 @@ data class MainVisitor<T>(
 	}
 }
 
+// TODO: Use this for "auto"-like keyword, so we can just infer info about the type by evaluating the expression literally.
+fun ParseTree.isLiteralExpression(): Boolean {
+	tailrec fun recurseThrough(tree: ParseTree): Boolean {
+		val childCount: Int = tree.childCount
+		if (childCount != 1) return false
+		if (tree !is MainParser.PrimaryExpressionContext) return recurseThrough(tree.getChild(0))
+		return true
+	}
+	return recurseThrough(this)
+}
+
 inline fun <reified T : ParseTree> ParserRuleContext.getChildOrNull(i: Int): T? = this.getChild(T::class.java, i)
 inline fun <reified T : ParseTree> ParserRuleContext.getChild(i: Int): T = this.getChildOrNull<T>(i)!!
 
