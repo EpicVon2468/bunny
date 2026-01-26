@@ -33,15 +33,29 @@ fun main(args: Array<String>) {
 	}
 }
 
+data class MutableVariable(
+	// name of the address variable created with alloca
+	val name: String,
+	val type: Type,
+	// the representation of the variable created with alloca
+	val addressVariable: MemorySegment /*= LLVMValueRef*/
+)
+
+data class Type(
+	val llvmTYpe: MemorySegment /*= LLVMTypeRef*/,
+	val name: String
+)
+
 @ConsistentCopyVisibility
 data class Env private constructor(
+	// TODO: Replace with new Type class
 	val typeLookup: Map<String, MemorySegment>,
 	// TODO: variable map for local & global variables :o
 	val returnType: MemorySegment = MemorySegment.NULL,
 	val parent: Env? = null
 ) {
 
-	// TODO: copy parameters of a function (via LLVM) into new copies w/ alloca, then store in a map here
+	// TODO: copy parameters of a function (via LLVM) into new copies w/ alloca, then store in a map here (see also: MutableVariable, Type)
 
 	fun newEnv(
 		addedTypes: Map<String, MemorySegment>? = null,
@@ -61,6 +75,7 @@ data class Env private constructor(
 
 	companion object {
 
+		// ONLY FOR TOP-LEVEL/ROOT ENV CREATION!!!
 		@JvmStatic
 		fun newEnv(context: MemorySegment) = Env(
 			typeLookup = mutableMapOf<String, MemorySegment>().apply {
@@ -82,6 +97,7 @@ data class Env private constructor(
 	}
 }
 
+// TODO: When a struct is parsed, update env to contain it as a type
 data class MainVisitor<T>(
 	val parser: MainParser,
 	val arena: Arena,
