@@ -45,23 +45,6 @@ data class MutableVariable(
 	val addressVariable: LLVMValueRef
 )
 
-data class Type(
-	val llvmType: LLVMTypeRef,
-	val names: List<String>
-) {
-
-	init {
-		require(names.isNotEmpty()) { "No name(s) were provided for a Type!" }
-	}
-
-	/**
-	 * The primary name of this type.
-	 */
-	val name: String = names.first()
-
-	constructor(llvmType: LLVMTypeRef, vararg names: String) : this(llvmType, names.toList())
-}
-
 // TODO: When a struct is parsed, update env to contain it as a type
 data class MainVisitor<T>(
 	val parser: MainParser,
