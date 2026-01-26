@@ -33,18 +33,6 @@ fun main(args: Array<String>) {
 	}
 }
 
-typealias LLVMValueRef = MemorySegment
-typealias LLVMTypeRef = MemorySegment
-typealias LLVMContextRef = MemorySegment
-
-data class MutableVariable(
-	// name of the address variable created with alloca
-	val name: String,
-	val type: Type,
-	// the representation of the variable created with alloca
-	val addressVariable: LLVMValueRef
-)
-
 // TODO: When a struct is parsed, update env to contain it as a type
 data class MainVisitor<T>(
 	val parser: MainParser,
