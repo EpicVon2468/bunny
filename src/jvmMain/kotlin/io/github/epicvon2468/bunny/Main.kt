@@ -48,9 +48,9 @@ data class Env private constructor(
 		returnType: MemorySegment = this.returnType,
 		parent: Env? = this.parent
 	): Env = Env(
-		this.typeLookup.let {
-			if (addedTypes == null) return@let it
-			it.toMutableMap().apply { putAll(addedTypes) }
+		this.typeLookup.let { lookup: Map<String, MemorySegment> ->
+			return@let if (addedTypes == null) lookup
+			else lookup.toMutableMap().apply { putAll(addedTypes) }
 		},
 		returnType,
 		parent
@@ -180,67 +180,67 @@ data class MainVisitor<T>(
 		else -> {}
 	}
 
-	fun evaluateExpression(expr: MainParser.ExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.ExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild(MainParser.EqualityExpressionContext::class.java, 0))
+			1 -> return evaluateExpression(expr.getChild<MainParser.EqualityExpressionContext>(0), env)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.EqualityExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.EqualityExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild(MainParser.ComparisonExpressionContext::class.java, 0))
+			1 -> return evaluateExpression(expr.getChild<MainParser.ComparisonExpressionContext>(0), env)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.ComparisonExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.ComparisonExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild(MainParser.TermExpressionContext::class.java, 0))
+			1 -> return evaluateExpression(expr.getChild<MainParser.TermExpressionContext>(0), env)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.TermExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.TermExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild(MainParser.FactorExpressionContext::class.java, 0))
+			1 -> return evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), env)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.FactorExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.FactorExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild(MainParser.UnaryExpressionContext::class.java, 0))
+			1 -> return evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(0), env)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.UnaryExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild(MainParser.PrimaryExpressionContext::class.java, 0))
+			1 -> return evaluateExpression(expr.getChild<MainParser.PrimaryExpressionContext>(0), env)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext): MemorySegment /*= LLVMValueRef*/ {
+	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, env: Env = this.env): MemorySegment /*= LLVMValueRef*/ {
 		if (expr.expression() != null) {
 			TODO("Grouped expression")
 		}
@@ -285,6 +285,9 @@ data class MainVisitor<T>(
 		LLVMContextDispose(context)
 	}
 }
+
+inline fun <reified T : ParseTree> ParserRuleContext.getChildOrNull(i: Int): T? = this.getChild(T::class.java, i)
+inline fun <reified T : ParseTree> ParserRuleContext.getChild(i: Int): T = this.getChildOrNull<T>(i)!!
 
 fun MemorySegment.jvmNull(): MemorySegment? = if (this == MemorySegment.NULL) null else this
 fun MemorySegment?.nativeNull(): MemorySegment = this ?: MemorySegment.NULL
