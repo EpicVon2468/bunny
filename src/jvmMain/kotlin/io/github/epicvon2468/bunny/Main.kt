@@ -20,6 +20,7 @@ import java.lang.foreign.MemorySegment
 // void* generics https://discord.com/channels/448959983657156608/448959983657156612/1458013565091971202
 // https://llvm.org/doxygen/group__LLVMCCoreType.html
 // https://llvm.org/doxygen/group__LLVMCCoreContext.html
+// https://llvm.org/doxygen/files.html
 fun main(args: Array<String>) {
 	println("Got args: ${args.contentToString()}")
 	println("Java library path: ${System.getProperty("java.library.path")}")
@@ -249,7 +250,7 @@ fun ParseTree.isLiteralExpression(): Boolean {
 }
 
 inline fun <reified T : ParseTree> ParserRuleContext.getChildOrNull(i: Int): T? = this.getChild(T::class.java, i)
-inline fun <reified T : ParseTree> ParserRuleContext.getChild(i: Int): T = this.getChildOrNull<T>(i)!!
+inline fun <reified T : ParseTree> ParserRuleContext.getChild(i: Int): T = this.getChildOrNull(i)!!
 
 fun MemorySegment.jvmNull(): MemorySegment? = if (this == MemorySegment.NULL) null else this
 fun MemorySegment?.nativeNull(): MemorySegment = this ?: MemorySegment.NULL
