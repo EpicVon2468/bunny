@@ -13,13 +13,16 @@ repositories {
 	mavenCentral()
 }
 
-// This is... the only working and effective way to do it...
-tasks.all {
-	if (this.name != "jvmRun") return@all
-	println("Gotcha :)")
-	this as JavaExec
+tasks.withType<JavaExec> {
 	jvmArgs("-XX:+UseCompactObjectHeaders", "--enable-native-access=ALL-UNNAMED")
 	//systemProperty("jextract.trace.downcalls", "true")
+}
+
+tasks.withType<Jar> {
+	if (name != "jvmJar") return@withType
+	manifest {
+		attributes("Main-Class" to "io.github.epicvon2468.bunny.MainKt")
+	}
 }
 
 kotlin {

@@ -10,6 +10,3 @@ trim_trailing_whitespace = true
 
 [{*.json,*.md,*.nix}]
 tab_width = 2
-
-[*.todoFileExtensionHere]
-trim_trailing_whitespace = false
