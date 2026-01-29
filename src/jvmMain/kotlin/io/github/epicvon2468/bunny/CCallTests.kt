@@ -57,7 +57,7 @@ fun test() {
 					builder,
 					LLVMBuildGlobalString(builder, arena.allocateFrom("%d\n"), arena.allocateFrom("print_int_str")),
 					ptrType,
-					arena.allocateFrom("")
+					EMPTY_STRING
 				),
 				LLVMGetParam(printIntFunction, 0)
 			),
@@ -83,7 +83,7 @@ context(arena: Arena) fun MemorySegment /*= LLVMModuleRef*/.getFunctionAndType(
 		it to LLVMGlobalGetValueType(it)
 	}
 
-fun List<Any?>.toNativeArray(arena: Arena, elementLayout: MemoryLayout): MemorySegment = arena.allocateArray(elementLayout, toTypedArray())
+fun Collection<Any?>.toNativeArray(arena: Arena, elementLayout: MemoryLayout): MemorySegment = arena.allocateArray(elementLayout, *toTypedArray())
 
 fun Arena.allocateArray(elementLayout: MemoryLayout, vararg values: Any?): MemorySegment {
 	val layout: SequenceLayout = MemoryLayout.sequenceLayout(values.size.toLong(), elementLayout)

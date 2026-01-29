@@ -2,6 +2,7 @@ package io.github.epicvon2468.bunny
 
 import org.llvm.Core_h.*
 
+// TODO: Rename to "Scope"
 @ConsistentCopyVisibility
 data class Env private constructor(
 	val typeLookup: Map<String, TypeInfo>,
@@ -10,7 +11,7 @@ data class Env private constructor(
 	val parent: Env? = null
 ) {
 
-	// TODO: copy parameters of a function (via LLVM) into new copies w/ alloca, then store in a map here (see also: MutableVariable, Type)
+	// TODO: copy parameters of a function (via LLVM) into new copies w/ alloca, then store in a map here (see also: MutableVariable, TypeInfo)
 
 	fun newEnv(
 		addedTypes: Map<String, TypeInfo>? = null,

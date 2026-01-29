@@ -34,6 +34,9 @@ fun main(args: Array<String>) {
 	}
 }
 
+@JvmField
+val EMPTY_STRING: MemorySegment = Arena.global().allocateFrom("")
+
 // TODO: When a struct is parsed, update env to contain it as a type
 data class MainVisitor<T>(
 	val parser: MainParser,
@@ -43,7 +46,7 @@ data class MainVisitor<T>(
 ) : ParseTreeVisitor<T>, AutoCloseable {
 
 	val module: MemorySegment = LLVMModuleCreateWithNameInContext(arena.allocateFrom(name), context)
-	val builder: MemorySegment = LLVMCreateBuilderInContext(context)
+	val builder: LLVMBuilderRef = LLVMCreateBuilderInContext(context)
 
 	val env: Env = Env.newEnv(context)
 
@@ -211,7 +214,7 @@ data class MainVisitor<T>(
 						.drop(1) // Drop first '"'
 						.dropLast(1) // Drop last '"'
 				),
-				arena.allocateFrom("")
+				EMPTY_STRING
 			)
 		}
 		expr.TRUE()?.let {
