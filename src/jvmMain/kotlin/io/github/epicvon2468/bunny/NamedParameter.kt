@@ -7,16 +7,16 @@ data class NamedParameter private constructor(
 	val index: Int
 ) : MutableVariable {
 
-	private lateinit var _addressVariable: () -> LLVMValueRef
+	private lateinit var _addressVariable: (LLVMValueRef) -> LLVMValueRef
 
-	fun runInit() {
-		this.addressVariable = _addressVariable()
+	fun runInit(function: LLVMValueRef) {
+		this.addressVariable = _addressVariable(function)
 	}
 
 	constructor(
 		name: String,
 		typeInfo: TypeInfo,
-		addressSupplier: () -> LLVMValueRef,
+		addressSupplier: (LLVMValueRef) -> LLVMValueRef,
 		index: Int
 	) : this(name, typeInfo, index) {
 		_addressVariable = addressSupplier

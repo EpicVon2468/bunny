@@ -120,11 +120,13 @@ data class MainVisitor<T>(
 				name = name,
 				typeInfo = typeInfo,
 				addressSupplier = {
-					LLVMBuildAlloca(
+					val addressVariable: MemorySegment = LLVMBuildAlloca(
 						builder,
 						typeInfo.llvmType,
 						arena.allocateFrom(name)
 					)
+					LLVMBuildStore(builder, LLVMGetParam(it, index), addressVariable)
+					addressVariable
 				},
 				index = index
 			)
@@ -145,7 +147,7 @@ data class MainVisitor<T>(
 				arena.allocateFrom("entry")
 			)
 		)
-		function.parameters.forEach(NamedParameter::runInit)
+		function.parameters.forEach { it.runInit(function.llvmFunction) }
 		body.children.forEach { bodyImpl(it as ParserRuleContext, returnType) }
 	}
 
@@ -293,16 +295,6 @@ fun MemorySegment?.nativeNull(): MemorySegment = this ?: MemorySegment.NULL
 infix fun MemorySegment.elvis(other: MemorySegment): MemorySegment = this.jvmNull() ?: other
 // This version does not have the same problem, but might not always want braces
 infix fun MemorySegment.elvis(other: () -> MemorySegment): MemorySegment = this.jvmNull() ?: other()
-
-fun determineLLVMParamTypes(
-	arena: Arena,
-	paramList: MainParser.ParameterListContext?,
-	params: List<MainParser.IdentifierWithTypeContext>?,
-	env: Env
-): MemorySegment /*= Pointer<LLVMTypeRef>*/ {
-	paramList ?: return MemorySegment.NULL
-	return params!!.map { determineLLVMType(it.type(), env).llvmType }.toNativeArray(arena, LLVMTypeRef)
-}
 
 fun determineLLVMType(type: MainParser.TypeContext?, env: Env): TypeInfo {
 	if (type == null) return env.lookupType("")
