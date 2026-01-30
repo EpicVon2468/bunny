@@ -45,10 +45,11 @@ data class MainVisitor<T>(
 	val name: String
 ) : ParseTreeVisitor<T>, AutoCloseable {
 
-	val module: MemorySegment = LLVMModuleCreateWithNameInContext(arena.allocateFrom(name), context)
+	val module: LLVMModuleRef = LLVMModuleCreateWithNameInContext(arena.allocateFrom(name), context)
 	val builder: LLVMBuilderRef = LLVMCreateBuilderInContext(context)
 
 	var env: Env = Env.newEnv(context)
+		private set
 
 	override fun visit(tree: ParseTree): T? {
 		val tree: ParserRuleContext = tree as ParserRuleContext

@@ -6,3 +6,4 @@ typealias LLVMValueRef = MemorySegment
 typealias LLVMTypeRef = MemorySegment
 typealias LLVMContextRef = MemorySegment
 typealias LLVMBuilderRef = MemorySegment
+typealias LLVMModuleRef = MemorySegment
