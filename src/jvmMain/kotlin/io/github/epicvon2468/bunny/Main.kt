@@ -37,6 +37,8 @@ fun main(args: Array<String>) {
 @JvmField
 val EMPTY_STRING: MemorySegment = Arena.global().allocateFrom("")
 
+fun String?.cstr(arena: Arena): MemorySegment = if (this == "" || this == null) EMPTY_STRING else arena.allocateFrom(this)
+
 // TODO: When a struct is parsed, update env to contain it as a type
 data class MainVisitor<T>(
 	val parser: MainParser,
@@ -45,7 +47,7 @@ data class MainVisitor<T>(
 	val name: String
 ) : ParseTreeVisitor<T>, AutoCloseable {
 
-	val module: LLVMModuleRef = LLVMModuleCreateWithNameInContext(arena.allocateFrom(name), context)
+	val module: LLVMModuleRef = LLVMModuleCreateWithNameInContext(name.cstr(arena), context)
 	val builder: LLVMBuilderRef = LLVMCreateBuilderInContext(context)
 
 	var scope: Scope = Scope.globalScope(context, module)
@@ -77,7 +79,7 @@ data class MainVisitor<T>(
 	// TODO: functions within structs, actual struct variables, find out if this even actually works, maybe turn TypeInfo into an interface & make one for StructInfo & another for SimpleTypeInfo
 	fun visitStructDefinition(struct: MainParser.StructDefinitionContext) {
 		val name: String = struct.IDENTIFIER()!!.text
-		val llvmStruct: LLVMTypeRef = LLVMStructCreateNamed(context, arena.allocateFrom(name))
+		val llvmStruct: LLVMTypeRef = LLVMStructCreateNamed(context, name.cstr(arena))
 		val variableTypes: List<LLVMTypeRef>? = struct.variableDefinition()?.map {
 			if (it.ASSIGNMENT() != null) error("Variable was provided an assignment in a struct!  Only a definition of the name and type was expected!")
 			scope.determineLLVMType(it.identifierWithType().type()).llvmType
@@ -97,7 +99,7 @@ data class MainVisitor<T>(
 		val paramList: MainParser.ParameterListContext? = funct.parameterList()
 		val params: List<MainParser.IdentifierWithTypeContext>? = paramList?.identifierWithType()
 		val name: String = funct.IDENTIFIER().text
-		val nativeName: MemorySegment = arena.allocateFrom(name)
+		val nativeName: MemorySegment = name.cstr(arena)
 		val returnType: TypeInfo = localScope.determineLLVMType(funct.type())
 		val parameters: List<NamedParameter> = buildParams(paramList, params, localScope)
 		// Retrieve or create if not found.
@@ -144,7 +146,7 @@ data class MainVisitor<T>(
 					val addressVariable: MemorySegment = LLVMBuildAlloca(
 						builder,
 						typeInfo.llvmType,
-						arena.allocateFrom(name)
+						name.cstr(arena)
 					)
 					LLVMBuildStore(builder, LLVMGetParam(it, index), addressVariable)
 					addressVariable
@@ -165,10 +167,10 @@ data class MainVisitor<T>(
 			LLVMAppendBasicBlockInContext(
 				context,
 				function.llvmFunction,
-				arena.allocateFrom("entry")
+				"entry".cstr(arena)
 			)
 		)
-//		val alloca = LLVMBuildAlloca(builder, scope.lookupType("size_t").llvmType, arena.allocateFrom("blah"))
+//		val alloca = LLVMBuildAlloca(builder, scope.lookupType("size_t").llvmType, "blah".cstr(arena))
 //		LLVMBuildStore(builder, LLVMSizeOf(scope.lookupType("i32").llvmType), alloca)
 		function.parameters.forEach { it.runInit(function.llvmFunction) }
 		body.children.forEach { bodyImpl(it as ParserRuleContext, scope) }
@@ -266,11 +268,10 @@ data class MainVisitor<T>(
 		expr.STRING_LITERAL()?.let {
 			return LLVMBuildGlobalString(
 				builder,
-				arena.allocateFrom(
-					it.text
-						.drop(1) // Drop first '"'
-						.dropLast(1) // Drop last '"'
-				),
+				it.text
+					.drop(1) // Drop first '"'
+					.dropLast(1) // Drop last '"'
+					.cstr(arena),
 				EMPTY_STRING
 			)
 		}
