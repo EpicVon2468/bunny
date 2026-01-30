@@ -76,14 +76,15 @@ data class MainVisitor<T>(
 
 	// TODO: Fix difference in type between 'expected' definition and actual implementation.  Also fix the fact that function parameter names can be repeated.
 	fun visitFunctionDefinition(funct: MainParser.FunctionDefinitionContext) {
+		var localScope: Scope = scope
 		val paramList: MainParser.ParameterListContext? = funct.parameterList()
 		val params: List<MainParser.IdentifierWithTypeContext>? = paramList?.identifierWithType()
 		val name: String = funct.IDENTIFIER().text
 		val nativeName: MemorySegment = arena.allocateFrom(name)
-		val returnType: TypeInfo = scope.determineLLVMType(funct.type())
-		val parameters: List<NamedParameter> = buildParams(paramList, params, scope)
+		val returnType: TypeInfo = localScope.determineLLVMType(funct.type())
+		val parameters: List<NamedParameter> = buildParams(paramList, params, localScope)
 		// Retrieve or create if not found.
-		val function: FunctionInfo = scope.lookupFunctOrNull(name) ?: run {
+		val function: FunctionInfo = localScope.lookupFunctOrNull(name) ?: run {
 			val function: LLVMValueRef = LLVMAddFunction(
 				/*M =*/ module,
 				/*Name =*/ nativeName,
@@ -95,14 +96,15 @@ data class MainVisitor<T>(
 				)
 			)
 			FunctionInfo(name, parameters, returnType, function).apply {
-				scope = scope.childScope(addedFunctions = mapOf(name to this))
+				scope = localScope.childScope(addedFunctions = mapOf(name to this))
+				localScope = localScope.mergeLookups(scope)
 			}
 		}
-		scope = scope.childScope(returnType = returnType)
+		localScope = localScope.childScope(returnType = function.returnType)
 		visitFunctionBody(
 			funct.functionBody() ?: return,
 			function,
-			returnType
+			localScope
 		)
 	}
 
@@ -139,7 +141,7 @@ data class MainVisitor<T>(
 	fun visitFunctionBody(
 		body: MainParser.FunctionBodyContext,
 		function: FunctionInfo,
-		returnType: TypeInfo
+		scope: Scope
 	) {
 		LLVMPositionBuilderAtEnd(
 			builder,
@@ -152,19 +154,19 @@ data class MainVisitor<T>(
 //		val alloca = LLVMBuildAlloca(builder, scope.lookupType("size_t").llvmType, arena.allocateFrom("blah"))
 //		LLVMBuildStore(builder, LLVMSizeOf(scope.lookupType("i32").llvmType), alloca)
 		function.parameters.forEach { it.runInit(function.llvmFunction) }
-		body.children.forEach { bodyImpl(it as ParserRuleContext, returnType) }
+		body.children.forEach { bodyImpl(it as ParserRuleContext, scope) }
 	}
 
 	fun bodyImpl(
 		input: ParserRuleContext,
-		returnType: TypeInfo
+		scope: Scope
 	): Unit = when (input) {
 		is MainParser.ReturnExpressionContext -> {
 			val expression: MainParser.ExpressionContext? = input.expression()
 			if (expression == null) LLVMBuildRetVoid(builder)
 			else LLVMBuildRet(
 				builder,
-				evaluateExpression(expression)
+				evaluateExpression(expression, scope)
 			)
 			return
 		}
@@ -239,10 +241,10 @@ data class MainVisitor<T>(
 			TODO("Grouped expression")
 		}
 		expr.NUM_INT()?.let {
-			return LLVMConstInt(scope.lookupType("i64").llvmType, it.text.toLong(), 0)
+			return LLVMConstInt(scope.returnType!!.llvmType, it.text.toLong(), 0)
 		}
 		expr.NUM_FLOAT()?.let {
-			return LLVMConstReal(scope.lookupType("f64").llvmType, it.text.toDouble())
+			return LLVMConstReal(scope.returnType!!.llvmType, it.text.toDouble())
 		}
 		expr.STRING_LITERAL()?.let {
 			return LLVMBuildGlobalString(

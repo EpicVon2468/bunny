@@ -23,15 +23,20 @@ data class Scope private constructor(
 		parent: Scope? = this
 	): Scope = Scope(
 		this.typeLookup.let { lookup: Map<String, TypeInfo> ->
-			return@let if (addedTypes == null) lookup
+			return@let if (addedTypes.isNullOrEmpty()) lookup
 			else lookup.toMutableMap().apply { putAll(addedTypes) }
 		},
 		this.functionLookup.let { lookup: Map<String, FunctionInfo> ->
-			return@let if (addedFunctions == null) lookup
+			return@let if (addedFunctions.isNullOrEmpty()) lookup
 			else lookup.toMutableMap().apply { putAll(addedFunctions) }
 		},
 		returnType,
 		parent
+	)
+
+	fun mergeLookups(other: Scope): Scope = childScope(
+		other.typeLookup,
+		other.functionLookup
 	)
 
 	fun lookupType(name: String): TypeInfo = lookupTypeOrNull(name) ?: error("No such key '$name' in type lookup!")
