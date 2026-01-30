@@ -79,6 +79,7 @@ data class MainVisitor<T>(
 		val name: String = struct.IDENTIFIER()!!.text
 		val llvmStruct: LLVMTypeRef = LLVMStructCreateNamed(context, arena.allocateFrom(name))
 		val variableTypes: List<LLVMTypeRef>? = struct.variableDefinition()?.map {
+			if (it.ASSIGNMENT() != null) error("Variable was provided an assignment in a struct!  Only a definition of the name and type was expected!")
 			scope.determineLLVMType(it.identifierWithType().type()).llvmType
 		}
 		LLVMStructSetBody(
