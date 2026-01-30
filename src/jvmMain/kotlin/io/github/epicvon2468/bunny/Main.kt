@@ -24,8 +24,8 @@ import java.lang.foreign.MemorySegment
 fun main(args: Array<String>) {
 	println("Got args: ${args.contentToString()}")
 	println("Java library path: ${System.getProperty("java.library.path")}")
-	System.setProperty("java.library.path", "${System.getProperty("java.library.path")}:${System.getenv("LIB_LLVM_LOCATION")}/lib")
-	println("Java library path: ${System.getProperty("java.library.path")}")
+//	System.setProperty("java.library.path", "${System.getProperty("java.library.path")}:${System.getenv("LIB_LLVM_LOCATION")}/lib")
+//	println("Java library path: ${System.getProperty("java.library.path")}")
 	test()
 	println("Starting parser-based codegen")
 	Arena.ofShared().use { arena: Arena ->
@@ -48,7 +48,7 @@ data class MainVisitor<T>(
 	val module: LLVMModuleRef = LLVMModuleCreateWithNameInContext(arena.allocateFrom(name), context)
 	val builder: LLVMBuilderRef = LLVMCreateBuilderInContext(context)
 
-	var env: Env = Env.newEnv(context)
+	var scope: Scope = Scope.globalScope(context, module)
 		private set
 
 	override fun visit(tree: ParseTree): T? {
@@ -80,10 +80,10 @@ data class MainVisitor<T>(
 		val params: List<MainParser.IdentifierWithTypeContext>? = paramList?.identifierWithType()
 		val name: String = funct.IDENTIFIER().text
 		val nativeName: MemorySegment = arena.allocateFrom(name)
-		val returnType: TypeInfo = determineLLVMType(funct.type(), env)
-		val parameters: List<NamedParameter> = buildParams(paramList, params, env)
+		val returnType: TypeInfo = scope.determineLLVMType(funct.type())
+		val parameters: List<NamedParameter> = buildParams(paramList, params, scope)
 		// Retrieve or create if not found.
-		val function: FunctionInfo = env.lookupFunctOrNull(name) ?: run {
+		val function: FunctionInfo = scope.lookupFunctOrNull(name) ?: run {
 			val function: LLVMValueRef = LLVMAddFunction(
 				/*M =*/ module,
 				/*Name =*/ nativeName,
@@ -95,9 +95,10 @@ data class MainVisitor<T>(
 				)
 			)
 			FunctionInfo(name, parameters, returnType, function).apply {
-				env = env.newEnv(addedFunctions = mapOf(name to this))
+				scope = scope.childScope(addedFunctions = mapOf(name to this))
 			}
 		}
+		scope = scope.childScope(returnType = returnType)
 		visitFunctionBody(
 			funct.functionBody() ?: return,
 			function,
@@ -108,12 +109,12 @@ data class MainVisitor<T>(
 	fun buildParams(
 		paramList: MainParser.ParameterListContext?,
 		params: List<MainParser.IdentifierWithTypeContext>?,
-		env: Env
+		scope: Scope
 	): List<NamedParameter> {
 		paramList ?: return emptyList()
 		val output: MutableList<NamedParameter> = mutableListOf()
 		params!!.map {
-			it to determineLLVMType(it.type(), env)
+			it to scope.determineLLVMType(it.type())
 		}.forEachIndexed { index: Int, pair: Pair<MainParser.IdentifierWithTypeContext, TypeInfo> ->
 			val name: String = pair.first.IDENTIFIER().text + ".addr"
 			val typeInfo: TypeInfo = pair.second
@@ -148,6 +149,8 @@ data class MainVisitor<T>(
 				arena.allocateFrom("entry")
 			)
 		)
+//		val alloca = LLVMBuildAlloca(builder, scope.lookupType("size_t").llvmType, arena.allocateFrom("blah"))
+//		LLVMBuildStore(builder, LLVMSizeOf(scope.lookupType("i32").llvmType), alloca)
 		function.parameters.forEach { it.runInit(function.llvmFunction) }
 		body.children.forEach { bodyImpl(it as ParserRuleContext, returnType) }
 	}
@@ -171,75 +174,75 @@ data class MainVisitor<T>(
 		else -> {}
 	}
 
-	fun evaluateExpression(expr: MainParser.ExpressionContext, env: Env = this.env): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.ExpressionContext, scope: Scope = this.scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.EqualityExpressionContext>(0), env)
+			1 -> return evaluateExpression(expr.getChild<MainParser.EqualityExpressionContext>(0), scope)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.EqualityExpressionContext, env: Env = this.env): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.EqualityExpressionContext, scope: Scope = this.scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.ComparisonExpressionContext>(0), env)
+			1 -> return evaluateExpression(expr.getChild<MainParser.ComparisonExpressionContext>(0), scope)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.ComparisonExpressionContext, env: Env = this.env): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.ComparisonExpressionContext, scope: Scope = this.scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.TermExpressionContext>(0), env)
+			1 -> return evaluateExpression(expr.getChild<MainParser.TermExpressionContext>(0), scope)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.TermExpressionContext, env: Env = this.env): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.TermExpressionContext, scope: Scope = this.scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), env)
+			1 -> return evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), scope)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.FactorExpressionContext, env: Env = this.env): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.FactorExpressionContext, scope: Scope = this.scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(0), env)
+			1 -> return evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(0), scope)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, env: Env = this.env): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, scope: Scope = this.scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.PrimaryExpressionContext>(0), env)
+			1 -> return evaluateExpression(expr.getChild<MainParser.PrimaryExpressionContext>(0), scope)
 			else -> {
 			}
 		}
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, env: Env = this.env): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, scope: Scope = this.scope): LLVMValueRef {
 		if (expr.expression() != null) {
 			TODO("Grouped expression")
 		}
 		expr.NUM_INT()?.let {
-			return LLVMConstInt(env.lookupType("i64").llvmType, it.text.toLong(), 0)
+			return LLVMConstInt(scope.lookupType("i64").llvmType, it.text.toLong(), 0)
 		}
 		expr.NUM_FLOAT()?.let {
-			return LLVMConstReal(env.lookupType("f64").llvmType, it.text.toDouble())
+			return LLVMConstReal(scope.lookupType("f64").llvmType, it.text.toDouble())
 		}
 		expr.STRING_LITERAL()?.let {
 			return LLVMBuildGlobalString(
@@ -253,10 +256,10 @@ data class MainVisitor<T>(
 			)
 		}
 		expr.TRUE()?.let {
-			return LLVMConstInt(env.lookupType("bool").llvmType, 1L, 0)
+			return LLVMConstInt(scope.lookupType("bool").llvmType, 1L, 0)
 		}
 		expr.FALSE()?.let {
-			return LLVMConstInt(env.lookupType("bool").llvmType, 0L, 0)
+			return LLVMConstInt(scope.lookupType("bool").llvmType, 0L, 0)
 		}
 		TODO("Identifier for variable.")
 	}
@@ -297,8 +300,8 @@ infix fun MemorySegment.elvis(other: MemorySegment): MemorySegment = this.jvmNul
 // This version does not have the same problem, but might not always want braces
 infix fun MemorySegment.elvis(other: () -> MemorySegment): MemorySegment = this.jvmNull() ?: other()
 
-fun determineLLVMType(type: MainParser.TypeContext?, env: Env): TypeInfo {
-	if (type == null) return env.lookupType("")
-	if (type.pointerType() != null) return env.lookupType("ptr")
-	return env.lookupType(type.IDENTIFIER()!!.text)
+fun Scope.determineLLVMType(type: MainParser.TypeContext?): TypeInfo {
+	if (type == null) return this.lookupType("")
+	if (type.pointerType() != null) return this.lookupType("ptr")
+	return this.lookupType(type.IDENTIFIER()!!.text)
 }

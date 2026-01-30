@@ -14,7 +14,11 @@ repositories {
 }
 
 tasks.withType<JavaExec> {
-	jvmArgs("-XX:+UseCompactObjectHeaders", "--enable-native-access=ALL-UNNAMED")
+	jvmArgs(
+		"-XX:+UseCompactObjectHeaders",
+		"--enable-native-access=ALL-UNNAMED",
+		"-Djava.library.path=${System.getenv("LIB_LLVM_LOCATION")}/lib:${System.getProperty("java.library.path")}"
+	)
 	//systemProperty("jextract.trace.downcalls", "true")
 }
 

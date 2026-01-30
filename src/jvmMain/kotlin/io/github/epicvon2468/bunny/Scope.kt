@@ -1,25 +1,27 @@
 package io.github.epicvon2468.bunny
 
 import org.llvm.Core_h.*
+import org.llvm.Target_h.LLVMGetModuleDataLayout
+import org.llvm.Target_h.LLVMIntPtrTypeInContext
 
 // TODO: Rename to "Scope"
 @ConsistentCopyVisibility
-data class Env private constructor(
+data class Scope private constructor(
 	val typeLookup: Map<String, TypeInfo>,
 	// TODO: variable map for local & global variables :o
 	val functionLookup: Map<String, FunctionInfo> = emptyMap(),
 	val returnType: TypeInfo? = null,
-	val parent: Env? = null
+	val parent: Scope? = null
 ) {
 
 	// TODO: copy parameters of a function (via LLVM) into new copies w/ alloca, then store in a map here (see also: MutableVariable, TypeInfo)
 
-	fun newEnv(
+	fun childScope(
 		addedTypes: Map<String, TypeInfo>? = null,
 		addedFunctions: Map<String, FunctionInfo>? = null,
 		returnType: TypeInfo? = this.returnType,
-		parent: Env? = this.parent
-	): Env = Env(
+		parent: Scope? = this
+	): Scope = Scope(
 		this.typeLookup.let { lookup: Map<String, TypeInfo> ->
 			return@let if (addedTypes == null) lookup
 			else lookup.toMutableMap().apply { putAll(addedTypes) }
@@ -42,20 +44,27 @@ data class Env private constructor(
 
 		// ONLY FOR TOP-LEVEL/ROOT ENV CREATION!!!
 		@JvmStatic
-		fun newEnv(context: LLVMContextRef) = Env(
+		fun globalScope(context: LLVMContextRef, module: LLVMModuleRef) = Scope(
 			typeLookup = mutableMapOf<String, TypeInfo>().apply {
 				fun <K, V> MutableMap<K, V>.put(vararg keys: K, value: V) {
-					for (key in keys) this[key] = value
+					for (key: K in keys) this[key] = value
 				}
 				fun MutableMap<String, TypeInfo>.put(value: TypeInfo) = put(*value.names.toTypedArray(), value = value)
 
+				put(TypeInfo(
+					LLVMIntPtrTypeInContext(context, LLVMGetModuleDataLayout(module)),
+					"isize", "usize",
+					"size_t",
+					"intptr_t", "uintptr_t"
+				))
 				put(TypeInfo(
 					LLVMVoidTypeInContext(context),
 					"", "void"
 				))
 				put(TypeInfo(
 					LLVMInt1TypeInContext(context),
-					"bool", "boolean"
+					"bool", "boolean",
+					"i1", "u8"
 				))
 				put(TypeInfo(
 					LLVMIntTypeInContext(context, 2),
