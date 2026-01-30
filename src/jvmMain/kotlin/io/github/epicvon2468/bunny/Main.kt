@@ -68,10 +68,23 @@ data class MainVisitor<T>(
 		topLevelEntries.forEach {
 			when (val declaration: ParserRuleContext = it.functionDefinition() ?: it.structDefinition()) {
 				is MainParser.FunctionDefinitionContext -> visitFunctionDefinition(declaration)
-				is MainParser.StructDefinitionContext -> TODO()
+				is MainParser.StructDefinitionContext -> visitStructDefinition(declaration)
 			}
 		}
 		return null
+	}
+
+	// TODO: functions within structs, actual struct variables
+	fun visitStructDefinition(struct: MainParser.StructDefinitionContext) {
+		val name: String = struct.IDENTIFIER()!!.text
+		val llvmStruct: LLVMTypeRef = LLVMStructCreateNamed(context, arena.allocateFrom(name))
+		LLVMStructSetBody(
+			/*StructTy =*/ llvmStruct,
+			/*ElementTypes =*/ arena.allocateArray(LLVMTypeRef),
+			/*ElementCount =*/ 0,
+			/*Packed =*/ 0
+		)
+		scope = scope.childScope(addedTypes = mapOf(name to TypeInfo(llvmStruct, name)))
 	}
 
 	// TODO: Fix difference in type between 'expected' definition and actual implementation.  Also fix the fact that function parameter names can be repeated.
