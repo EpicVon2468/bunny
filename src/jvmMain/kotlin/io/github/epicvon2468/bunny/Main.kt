@@ -74,14 +74,17 @@ data class MainVisitor<T>(
 		return null
 	}
 
-	// TODO: functions within structs, actual struct variables
+	// TODO: functions within structs, actual struct variables, find out if this even actually works, maybe turn TypeInfo into an interface & make one for StructInfo & another for SimpleTypeInfo
 	fun visitStructDefinition(struct: MainParser.StructDefinitionContext) {
 		val name: String = struct.IDENTIFIER()!!.text
 		val llvmStruct: LLVMTypeRef = LLVMStructCreateNamed(context, arena.allocateFrom(name))
+		val variableTypes: List<LLVMTypeRef>? = struct.variableDefinition()?.map {
+			scope.determineLLVMType(it.identifierWithType().type()).llvmType
+		}
 		LLVMStructSetBody(
 			/*StructTy =*/ llvmStruct,
-			/*ElementTypes =*/ arena.allocateArray(LLVMTypeRef),
-			/*ElementCount =*/ 0,
+			/*ElementTypes =*/ variableTypes?.toNativeArray(arena, LLVMTypeRef) ?: arena.allocateArray(LLVMTypeRef),
+			/*ElementCount =*/ variableTypes?.size ?: 0,
 			/*Packed =*/ 0
 		)
 		scope = scope.childScope(addedTypes = mapOf(name to TypeInfo(llvmStruct, name)))
