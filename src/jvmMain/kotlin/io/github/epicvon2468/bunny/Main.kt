@@ -48,7 +48,7 @@ data class MainVisitor<T>(
 	val module: MemorySegment = LLVMModuleCreateWithNameInContext(arena.allocateFrom(name), context)
 	val builder: LLVMBuilderRef = LLVMCreateBuilderInContext(context)
 
-	val env: Env = Env.newEnv(context)
+	var env: Env = Env.newEnv(context)
 
 	override fun visit(tree: ParseTree): T? {
 		val tree: ParserRuleContext = tree as ParserRuleContext
@@ -73,27 +73,30 @@ data class MainVisitor<T>(
 		return null
 	}
 
+	// TODO: Fix difference in type between 'expected' definition and actual implementation.  Also fix the fact that function parameter names can be repeated.
 	fun visitFunctionDefinition(funct: MainParser.FunctionDefinitionContext) {
 		val paramList: MainParser.ParameterListContext? = funct.parameterList()
 		val params: List<MainParser.IdentifierWithTypeContext>? = paramList?.identifierWithType()
-		val nativeName: MemorySegment = arena.allocateFrom(funct.IDENTIFIER().text)
-		val returnType: LLVMTypeRef = determineLLVMType(funct.type(), env)
+		val name: String = funct.IDENTIFIER().text
+		val nativeName: MemorySegment = arena.allocateFrom(name)
+		val returnType: TypeInfo = determineLLVMType(funct.type(), env)
+		val parameters: List<NamedParameter> = buildParams(paramList, params, env)
 		// Retrieve or create if not found.
-		val function: LLVMValueRef = LLVMGetNamedFunction(module, nativeName).jvmNull() ?: LLVMAddFunction(
-			/*M =*/ module,
-			/*Name =*/ nativeName,
-			/*FunctionTy =*/ LLVMFunctionType(
-				/*ReturnType =*/ returnType,
-				/*ParamTypes =*/ determineLLVMParamTypes(
-					arena,
-					paramList,
-					params,
-					env
-				),
-				/*ParamCount =*/ params?.size ?: 0,
-				/*IsVarArg =*/ paramList?.VARARG()?.let { 1 } ?: 0
+		val function: FunctionInfo = env.lookupFunctOrNull(name) ?: run {
+			val function: LLVMValueRef = LLVMAddFunction(
+				/*M =*/ module,
+				/*Name =*/ nativeName,
+				/*FunctionTy =*/ LLVMFunctionType(
+					/*ReturnType =*/ returnType.llvmType,
+					/*ParamTypes =*/ parameters.map { it.typeInfo.llvmType }.toNativeArray(arena, LLVMTypeRef),
+					/*ParamCount =*/ params?.size ?: 0,
+					/*IsVarArg =*/ paramList?.VARARG()?.let { 1 } ?: 0
+				)
 			)
-		)
+			FunctionInfo(name, parameters, returnType, function).apply {
+				env = env.newEnv(addedFunctions = mapOf(name to this))
+			}
+		}
 		visitFunctionBody(
 			funct.functionBody() ?: return,
 			function,
@@ -101,25 +104,54 @@ data class MainVisitor<T>(
 		)
 	}
 
+	fun buildParams(
+		paramList: MainParser.ParameterListContext?,
+		params: List<MainParser.IdentifierWithTypeContext>?,
+		env: Env
+	): List<NamedParameter> {
+		paramList ?: return emptyList()
+		val output: MutableList<NamedParameter> = mutableListOf()
+		params!!.map {
+			it to determineLLVMType(it.type(), env)
+		}.forEachIndexed { index: Int, pair: Pair<MainParser.IdentifierWithTypeContext, TypeInfo> ->
+			val name: String = pair.first.IDENTIFIER().text + ".addr"
+			val typeInfo: TypeInfo = pair.second
+			output += NamedParameter(
+				name = name,
+				typeInfo = typeInfo,
+				addressSupplier = {
+					LLVMBuildAlloca(
+						builder,
+						typeInfo.llvmType,
+						arena.allocateFrom(name)
+					)
+				},
+				index = index
+			)
+		}
+		return output
+	}
+
 	fun visitFunctionBody(
 		body: MainParser.FunctionBodyContext,
-		function: LLVMValueRef,
-		returnType: LLVMTypeRef
+		function: FunctionInfo,
+		returnType: TypeInfo
 	) {
 		LLVMPositionBuilderAtEnd(
 			builder,
 			LLVMAppendBasicBlockInContext(
 				context,
-				function,
+				function.llvmFunction,
 				arena.allocateFrom("entry")
 			)
 		)
+		function.parameters.forEach(NamedParameter::runInit)
 		body.children.forEach { bodyImpl(it as ParserRuleContext, returnType) }
 	}
 
 	fun bodyImpl(
 		input: ParserRuleContext,
-		returnType: LLVMTypeRef
+		returnType: TypeInfo
 	): Unit = when (input) {
 		is MainParser.ReturnExpressionContext -> {
 			val expression: MainParser.ExpressionContext? = input.expression()
@@ -268,12 +300,12 @@ fun determineLLVMParamTypes(
 	params: List<MainParser.IdentifierWithTypeContext>?,
 	env: Env
 ): MemorySegment /*= Pointer<LLVMTypeRef>*/ {
-	if (paramList == null) return MemorySegment.NULL
-	return params!!.map { determineLLVMType(it.type(), env) }.toNativeArray(arena, LLVMTypeRef)
+	paramList ?: return MemorySegment.NULL
+	return params!!.map { determineLLVMType(it.type(), env).llvmType }.toNativeArray(arena, LLVMTypeRef)
 }
 
-fun determineLLVMType(type: MainParser.TypeContext?, env: Env): LLVMTypeRef {
-	if (type == null) return env.lookupType("").llvmType
-	if (type.pointerType() != null) return env.lookupType("ptr").llvmType
-	return env.lookupType(type.IDENTIFIER()!!.text).llvmType
+fun determineLLVMType(type: MainParser.TypeContext?, env: Env): TypeInfo {
+	if (type == null) return env.lookupType("")
+	if (type.pointerType() != null) return env.lookupType("ptr")
+	return env.lookupType(type.IDENTIFIER()!!.text)
 }

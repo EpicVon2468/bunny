@@ -7,6 +7,7 @@ import org.llvm.Core_h.*
 data class Env private constructor(
 	val typeLookup: Map<String, TypeInfo>,
 	// TODO: variable map for local & global variables :o
+	val functionLookup: Map<String, FunctionInfo> = emptyMap(),
 	val returnType: TypeInfo? = null,
 	val parent: Env? = null
 ) {
@@ -15,6 +16,7 @@ data class Env private constructor(
 
 	fun newEnv(
 		addedTypes: Map<String, TypeInfo>? = null,
+		addedFunctions: Map<String, FunctionInfo>? = null,
 		returnType: TypeInfo? = this.returnType,
 		parent: Env? = this.parent
 	): Env = Env(
@@ -22,12 +24,19 @@ data class Env private constructor(
 			return@let if (addedTypes == null) lookup
 			else lookup.toMutableMap().apply { putAll(addedTypes) }
 		},
+		this.functionLookup.let { lookup: Map<String, FunctionInfo> ->
+			return@let if (addedFunctions == null) lookup
+			else lookup.toMutableMap().apply { putAll(addedFunctions) }
+		},
 		returnType,
 		parent
 	)
 
-	fun lookupType(name: String): TypeInfo = lookupTypeOrNull(name) ?: error("No such key '$name' in lookup!")
+	fun lookupType(name: String): TypeInfo = lookupTypeOrNull(name) ?: error("No such key '$name' in type lookup!")
 	fun lookupTypeOrNull(name: String): TypeInfo? = typeLookup[name] ?: parent?.lookupTypeOrNull(name)
+
+	fun lookupFunct(name: String): FunctionInfo = lookupFunctOrNull(name) ?: error("No such key '$name' in function lookup!")
+	fun lookupFunctOrNull(name: String): FunctionInfo? = functionLookup[name] ?: parent?.lookupFunctOrNull(name)
 
 	companion object {
 
@@ -83,6 +92,10 @@ data class Env private constructor(
 				put(TypeInfo(
 					LLVMIntTypeInContext(context, 512),
 					"i512", "u512"
+				))
+				put(TypeInfo(
+					LLVMIntTypeInContext(context, 1024),
+					"i1024", "u1024"
 				))
 				put(TypeInfo(
 					LLVMFloatTypeInContext(context),

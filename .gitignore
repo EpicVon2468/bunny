@@ -8,6 +8,9 @@ build/
 output/
 gen/
 
+### Java ###
+hs_err_pid*.log
+
 ### IntelliJ IDEA ###
 .idea/modules.xml
 .idea/jarRepositories.xml
