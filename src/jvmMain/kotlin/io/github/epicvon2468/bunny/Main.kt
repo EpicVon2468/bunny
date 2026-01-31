@@ -259,14 +259,27 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.TermExpressionContext, scope: Scope): LLVMValueRef {
-		when (expr.childCount) {
-			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), scope)
-			else -> {
+	// TODO: mem2reg
+	fun evaluateExpression(expr: MainParser.TermExpressionContext, scope: Scope): LLVMValueRef = when (expr.childCount) {
+		0 -> error("No children for expression '$expr'!")
+		1 -> return evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), scope)
+		else -> {
+			var value: LLVMValueRef? = null
+			var index = 0
+			while (index < expr.childCount) {
+				val lhs: LLVMValueRef = value ?: evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(index), scope)
+				val op: TerminalNode = expr.getChild<TerminalNode>(index + 1)
+				val rhs: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(index + 2), scope)
+				when (op.text.trim().first()) {
+					'+' -> value = LLVMBuildAdd(builder, lhs, rhs, EMPTY_STRING)
+					'-' -> value = LLVMBuildSub(builder, lhs, rhs, EMPTY_STRING)
+				}
+				// cRHS op cLHS op nLHS
+				if (index + 4 >= expr.childCount) break
+				index += 2
 			}
+			return value!!
 		}
-		TODO()
 	}
 
 	fun evaluateExpression(expr: MainParser.FactorExpressionContext, scope: Scope): LLVMValueRef {
@@ -344,7 +357,7 @@ fun ParseTree.isLiteralExpression(): Boolean {
 	return recurseThrough(this)
 }
 
-inline fun <reified T : ParseTree> ParserRuleContext.getChildOrNull(i: Int): T? = this.getChild(T::class.java, i)
+inline fun <reified T : ParseTree> ParserRuleContext.getChildOrNull(i: Int): T? = this.getChild(i) as? T
 inline fun <reified T : ParseTree> ParserRuleContext.getChild(i: Int): T = this.getChildOrNull(i)!!
 
 fun MemorySegment.jvmNull(): MemorySegment? = if (this == MemorySegment.NULL) null else this
