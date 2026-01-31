@@ -15,4 +15,11 @@ interface MutableVariable {
 		addressVariable,
 		EMPTY_STRING
 	)
+
+	// I... don't actually know what the LLVMValueRef returned here is...
+	fun storeValue(builder: LLVMBuilderRef, value: LLVMValueRef): LLVMValueRef = LLVMBuildStore(
+		builder,
+		value,
+		addressVariable
+	)
 }

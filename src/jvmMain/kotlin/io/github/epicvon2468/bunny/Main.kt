@@ -142,13 +142,13 @@ data class MainVisitor<T>(
 			output += NamedParameter(
 				name = name,
 				typeInfo = typeInfo,
-				addressSupplier = {
+				addressSupplier = { function: LLVMValueRef ->
 					val addressVariable: MemorySegment = LLVMBuildAlloca(
 						builder,
 						typeInfo.llvmType,
 						name.cstr(arena)
 					)
-					LLVMBuildStore(builder, LLVMGetParam(it, index), addressVariable)
+					LLVMBuildStore(builder, LLVMGetParam(function, index), addressVariable)
 					addressVariable
 				},
 				index = index
@@ -199,17 +199,29 @@ data class MainVisitor<T>(
 				val identifierWithType: MainParser.IdentifierWithTypeContext = input.identifierWithType()
 				val name: String = identifierWithType.IDENTIFIER().text + ".addr"
 				val type: TypeInfo = localScope.determineLLVMType(identifierWithType.type())
-				val alloca: LLVMValueRef = LLVMBuildAlloca(builder, type.llvmType, name.cstr(arena))
-				localScope = setScope(
-					localScope.childScope(addedVariables = mapOf(name to LocalVariable(name, type, alloca)))
+				val variable = LocalVariable(
+					name,
+					type,
+					LLVMBuildAlloca(
+						builder,
+						type.llvmType,
+						name.cstr(arena)
+					)
 				)
-				LLVMBuildStore(
+				localScope = setScope(localScope.childScope(addedVariables = mapOf(name to variable)))
+				variable.storeValue(
 					builder,
 					evaluateExpression(
 						input.expression() ?: return,
 						localScope
-					),
-					alloca
+					)
+				)
+				return
+			}
+			is MainParser.AssignmentExpressionContext -> {
+				localScope.lookupVariable(input.IDENTIFIER().text).storeValue(
+					builder,
+					evaluateExpression(input.expression(), localScope)
 				)
 				return
 			}

@@ -82,7 +82,7 @@ data class Scope private constructor(
 	fun lookupFunct(name: String): FunctionInfo = lookupFunctOrNull(name) ?: error("No such key '$name' in function lookup!")
 	fun lookupFunctOrNull(name: String): FunctionInfo? = functionLookup[name]
 
-	fun lookupVariable(name: String): MutableVariable = lookupVariableOrNull(name) ?: error("No such key '$name' in variable lookup!")
+	fun lookupVariable(name: String): MutableVariable = lookupVariableOrNull(name) ?: error("No such key '$name'(.addr) in variable lookup!")
 	fun lookupVariableOrNull(name: String): MutableVariable? = variableLookup["$name.addr"] ?: variableLookup[name]
 
 	companion object {
