@@ -13,7 +13,7 @@ funct freopen(__filename: *u8, __modes: *u8, __stream: *FILE): *FILE;
 funct fdopen(__fd: i32, __modes: *u8): *FILE;
 
 funct setbuf(__stream: *FILE, __buf: *u8);
-funct setvbuf(__stream: *FILE, __buf: *u8, __modes: i32, __n: size_t);
+funct setvbuf(__stream: *FILE, __buf: *u8, __modes: i32, __n: usize);
 
 funct fprintf(__stream: *FILE, __format: *u8, ...): i32;
 funct printf(__format: *u8): i32;
@@ -38,8 +38,8 @@ funct puts(__s: *u8): i32;
 
 funct ungetc(__c: i32, __stream: *FILE): i32;
 
-funct fread(__ptr: *void, __size: size_t, __n: size_t, __stream: *FILE): size_t;
-funct fwrite(__ptr: *void, __size: size_t, __n: size_t, __s: *FILE): size_t;
+funct fread(__ptr: *void, __size: usize, __n: usize, __stream: *FILE): usize;
+funct fwrite(__ptr: *void, __size: usize, __n: usize, __s: *FILE): usize;
 funct fseek(__stream: *FILE, __off: i64, __whence: i32): i32;
 funct ftell(__stream: *FILE): i64;
 funct rewind(__stream: *FILE);
