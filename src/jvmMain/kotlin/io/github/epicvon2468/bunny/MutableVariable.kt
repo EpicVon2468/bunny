@@ -6,6 +6,7 @@ interface MutableVariable : Variable {
 
 	// name of the address variable created with alloca
 	override val name: String
+	override val value: LLVMValueRef get() = addressVariable
 	// the representation of the variable created with alloca
 	val addressVariable: LLVMValueRef
 
