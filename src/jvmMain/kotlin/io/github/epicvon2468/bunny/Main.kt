@@ -198,28 +198,31 @@ data class MainVisitor<T>(
 			is MainParser.VariableDefinitionContext -> {
 				val identifierWithType: MainParser.IdentifierWithTypeContext = input.identifierWithType()
 				val name: String = identifierWithType.IDENTIFIER().text + ".addr"
-				val type: TypeInfo = localScope.determineLLVMType(identifierWithType.type())
-				val variable = LocalVariable(
-					name,
-					type,
-					LLVMBuildAlloca(
-						builder,
-						type.llvmType,
-						name.cstr(arena)
-					)
+				val typeInfo: TypeInfo = localScope.determineLLVMType(identifierWithType.type())
+				fun value(): LLVMValueRef? = evaluateExpression(
+					input.expression() ?: return null,
+					localScope
 				)
+				// I think I accidentally made inline variables lmao
+				val variable: Variable
+				if (input.MUTABLE() == null) variable = LocalVariable(name, typeInfo, value() ?: return)
+				else {
+					variable = LocalMutableVariable(
+						name,
+						typeInfo,
+						LLVMBuildAlloca(
+							builder,
+							typeInfo.llvmType,
+							name.cstr(arena)
+						)
+					)
+					variable.storeValue(builder, value() ?: return)
+				}
 				localScope = setScope(localScope.childScope(addedVariables = mapOf(name to variable)))
-				variable.storeValue(
-					builder,
-					evaluateExpression(
-						input.expression() ?: return,
-						localScope
-					)
-				)
 				return
 			}
 			is MainParser.AssignmentExpressionContext -> {
-				localScope.lookupVariable(input.IDENTIFIER().text).storeValue(
+				localScope.lookupMutableVariable(input.IDENTIFIER().text).storeValue(
 					builder,
 					evaluateExpression(input.expression(), localScope)
 				)

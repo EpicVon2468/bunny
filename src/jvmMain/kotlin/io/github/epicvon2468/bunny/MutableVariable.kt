@@ -2,14 +2,14 @@ package io.github.epicvon2468.bunny
 
 import org.llvm.Core_h.*
 
-interface MutableVariable {
+interface MutableVariable : Variable {
+
 	// name of the address variable created with alloca
-	val name: String
-	val typeInfo: TypeInfo
+	override val name: String
 	// the representation of the variable created with alloca
 	val addressVariable: LLVMValueRef
 
-	fun loadValue(builder: LLVMBuilderRef): LLVMValueRef = LLVMBuildLoad2(
+	override fun loadValue(builder: LLVMBuilderRef): LLVMValueRef = LLVMBuildLoad2(
 		builder,
 		typeInfo.llvmType,
 		addressVariable,
