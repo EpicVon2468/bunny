@@ -16,8 +16,8 @@ import org.llvm.Target_h.LLVMIntPtrTypeInContext
 @ConsistentCopyVisibility
 data class Scope private constructor(
 	val typeLookup: Map<String, TypeInfo>,
-	// TODO: variable map for local & global variables :o
 	val functionLookup: Map<String, FunctionInfo> = emptyMap(),
+	val variableLookup: Map<String, MutableVariable> = emptyMap(),
 	val returnType: TypeInfo? = null
 ) {
 
@@ -32,6 +32,7 @@ data class Scope private constructor(
 	fun childScope(
 		addedTypes: Map<String, TypeInfo>? = null,
 		addedFunctions: Map<String, FunctionInfo>? = null,
+		addedVariables: Map<String, MutableVariable>? = null,
 		returnType: TypeInfo? = this.returnType
 	): Scope = Scope(
 		// TODO: this can overwrite builtin types.
@@ -42,6 +43,10 @@ data class Scope private constructor(
 		this.functionLookup.let { lookup: Map<String, FunctionInfo> ->
 			return@let if (addedFunctions.isNullOrEmpty()) lookup
 			else lookup.toMutableMap().apply { putAll(addedFunctions) }
+		},
+		this.variableLookup.let { lookup: Map<String, MutableVariable> ->
+			return@let if (addedVariables.isNullOrEmpty()) lookup
+			else lookup.toMutableMap().apply { putAll(addedVariables) }
 		},
 		returnType
 	)
@@ -76,6 +81,9 @@ data class Scope private constructor(
 	 */
 	fun lookupFunct(name: String): FunctionInfo = lookupFunctOrNull(name) ?: error("No such key '$name' in function lookup!")
 	fun lookupFunctOrNull(name: String): FunctionInfo? = functionLookup[name]
+
+	fun lookupVariable(name: String): MutableVariable = lookupVariableOrNull(name) ?: error("No such key '$name' in variable lookup!")
+	fun lookupVariableOrNull(name: String): MutableVariable? = variableLookup["$name.addr"] ?: variableLookup[name]
 
 	companion object {
 

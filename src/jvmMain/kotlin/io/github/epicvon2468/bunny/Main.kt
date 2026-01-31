@@ -172,30 +172,52 @@ data class MainVisitor<T>(
 		)
 //		val alloca = LLVMBuildAlloca(builder, scope.lookupType("size_t").llvmType, "blah".cstr(arena))
 //		LLVMBuildStore(builder, LLVMSizeOf(scope.lookupType("i32").llvmType), alloca)
+		var localScope: Scope = scope
 		function.parameters.forEach { it.runInit(function.llvmFunction) }
-		body.children.forEach { bodyImpl(it as ParserRuleContext, scope) }
+		body.children.forEach { child: ParseTree ->
+			bodyImpl(child as ParserRuleContext, localScope) { localScope = it; it }
+		}
 	}
 
 	fun bodyImpl(
 		input: ParserRuleContext,
-		scope: Scope
-	): Unit = when (input) {
-		is MainParser.ReturnExpressionContext -> {
-			val expression: MainParser.ExpressionContext? = input.expression()
-			if (expression == null) LLVMBuildRetVoid(builder)
-			else LLVMBuildRet(
-				builder,
-				evaluateExpression(expression, scope)
-			)
-			return
+		scope: Scope,
+		setScope: (Scope) -> Scope
+	) {
+		var localScope: Scope = scope
+		when (input) {
+			is MainParser.ReturnExpressionContext -> {
+				val expression: MainParser.ExpressionContext? = input.expression()
+				if (expression == null) LLVMBuildRetVoid(builder)
+				else LLVMBuildRet(
+					builder,
+					evaluateExpression(expression, localScope)
+				)
+				return
+			}
+			is MainParser.VariableDefinitionContext -> {
+				val identifierWithType: MainParser.IdentifierWithTypeContext = input.identifierWithType()
+				val name: String = identifierWithType.IDENTIFIER().text + ".addr"
+				val type: TypeInfo = localScope.determineLLVMType(identifierWithType.type())
+				val alloca: LLVMValueRef = LLVMBuildAlloca(builder, type.llvmType, name.cstr(arena))
+				localScope = setScope(
+					localScope.childScope(addedVariables = mapOf(name to LocalVariable(name, type, alloca)))
+				)
+				LLVMBuildStore(
+					builder,
+					evaluateExpression(
+						input.expression() ?: return,
+						localScope
+					),
+					alloca
+				)
+				return
+			}
+			else -> {}
 		}
-		is MainParser.VariableDefinitionContext -> {
-			return
-		}
-		else -> {}
 	}
 
-	fun evaluateExpression(expr: MainParser.ExpressionContext, scope: Scope = this.scope): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.ExpressionContext, scope: Scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.EqualityExpressionContext>(0), scope)
@@ -205,7 +227,7 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.EqualityExpressionContext, scope: Scope = this.scope): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.EqualityExpressionContext, scope: Scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.ComparisonExpressionContext>(0), scope)
@@ -215,7 +237,7 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.ComparisonExpressionContext, scope: Scope = this.scope): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.ComparisonExpressionContext, scope: Scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.TermExpressionContext>(0), scope)
@@ -225,7 +247,7 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.TermExpressionContext, scope: Scope = this.scope): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.TermExpressionContext, scope: Scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), scope)
@@ -235,7 +257,7 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.FactorExpressionContext, scope: Scope = this.scope): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.FactorExpressionContext, scope: Scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(0), scope)
@@ -245,7 +267,7 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, scope: Scope = this.scope): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, scope: Scope): LLVMValueRef {
 		when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.PrimaryExpressionContext>(0), scope)
@@ -255,7 +277,7 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, scope: Scope = this.scope): LLVMValueRef {
+	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, scope: Scope): LLVMValueRef {
 		if (expr.expression() != null) {
 			TODO("Grouped expression")
 		}
@@ -281,7 +303,7 @@ data class MainVisitor<T>(
 		expr.FALSE()?.let {
 			return LLVMConstInt(scope.lookupType("bool").llvmType, 0L, 0)
 		}
-		TODO("Identifier for variable.")
+		return scope.lookupVariable(expr.IDENTIFIER().text).loadValue(builder)
 	}
 
 	override fun visitTerminal(node: TerminalNode): T? {
