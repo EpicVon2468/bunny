@@ -18,6 +18,7 @@ data class Scope private constructor(
 	val typeLookup: Map<String, TypeInfo>,
 	val functionLookup: Map<String, FunctionInfo> = emptyMap(),
 	val variableLookup: Map<String, Variable> = emptyMap(),
+	// May represent return type of function or expression
 	val returnType: TypeInfo? = null
 ) {
 

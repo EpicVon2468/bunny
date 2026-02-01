@@ -174,7 +174,7 @@ data class MainVisitor<T>(
 //		LLVMBuildStore(builder, LLVMSizeOf(scope.lookupType("i32").llvmType), alloca)
 		var localScope: Scope = scope
 		function.parameters.forEach { it.runInit(function.llvmFunction) }
-		body.children.forEach { child: ParseTree ->
+		body.children?.forEach { child: ParseTree ->
 			bodyImpl(child as ParserRuleContext, localScope) { localScope = it; it }
 		}
 	}
@@ -201,7 +201,7 @@ data class MainVisitor<T>(
 				val typeInfo: TypeInfo = localScope.determineLLVMType(identifierWithType.type())
 				fun value(): LLVMValueRef? = evaluateExpression(
 					input.expression() ?: return null,
-					localScope
+					localScope.childScope(returnType = typeInfo)
 				)
 				// I think I accidentally made inline variables lmao
 				val variable: Variable
@@ -222,9 +222,10 @@ data class MainVisitor<T>(
 				return
 			}
 			is MainParser.AssignmentExpressionContext -> {
-				localScope.lookupMutableVariable(input.IDENTIFIER().text).storeValue(
+				val variable: MutableVariable = localScope.lookupMutableVariable(input.IDENTIFIER().text)
+				variable.storeValue(
 					builder,
-					evaluateExpression(input.expression(), localScope)
+					evaluateExpression(input.expression(), localScope.childScope(returnType = variable.typeInfo))
 				)
 				return
 			}
@@ -271,9 +272,8 @@ data class MainVisitor<T>(
 			var index = 0
 			while (index < expr.childCount) {
 				val lhs: LLVMValueRef = value ?: evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(index), scope)
-				val op: TerminalNode = expr.getChild<TerminalNode>(index + 1)
 				val rhs: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(index + 2), scope)
-				when (op.text.trim().first()) {
+				when (expr.getChild<TerminalNode>(index + 1).text.trim().first()) {
 					'+' -> value = LLVMBuildAdd(builder, lhs, rhs, EMPTY_STRING)
 					'-' -> value = LLVMBuildSub(builder, lhs, rhs, EMPTY_STRING)
 				}
@@ -290,9 +290,22 @@ data class MainVisitor<T>(
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(0), scope)
 			else -> {
+				var value: LLVMValueRef? = null
+				var index = 0
+				while (index < expr.childCount) {
+					val lhs: LLVMValueRef = value ?: evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(index), scope)
+					val rhs: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(index + 2), scope)
+					when (expr.getChild<TerminalNode>(index + 1).text.trim().first()) {
+						'/' -> value = LLVMBuildSDiv(builder, lhs, rhs, EMPTY_STRING)
+						'*' -> value = LLVMBuildMul(builder, lhs, rhs, EMPTY_STRING)
+					}
+					// cRHS op cLHS op nLHS
+					if (index + 4 >= expr.childCount) break
+					index += 2
+				}
+				return value!!
 			}
 		}
-		TODO()
 	}
 
 	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, scope: Scope): LLVMValueRef {
@@ -300,14 +313,19 @@ data class MainVisitor<T>(
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.PrimaryExpressionContext>(0), scope)
 			else -> {
+				// TODO: Only works for f32 & f64
+				return LLVMBuildFNeg(
+					builder,
+					evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope),
+					EMPTY_STRING
+				)
 			}
 		}
-		TODO()
 	}
 
 	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, scope: Scope): LLVMValueRef {
-		if (expr.expression() != null) {
-			TODO("Grouped expression")
+		expr.expression()?.let {
+			return evaluateExpression(it, scope)
 		}
 		expr.NUM_INT()?.let {
 			return LLVMConstInt(scope.returnType!!.llvmType, it.text.toLong(), 0)
