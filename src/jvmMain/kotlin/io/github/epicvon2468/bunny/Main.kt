@@ -179,7 +179,7 @@ data class MainVisitor<T>(
 				"entry".cstr(arena)
 			)
 		)
-//		val alloca = LLVMBuildAlloca(builder, scope.lookupType("size_t").llvmType, "blah".cstr(arena))
+//		val alloca = LLVMBuildAlloca(builder, scope.lookupType("size").llvmType, "blah".cstr(arena))
 //		LLVMBuildStore(builder, LLVMSizeOf(scope.lookupType("i32").llvmType), alloca)
 		var localScope: Scope = scope
 		function.parameters.forEach { it.runInit(function.llvmFunction) }
