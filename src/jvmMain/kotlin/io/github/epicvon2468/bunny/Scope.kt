@@ -119,11 +119,11 @@ data class Scope private constructor(
 
 				put(BooleanTypeInfo(LLVMInt1TypeInContext(context)))
 
-				put(IntTypeInfo.Signed(context, 2, "i2"))
-				put(IntTypeInfo.Unsigned(context, 2, "u2"))
+				put(IntTypeInfo.Signed(context, 2))
+				put(IntTypeInfo.Unsigned(context, 2))
 
-				put(IntTypeInfo.Signed(context, 4, "i4"))
-				put(IntTypeInfo.Unsigned(context, 4, "u4"))
+				put(IntTypeInfo.Signed(context, 4))
+				put(IntTypeInfo.Unsigned(context, 4))
 
 				val int8: LLVMTypeRef = LLVMInt8TypeInContext(context)
 				put(IntTypeInfo.Signed(int8, "i8"))
@@ -145,14 +145,14 @@ data class Scope private constructor(
 				put(IntTypeInfo.Signed(int128, "i128"))
 				put(IntTypeInfo.Unsigned(int128, "u128"))
 
-				put(IntTypeInfo.Signed(context, 256, "i256"))
-				put(IntTypeInfo.Unsigned(context, 256, "u256"))
+				put(IntTypeInfo.Signed(context, 256))
+				put(IntTypeInfo.Unsigned(context, 256))
 
-				put(IntTypeInfo.Signed(context, 512, "i512"))
-				put(IntTypeInfo.Unsigned(context, 512, "u512"))
+				put(IntTypeInfo.Signed(context, 512))
+				put(IntTypeInfo.Unsigned(context, 512))
 
-				put(IntTypeInfo.Signed(context, 1024, "i1024"))
-				put(IntTypeInfo.Unsigned(context, 1024, "u1024"))
+				put(IntTypeInfo.Signed(context, 1024))
+				put(IntTypeInfo.Unsigned(context, 1024))
 
 				put(FloatTypeInfo(LLVMFloatTypeInContext(context), "f32"))
 				put(FloatTypeInfo(LLVMDoubleTypeInContext(context), "f64"))

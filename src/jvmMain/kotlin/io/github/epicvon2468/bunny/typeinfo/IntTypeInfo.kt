@@ -20,11 +20,7 @@ sealed class IntTypeInfo : NumberTypeInfo {
 
 		constructor(llvmType: LLVMTypeRef, vararg names: String) : this(llvmType, names.toList())
 
-		// I wanted to add default args '= arrayOf("i$numBits")', and then compilation failed until running `./gradlew --stop' and rebuilding / running without the statement.
-		// The compiler doesn't diagnose the problem to be in this statement, instead it says: "Extending sealed classes or interfaces from a different module is prohibited."
-		// Okay, now the entire project just doesn't compile sometimes, and I've changed nothing.
-		// https://github.com/JetBrains/kotlin/blob/master/compiler/frontend/src/org/jetbrains/kotlin/resolve/checkers/SealedInheritorInSameModuleChecker.kt
-		constructor(context: LLVMContextRef, numBits: Int, vararg names: String) : this(LLVMIntTypeInContext(context, numBits), names.toList())
+		constructor(context: LLVMContextRef, numBits: Int, vararg names: String = arrayOf("i$numBits")) : this(LLVMIntTypeInContext(context, numBits), names.toList())
 	}
 
 	data class Unsigned(
@@ -38,6 +34,6 @@ sealed class IntTypeInfo : NumberTypeInfo {
 
 		constructor(llvmType: LLVMTypeRef, vararg names: String) : this(llvmType, names.toList())
 
-		constructor(context: LLVMContextRef, numBits: Int, vararg names: String) : this(LLVMIntTypeInContext(context, numBits), names.toList())
+		constructor(context: LLVMContextRef, numBits: Int, vararg names: String = arrayOf("u$numBits")) : this(LLVMIntTypeInContext(context, numBits), names.toList())
 	}
 }
