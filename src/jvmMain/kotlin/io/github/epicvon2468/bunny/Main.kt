@@ -242,15 +242,10 @@ data class MainVisitor<T>(
 		}
 	}
 
-	fun evaluateExpression(expr: MainParser.ExpressionContext, scope: Scope): LLVMValueRef {
-		when (expr.childCount) {
-			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.EqualityExpressionContext>(0), scope)
-			else -> {
-			}
-		}
-		TODO()
-	}
+	fun evaluateExpression(expr: MainParser.ExpressionContext, scope: Scope): LLVMValueRef = evaluateExpression(
+		expr.equalityExpression(),
+		scope
+	)
 
 	fun evaluateExpression(expr: MainParser.EqualityExpressionContext, scope: Scope): LLVMValueRef {
 		when (expr.childCount) {
