@@ -44,7 +44,9 @@ funct fseek(__stream: *FILE, __off: i64, __whence: i32): i32;
 funct ftell(__stream: *FILE): i64;
 funct rewind(__stream: *FILE);
 
-// TODO: fgetpos && fsetpos (fpos_t is sometimes a struct, sometimes i64, sometimes other, never array)
+// fpos_t is implementation-specific, but since it's only referred to as a pointer, and 'ptr' is technically stored in the type lookup, I can just opaquely request any pointer, as LLVM doesn't need to know the underlying type.
+funct fgetpos(__stream: *FILE, __pos: ptr /*= *fpos_t*/): i32;
+funct fsetpos(__stream: *FILE, __pos: ptr /*= *fpos_t*/): i32;
 
 funct clearerr(__stream: *FILE);
 funct feof(__stream: *FILE): i32;
