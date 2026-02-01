@@ -3,6 +3,9 @@ package io.github.epicvon2468.bunny
 import generated.antlr.MainLexer
 import generated.antlr.MainParser
 
+import io.github.epicvon2468.bunny.typeinfo.SimpleTypeInfo
+import io.github.epicvon2468.bunny.typeinfo.TypeInfo
+
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.ParserRuleContext
@@ -90,7 +93,7 @@ data class MainVisitor<T>(
 			/*ElementCount =*/ variableTypes?.size ?: 0,
 			/*Packed =*/ 0
 		)
-		scope = scope.childScope(addedTypes = mapOf(name to TypeInfo(llvmStruct, name)))
+		scope = scope.childScope(addedTypes = mapOf(name to SimpleTypeInfo(llvmStruct, name)))
 	}
 
 	// TODO: Fix difference in type between 'expected' definition and actual implementation.  Also fix the fact that function parameter names can be repeated.

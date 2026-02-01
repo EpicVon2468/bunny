@@ -1,5 +1,9 @@
 package io.github.epicvon2468.bunny
 
+import io.github.epicvon2468.bunny.typeinfo.IntTypeInfo
+import io.github.epicvon2468.bunny.typeinfo.SimpleTypeInfo
+import io.github.epicvon2468.bunny.typeinfo.TypeInfo
+
 import org.llvm.Core_h.*
 import org.llvm.Target_h.LLVMGetModuleDataLayout
 import org.llvm.Target_h.LLVMIntPtrTypeInContext
@@ -105,23 +109,51 @@ data class Scope private constructor(
 				}
 				fun MutableMap<String, TypeInfo>.put(value: TypeInfo) = put(*value.names.toTypedArray(), value = value)
 
-				// TODO: Type system needs a rework to handle signed vs unsigned...
-				put(TypeInfo(LLVMIntPtrTypeInContext(context, LLVMGetModuleDataLayout(module)), "size", "usize"))
-				put(TypeInfo(LLVMVoidTypeInContext(context), "", "void"))
-				put(TypeInfo(LLVMInt1TypeInContext(context), "bool"))
-				put(TypeInfo(LLVMIntTypeInContext(context, 2), "i2", "u2"))
-				put(TypeInfo(LLVMIntTypeInContext(context, 4), "i4", "u4"))
-				put(TypeInfo(LLVMInt8TypeInContext(context), "i8", "u8"))
-				put(TypeInfo(LLVMInt16TypeInContext(context), "i16", "u16"))
-				put(TypeInfo(LLVMInt32TypeInContext(context), "i32", "u32"))
-				put(TypeInfo(LLVMInt64TypeInContext(context), "i64", "u64"))
-				put(TypeInfo(LLVMInt128TypeInContext(context), "i128", "u128"))
-				put(TypeInfo(LLVMIntTypeInContext(context, 256), "i256", "u256"))
-				put(TypeInfo(LLVMIntTypeInContext(context, 512), "i512", "u512"))
-				put(TypeInfo(LLVMIntTypeInContext(context, 1024), "i1024", "u1024"))
-				put(TypeInfo(LLVMFloatTypeInContext(context), "f32"))
-				put(TypeInfo(LLVMDoubleTypeInContext(context), "f64"))
-				put(TypeInfo(LLVMPointerTypeInContext(context, 0), "ptr"))
+				put(IntTypeInfo.Unsigned(
+					LLVMIntPtrTypeInContext(context, LLVMGetModuleDataLayout(module)),
+					"size", "usize"
+				))
+				put(SimpleTypeInfo(LLVMVoidTypeInContext(context), "", "void"))
+				put(IntTypeInfo.Unsigned(LLVMInt1TypeInContext(context), "bool"))
+
+				put(IntTypeInfo.Signed(context, 2, "i2"))
+				put(IntTypeInfo.Unsigned(context, 2, "u2"))
+
+				put(IntTypeInfo.Signed(context, 4, "i4"))
+				put(IntTypeInfo.Unsigned(context, 4, "u4"))
+
+				val int8: LLVMTypeRef = LLVMInt8TypeInContext(context)
+				put(IntTypeInfo.Signed(int8, "i8"))
+				put(IntTypeInfo.Unsigned(int8, "u8"))
+
+				val int16: LLVMTypeRef = LLVMInt16TypeInContext(context)
+				put(IntTypeInfo.Signed(int16, "i16"))
+				put(IntTypeInfo.Unsigned(int16, "u16"))
+
+				val int32: LLVMTypeRef = LLVMInt32TypeInContext(context)
+				put(IntTypeInfo.Signed(int32, "i32"))
+				put(IntTypeInfo.Unsigned(int32, "u32"))
+
+				val int64: LLVMTypeRef = LLVMInt64TypeInContext(context)
+				put(IntTypeInfo.Signed(int64, "i64"))
+				put(IntTypeInfo.Unsigned(int64, "u64"))
+
+				val int128: LLVMTypeRef = LLVMInt128TypeInContext(context)
+				put(IntTypeInfo.Signed(int128, "i128"))
+				put(IntTypeInfo.Unsigned(int128, "u128"))
+
+				put(IntTypeInfo.Signed(context, 256, "i256"))
+				put(IntTypeInfo.Unsigned(context, 256, "u256"))
+
+				put(IntTypeInfo.Signed(context, 512, "i512"))
+				put(IntTypeInfo.Unsigned(context, 512, "u512"))
+
+				put(IntTypeInfo.Signed(context, 1024, "i1024"))
+				put(IntTypeInfo.Unsigned(context, 1024, "u1024"))
+
+				put(SimpleTypeInfo(LLVMFloatTypeInContext(context), "f32"))
+				put(SimpleTypeInfo(LLVMDoubleTypeInContext(context), "f64"))
+				put(SimpleTypeInfo(LLVMPointerTypeInContext(context, 0), "ptr"))
 			}
 		)
 	}

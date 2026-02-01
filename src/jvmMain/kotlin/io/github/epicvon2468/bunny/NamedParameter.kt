@@ -1,5 +1,7 @@
 package io.github.epicvon2468.bunny
 
+import io.github.epicvon2468.bunny.typeinfo.TypeInfo
+
 @ConsistentCopyVisibility
 data class NamedParameter private constructor(
 	override val name: String,
