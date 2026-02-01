@@ -5,7 +5,7 @@ import io.github.epicvon2468.bunny.LLVMTypeRef
 
 import org.llvm.Core_h.LLVMIntTypeInContext
 
-sealed class IntTypeInfo : TypeInfo {
+sealed class IntTypeInfo : NumberTypeInfo {
 
 	protected fun validate() = require(this.names.isNotEmpty()) { "No name(s) were provided for TypeInfo '$this'!" }
 

@@ -1,5 +1,7 @@
 package io.github.epicvon2468.bunny
 
+import io.github.epicvon2468.bunny.typeinfo.BooleanTypeInfo
+import io.github.epicvon2468.bunny.typeinfo.FloatTypeInfo
 import io.github.epicvon2468.bunny.typeinfo.IntTypeInfo
 import io.github.epicvon2468.bunny.typeinfo.SimpleTypeInfo
 import io.github.epicvon2468.bunny.typeinfo.TypeInfo
@@ -109,12 +111,13 @@ data class Scope private constructor(
 				}
 				fun MutableMap<String, TypeInfo>.put(value: TypeInfo) = put(*value.names.toTypedArray(), value = value)
 
-				put(IntTypeInfo.Unsigned(
-					LLVMIntPtrTypeInContext(context, LLVMGetModuleDataLayout(module)),
-					"size", "usize"
-				))
+				val size: LLVMTypeRef = LLVMIntPtrTypeInContext(context, LLVMGetModuleDataLayout(module))
+				put(IntTypeInfo.Signed(size, "size"))
+				put(IntTypeInfo.Unsigned(size, "usize"))
+
 				put(SimpleTypeInfo(LLVMVoidTypeInContext(context), "", "void"))
-				put(IntTypeInfo.Unsigned(LLVMInt1TypeInContext(context), "bool"))
+
+				put(BooleanTypeInfo(LLVMInt1TypeInContext(context)))
 
 				put(IntTypeInfo.Signed(context, 2, "i2"))
 				put(IntTypeInfo.Unsigned(context, 2, "u2"))
@@ -151,8 +154,9 @@ data class Scope private constructor(
 				put(IntTypeInfo.Signed(context, 1024, "i1024"))
 				put(IntTypeInfo.Unsigned(context, 1024, "u1024"))
 
-				put(SimpleTypeInfo(LLVMFloatTypeInContext(context), "f32"))
-				put(SimpleTypeInfo(LLVMDoubleTypeInContext(context), "f64"))
+				put(FloatTypeInfo(LLVMFloatTypeInContext(context), "f32"))
+				put(FloatTypeInfo(LLVMDoubleTypeInContext(context), "f64"))
+
 				put(SimpleTypeInfo(LLVMPointerTypeInContext(context, 0), "ptr"))
 			}
 		)

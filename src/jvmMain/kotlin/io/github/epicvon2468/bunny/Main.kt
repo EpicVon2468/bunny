@@ -3,6 +3,11 @@ package io.github.epicvon2468.bunny
 import generated.antlr.MainLexer
 import generated.antlr.MainParser
 
+import io.github.epicvon2468.bunny.typeinfo.BooleanTypeInfo
+import io.github.epicvon2468.bunny.typeinfo.FloatTypeInfo
+import io.github.epicvon2468.bunny.typeinfo.IntTypeInfo
+import io.github.epicvon2468.bunny.typeinfo.NumberTypeInfo
+import io.github.epicvon2468.bunny.typeinfo.PrimitiveTypeInfo
 import io.github.epicvon2468.bunny.typeinfo.SimpleTypeInfo
 import io.github.epicvon2468.bunny.typeinfo.TypeInfo
 
@@ -24,6 +29,7 @@ import java.lang.foreign.MemorySegment
 // https://llvm.org/doxygen/group__LLVMCCoreType.html
 // https://llvm.org/doxygen/group__LLVMCCoreContext.html
 // https://llvm.org/doxygen/files.html
+// https://llvm.org/docs/LangRef.html
 fun main(args: Array<String>) {
 	println("Got args: ${args.contentToString()}")
 	println("Java library path: ${System.getProperty("java.library.path")}")
@@ -277,8 +283,14 @@ data class MainVisitor<T>(
 				val lhs: LLVMValueRef = value ?: evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(index), scope)
 				val rhs: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(index + 2), scope)
 				when (expr.getChild<TerminalNode>(index + 1).text.trim().first()) {
-					'+' -> value = LLVMBuildAdd(builder, lhs, rhs, EMPTY_STRING)
-					'-' -> value = LLVMBuildSub(builder, lhs, rhs, EMPTY_STRING)
+					'+' -> value = when (scope.returnType as NumberTypeInfo) {
+						is IntTypeInfo -> LLVMBuildAdd(builder, lhs, rhs, EMPTY_STRING)
+						is FloatTypeInfo -> LLVMBuildFAdd(builder, lhs, rhs, EMPTY_STRING)
+					}
+					'-' -> value = when (scope.returnType as NumberTypeInfo) {
+						is IntTypeInfo -> LLVMBuildSub(builder, lhs, rhs, EMPTY_STRING)
+						is FloatTypeInfo -> LLVMBuildFSub(builder, lhs, rhs, EMPTY_STRING)
+					}
 				}
 				// cRHS op cLHS op nLHS
 				if (index + 4 >= expr.childCount) break
@@ -299,8 +311,15 @@ data class MainVisitor<T>(
 					val lhs: LLVMValueRef = value ?: evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(index), scope)
 					val rhs: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(index + 2), scope)
 					when (expr.getChild<TerminalNode>(index + 1).text.trim().first()) {
-						'/' -> value = LLVMBuildSDiv(builder, lhs, rhs, EMPTY_STRING)
-						'*' -> value = LLVMBuildMul(builder, lhs, rhs, EMPTY_STRING)
+						'/' -> value = when (scope.returnType as NumberTypeInfo) {
+							is IntTypeInfo.Signed -> LLVMBuildSDiv(builder, lhs, rhs, EMPTY_STRING)
+							is IntTypeInfo.Unsigned -> LLVMBuildUDiv(builder, lhs, rhs, EMPTY_STRING)
+							is FloatTypeInfo -> LLVMBuildFDiv(builder, lhs, rhs, EMPTY_STRING)
+						}
+						'*' -> value = when (scope.returnType as NumberTypeInfo) {
+							is IntTypeInfo -> LLVMBuildMul(builder, lhs, rhs, EMPTY_STRING)
+							is FloatTypeInfo -> LLVMBuildFMul(builder, lhs, rhs, EMPTY_STRING)
+						}
 					}
 					// cRHS op cLHS op nLHS
 					if (index + 4 >= expr.childCount) break
@@ -312,12 +331,20 @@ data class MainVisitor<T>(
 	}
 
 	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, scope: Scope): LLVMValueRef {
-		when (expr.childCount) {
+		return when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.PrimaryExpressionContext>(0), scope)
-			else -> {
-				// TODO: Only works for f32 & f64
-				return LLVMBuildFNeg(
+			1 -> evaluateExpression(expr.getChild<MainParser.PrimaryExpressionContext>(0), scope)
+			// I think you might be able to do '!!' and so on as a prefix... oops
+			else -> when (scope.returnType as PrimitiveTypeInfo) {
+				is BooleanTypeInfo -> LLVMBuildXor(
+					builder,
+					evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope),
+					bool(true, scope),
+					EMPTY_STRING
+				)
+				is IntTypeInfo.Signed -> TODO()
+				is IntTypeInfo.Unsigned -> TODO()
+				is FloatTypeInfo -> LLVMBuildFNeg(
 					builder,
 					evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope),
 					EMPTY_STRING
@@ -346,14 +373,16 @@ data class MainVisitor<T>(
 				EMPTY_STRING
 			)
 		}
-		expr.TRUE()?.let {
-			return LLVMConstInt(scope.lookupType("bool").llvmType, 1L, 0)
-		}
-		expr.FALSE()?.let {
-			return LLVMConstInt(scope.lookupType("bool").llvmType, 0L, 0)
-		}
+		if (expr.TRUE() != null) return bool(true, scope)
+		if (expr.FALSE() != null) return bool(false, scope)
 		return scope.lookupVariable(expr.IDENTIFIER().text).loadValue(builder)
 	}
+
+	fun bool(boolean: Boolean, scope: Scope): LLVMValueRef = LLVMConstInt(
+		/*IntTy =*/ scope.lookupType("bool").llvmType,
+		/*N =*/ if (boolean) 1L else 0L,
+		/*SignExtend =*/ 0
+	)
 
 	override fun visitTerminal(node: TerminalNode): T? {
 		return null
