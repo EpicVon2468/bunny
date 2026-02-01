@@ -22,6 +22,13 @@ tasks.withType<JavaExec> {
 	//systemProperty("jextract.trace.downcalls", "true")
 }
 
+tasks.withType<JavaCompile> {
+	options.apply {
+		encoding = "UTF-8"
+		isIncremental = true
+	}
+}
+
 tasks.withType<Jar> {
 	if (name != "jvmJar") return@withType
 	manifest {
@@ -45,7 +52,10 @@ kotlin {
 			mainClass.set("io.github.epicvon2468.bunny.MainKt")
 		}
 	}
-	jvmToolchain(25)
+	jvmToolchain {
+		vendor.set(JvmVendorSpec.JETBRAINS)
+		languageVersion.set(JavaLanguageVersion.of(25))
+	}
 	linuxX64 {
 		binaries {
 			executable {
