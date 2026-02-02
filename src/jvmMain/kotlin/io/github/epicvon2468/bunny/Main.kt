@@ -337,8 +337,27 @@ data class MainVisitor<T>(
 					bool(true, scope),
 					EMPTY_STRING
 				)
-				is IntTypeInfo.Signed -> TODO()
-				is IntTypeInfo.Unsigned -> TODO()
+				is IntTypeInfo -> {
+					val zero: LLVMValueRef = LLVMConstInt(scope.returnType.llvmType, 0L, 0)
+					val value: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope)
+					if (expr.NOT() != null) {
+						// https://llvm.org/doxygen/llvm-c_2Core_8h_source.html#l00294
+						// %4 = icmp ne i32 %3, 0
+						// %5 = xor i1 %4, true
+						// %6 = zext i1 %5 to i32
+						val icmp: LLVMValueRef = LLVMBuildICmp(builder, 33, value, zero, EMPTY_STRING)
+						val xor: LLVMValueRef = LLVMBuildXor(builder, icmp, bool(true, scope), EMPTY_STRING)
+						return LLVMBuildZExt(builder, xor, scope.returnType.llvmType, EMPTY_STRING)
+					}
+					// Clang generates this for unary minus:
+					// %4 = sub nsw i32 0, %3
+					LLVMBuildSub(
+						builder,
+						zero,
+						value,
+						EMPTY_STRING
+					)
+				}
 				is FloatTypeInfo -> LLVMBuildFNeg(
 					builder,
 					evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope),
