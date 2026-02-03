@@ -198,10 +198,7 @@ data class MainVisitor<T>(
 			is MainParser.ReturnExpressionContext -> {
 				val expression: MainParser.ExpressionContext? = input.expression()
 				if (expression == null) LLVMBuildRetVoid(builder)
-				else LLVMBuildRet(
-					builder,
-					evaluateExpression(expression, localScope)
-				)
+				else LLVMBuildRet(builder, evaluateExpression(expression, localScope))
 				return
 			}
 			is MainParser.VariableDefinitionContext -> {
@@ -219,11 +216,7 @@ data class MainVisitor<T>(
 					variable = LocalMutableVariable(
 						name,
 						typeInfo,
-						LLVMBuildAlloca(
-							builder,
-							typeInfo.llvmType,
-							name.cstr(arena)
-						)
+						LLVMBuildAlloca(builder, typeInfo.llvmType, name.cstr(arena))
 					)
 					variable.storeValue(builder, value() ?: return)
 				}
@@ -267,60 +260,73 @@ data class MainVisitor<T>(
 		TODO()
 	}
 
-	// TODO: mem2reg
+	fun evaluateOp(
+		expr: ParserRuleContext,
+		evaluate: (index: Int) -> LLVMValueRef,
+		evaluateOp: (op: Char, lhs: LLVMValueRef, rhs: LLVMValueRef) -> LLVMValueRef
+	): LLVMValueRef {
+		var value: LLVMValueRef = evaluate(0)
+		var index = 0
+		while (index < expr.childCount) {
+			value = evaluateOp(
+				/*op =*/ expr.getChild<TerminalNode>(index + 1).text.trim().first(),
+				/*lhs =*/ value,
+				/*rhs =*/ evaluate(index + 2)
+			)
+			// cRHS op cLHS op nLHS
+			if (index + 4 >= expr.childCount) break
+			index += 2
+		}
+		return value
+	}
+
 	fun evaluateExpression(expr: MainParser.TermExpressionContext, scope: Scope): LLVMValueRef = when (expr.childCount) {
 		0 -> error("No children for expression '$expr'!")
-		1 -> return evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), scope)
-		else -> {
-			var value: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), scope)
-			var index = 0
-			while (index < expr.childCount) {
-				val lhs: LLVMValueRef = value
-				val rhs: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(index + 2), scope)
-				when (expr.getChild<TerminalNode>(index + 1).text.trim().first()) {
-					'+' -> value = when (scope.returnType as NumberTypeInfo) {
+		1 -> evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), scope)
+		else -> evaluateOp(
+			expr = expr,
+			evaluate = { index: Int ->
+				evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(index), scope)
+			},
+			evaluateOp = { op: Char, lhs: LLVMValueRef, rhs: LLVMValueRef ->
+				when (op) {
+					'+' -> when (scope.returnType as NumberTypeInfo) {
 						is IntTypeInfo -> LLVMBuildAdd(builder, lhs, rhs, EMPTY_STRING)
 						is FloatTypeInfo -> LLVMBuildFAdd(builder, lhs, rhs, EMPTY_STRING)
 					}
-					'-' -> value = when (scope.returnType as NumberTypeInfo) {
+					'-' -> when (scope.returnType as NumberTypeInfo) {
 						is IntTypeInfo -> LLVMBuildSub(builder, lhs, rhs, EMPTY_STRING)
 						is FloatTypeInfo -> LLVMBuildFSub(builder, lhs, rhs, EMPTY_STRING)
 					}
+					else -> error("Illegal operator char '$op', expected '+' or '-'!")
 				}
-				// cRHS op cLHS op nLHS
-				if (index + 4 >= expr.childCount) break
-				index += 2
 			}
-			return value
-		}
+		)
 	}
 
 	fun evaluateExpression(expr: MainParser.FactorExpressionContext, scope: Scope): LLVMValueRef = when (expr.childCount) {
 		0 -> error("No children for expression '$expr'!")
 		1 -> return evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(0), scope)
-		else -> {
-			var value: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(0), scope)
-			var index = 0
-			while (index < expr.childCount) {
-				val lhs: LLVMValueRef = value
-				val rhs: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(index + 2), scope)
-				when (expr.getChild<TerminalNode>(index + 1).text.trim().first()) {
-					'/' -> value = when (scope.returnType as NumberTypeInfo) {
+		else -> evaluateOp(
+			expr = expr,
+			evaluate = { index: Int ->
+				evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(index), scope)
+			},
+			evaluateOp = { op: Char, lhs: LLVMValueRef, rhs: LLVMValueRef ->
+				when (op) {
+					'/' -> when (scope.returnType as NumberTypeInfo) {
 						is IntTypeInfo.Signed -> LLVMBuildSDiv(builder, lhs, rhs, EMPTY_STRING)
 						is IntTypeInfo.Unsigned -> LLVMBuildUDiv(builder, lhs, rhs, EMPTY_STRING)
 						is FloatTypeInfo -> LLVMBuildFDiv(builder, lhs, rhs, EMPTY_STRING)
 					}
-					'*' -> value = when (scope.returnType as NumberTypeInfo) {
+					'*' -> when (scope.returnType as NumberTypeInfo) {
 						is IntTypeInfo -> LLVMBuildMul(builder, lhs, rhs, EMPTY_STRING)
 						is FloatTypeInfo -> LLVMBuildFMul(builder, lhs, rhs, EMPTY_STRING)
 					}
+					else -> error("Illegal operator char '$op', expected '/' or '*'!")
 				}
-				// cRHS op cLHS op nLHS
-				if (index + 4 >= expr.childCount) break
-				index += 2
 			}
-			return value
-		}
+		)
 	}
 
 	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, scope: Scope): LLVMValueRef = when (expr.childCount) {
