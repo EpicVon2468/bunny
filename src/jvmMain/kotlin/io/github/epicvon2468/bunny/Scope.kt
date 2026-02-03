@@ -58,9 +58,18 @@ data class Scope private constructor(
 		returnType
 	)
 
-	fun withTypes(vararg types: Pair<String, TypeInfo>): Scope = childScope(addedTypes = types.toMap())
-	fun withFunctions(vararg functions: Pair<String, FunctionInfo>): Scope = childScope(addedFunctions = functions.toMap())
-	fun withVariables(vararg variables: Pair<String, Variable>): Scope = childScope(addedVariables = variables.toMap())
+	fun withTypes(vararg types: Pair<String, TypeInfo>): Scope = withTypes(types.toMap())
+	fun withTypes(vararg types: TypeInfo): Scope = withTypes(mutableMapOf<String, TypeInfo>().apply { types.forEach { this.put(it) } })
+	fun withTypes(types: Map<String, TypeInfo>): Scope = childScope(addedTypes = types)
+
+	fun withFunctions(vararg functions: Pair<String, FunctionInfo>): Scope = withFunctions(functions.toMap())
+	fun withFunctions(vararg functions: FunctionInfo): Scope = withFunctions(functions.associateBy(FunctionInfo::name))
+	fun withFunctions(functions: Map<String, FunctionInfo>): Scope = childScope(addedFunctions = functions)
+
+	fun withVariables(vararg variables: Pair<String, Variable>): Scope = withVariables(variables.toMap())
+	fun withVariables(vararg variables: Variable): Scope = withVariables(variables.associateBy(Variable::name))
+	fun withVariables(variables: Map<String, Variable>): Scope = childScope(addedVariables = variables)
+
 	fun withReturnType(returnType: TypeInfo): Scope = childScope(returnType = returnType)
 
 	/**
@@ -103,6 +112,11 @@ data class Scope private constructor(
 
 	companion object {
 
+		fun <K, V> MutableMap<K, V>.put(vararg keys: K, value: V) {
+			for (key: K in keys) this[key] = value
+		}
+		fun MutableMap<String, TypeInfo>.put(value: TypeInfo) = put(*value.names.toTypedArray(), value = value)
+
 		/**
 		 * Creates a new defaulted 'global' [Scope], using the [context][LLVMContextRef] and [module][LLVMModuleRef] provided.
 		 *
@@ -112,11 +126,6 @@ data class Scope private constructor(
 		@JvmStatic
 		fun globalScope(context: LLVMContextRef, module: LLVMModuleRef) = Scope(
 			typeLookup = mutableMapOf<String, TypeInfo>().apply {
-				fun <K, V> MutableMap<K, V>.put(vararg keys: K, value: V) {
-					for (key: K in keys) this[key] = value
-				}
-				fun MutableMap<String, TypeInfo>.put(value: TypeInfo) = put(*value.names.toTypedArray(), value = value)
-
 				val size: LLVMTypeRef = LLVMIntPtrTypeInContext(context, LLVMGetModuleDataLayout(module))
 				put(IntTypeInfo.Signed(size, "size"))
 				put(IntTypeInfo.Unsigned(size, "usize"))

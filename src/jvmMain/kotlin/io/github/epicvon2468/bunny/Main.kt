@@ -99,7 +99,7 @@ data class MainVisitor<T>(
 			/*ElementCount =*/ variableTypes?.size ?: 0,
 			/*Packed =*/ 0
 		)
-		scope = scope.withTypes(name to SimpleTypeInfo(llvmStruct, name))
+		scope = scope.withTypes(SimpleTypeInfo(llvmStruct, name))
 	}
 
 	// TODO: Fix difference in type between 'expected' definition and actual implementation.  Also fix the fact that function parameter names can be repeated.
@@ -111,6 +111,7 @@ data class MainVisitor<T>(
 		val nativeName: MemorySegment = name.cstr(arena)
 		val returnType: TypeInfo = localScope.determineLLVMType(funct.type())
 		val parameters: List<NamedParameter> = buildParams(paramList, params, localScope)
+		localScope = localScope.withVariables(*parameters.toTypedArray())
 		// Retrieve or create if not found.
 		val function: FunctionInfo = localScope.lookupFunctOrNull(name) ?: run {
 			val function: LLVMValueRef = LLVMAddFunction(
@@ -124,7 +125,7 @@ data class MainVisitor<T>(
 				)
 			)
 			FunctionInfo(name, parameters, returnType, function).apply {
-				scope = scope.withFunctions(name to this)
+				scope = scope.withFunctions(this)
 				localScope = localScope.mergeLookups(scope)
 			}
 		}
@@ -211,7 +212,7 @@ data class MainVisitor<T>(
 				)
 				// I think I accidentally made inline variables lmao
 				val variable: Variable
-				if (input.MUTABLE() == null) variable = LocalVariable(name, typeInfo, value() ?: return, arena.allocateFrom(name))
+				if (input.MUTABLE() == null) variable = LocalVariable(name, typeInfo, value() ?: return, name.cstr(arena))
 				else {
 					name += ".addr"
 					variable = LocalMutableVariable(
@@ -221,7 +222,7 @@ data class MainVisitor<T>(
 					)
 					variable.storeValue(builder, value() ?: return)
 				}
-				localScope = setScope(localScope.withVariables(name to variable))
+				localScope = setScope(localScope.withVariables(variable))
 				return
 			}
 			is MainParser.AssignmentExpressionContext -> {
@@ -374,6 +375,27 @@ data class MainVisitor<T>(
 	}
 
 	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, scope: Scope): LLVMValueRef {
+		expr.functionCall()?.let {
+			val calledFunct: FunctionInfo = scope.lookupFunct(it.IDENTIFIER().text)
+			val llvmFunct: LLVMValueRef = calledFunct.llvmFunction
+			var size = 0
+			val args: MemorySegment = run {
+				val map: List<LLVMValueRef>? = it.argList()?.children?.filterNot(TerminalNode::class::isInstance)?.map { child ->
+					size++
+					evaluateExpression(child as MainParser.ExpressionContext, scope)
+				}
+				map ?: return@run MemorySegment.NULL
+				map.toNativeArray(arena, LLVMValueRef)
+			}
+			return LLVMBuildCall2(
+				builder,
+				LLVMGlobalGetValueType(llvmFunct),
+				llvmFunct,
+				args,
+				size,
+				EMPTY_STRING
+			)
+		}
 		expr.expression()?.let {
 			return evaluateExpression(it, scope)
 		}

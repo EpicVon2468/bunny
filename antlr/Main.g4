@@ -70,7 +70,28 @@ comparisonExpression : termExpression ((COMPARISON_GREATER | COMPARISON_GREATER_
 termExpression : factorExpression ((SUB | ADD) factorExpression)* ;
 factorExpression : unaryExpression ((DIV | ASTERISK) unaryExpression)* ;
 unaryExpression : (NOT | SUB) unaryExpression | primaryExpression;
-primaryExpression : NUM_INT | NUM_FLOAT | STRING_LITERAL | TRUE | FALSE | IDENTIFIER | OPEN_PAREN expression CLOSE_PAREN ;
+primaryExpression :
+	NUM_INT
+	| NUM_FLOAT
+	| STRING_LITERAL
+	| TRUE
+	| FALSE
+	| functionCall
+	| IDENTIFIER
+	| OPEN_PAREN expression CLOSE_PAREN
+	;
+
+functionCall : IDENTIFIER OPEN_PAREN argList? CLOSE_PAREN ;
+
+argList :
+	(
+		expression
+		(ARGUMENT_SEPARATOR expression)*
+		(ARGUMENT_SEPARATOR VARARG)?
+	)
+	|
+	VARARG
+	;
 
 parameterList :
 	(

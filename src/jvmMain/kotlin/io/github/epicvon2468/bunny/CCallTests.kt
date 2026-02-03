@@ -52,7 +52,7 @@ fun test() {
 			printfFunctionType,
 			printfFunction,
 			arena.allocateArray(
-				LLVMTypeRef,
+				LLVMValueRef,
 				LLVMBuildPointerCast(
 					builder,
 					LLVMBuildGlobalString(builder, arena.allocateFrom("%d\n"), arena.allocateFrom("print_int_str")),
