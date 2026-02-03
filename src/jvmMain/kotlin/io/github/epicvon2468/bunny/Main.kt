@@ -272,10 +272,10 @@ data class MainVisitor<T>(
 		0 -> error("No children for expression '$expr'!")
 		1 -> return evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), scope)
 		else -> {
-			var value: LLVMValueRef? = null
+			var value: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(0), scope)
 			var index = 0
 			while (index < expr.childCount) {
-				val lhs: LLVMValueRef = value ?: evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(index), scope)
+				val lhs: LLVMValueRef = value
 				val rhs: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(index + 2), scope)
 				when (expr.getChild<TerminalNode>(index + 1).text.trim().first()) {
 					'+' -> value = when (scope.returnType as NumberTypeInfo) {
@@ -291,79 +291,75 @@ data class MainVisitor<T>(
 				if (index + 4 >= expr.childCount) break
 				index += 2
 			}
-			return value!!
+			return value
 		}
 	}
 
-	fun evaluateExpression(expr: MainParser.FactorExpressionContext, scope: Scope): LLVMValueRef {
-		when (expr.childCount) {
-			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(0), scope)
-			else -> {
-				var value: LLVMValueRef? = null
-				var index = 0
-				while (index < expr.childCount) {
-					val lhs: LLVMValueRef = value ?: evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(index), scope)
-					val rhs: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(index + 2), scope)
-					when (expr.getChild<TerminalNode>(index + 1).text.trim().first()) {
-						'/' -> value = when (scope.returnType as NumberTypeInfo) {
-							is IntTypeInfo.Signed -> LLVMBuildSDiv(builder, lhs, rhs, EMPTY_STRING)
-							is IntTypeInfo.Unsigned -> LLVMBuildUDiv(builder, lhs, rhs, EMPTY_STRING)
-							is FloatTypeInfo -> LLVMBuildFDiv(builder, lhs, rhs, EMPTY_STRING)
-						}
-						'*' -> value = when (scope.returnType as NumberTypeInfo) {
-							is IntTypeInfo -> LLVMBuildMul(builder, lhs, rhs, EMPTY_STRING)
-							is FloatTypeInfo -> LLVMBuildFMul(builder, lhs, rhs, EMPTY_STRING)
-						}
+	fun evaluateExpression(expr: MainParser.FactorExpressionContext, scope: Scope): LLVMValueRef = when (expr.childCount) {
+		0 -> error("No children for expression '$expr'!")
+		1 -> return evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(0), scope)
+		else -> {
+			var value: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(0), scope)
+			var index = 0
+			while (index < expr.childCount) {
+				val lhs: LLVMValueRef = value
+				val rhs: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(index + 2), scope)
+				when (expr.getChild<TerminalNode>(index + 1).text.trim().first()) {
+					'/' -> value = when (scope.returnType as NumberTypeInfo) {
+						is IntTypeInfo.Signed -> LLVMBuildSDiv(builder, lhs, rhs, EMPTY_STRING)
+						is IntTypeInfo.Unsigned -> LLVMBuildUDiv(builder, lhs, rhs, EMPTY_STRING)
+						is FloatTypeInfo -> LLVMBuildFDiv(builder, lhs, rhs, EMPTY_STRING)
 					}
-					// cRHS op cLHS op nLHS
-					if (index + 4 >= expr.childCount) break
-					index += 2
+					'*' -> value = when (scope.returnType as NumberTypeInfo) {
+						is IntTypeInfo -> LLVMBuildMul(builder, lhs, rhs, EMPTY_STRING)
+						is FloatTypeInfo -> LLVMBuildFMul(builder, lhs, rhs, EMPTY_STRING)
+					}
 				}
-				return value!!
+				// cRHS op cLHS op nLHS
+				if (index + 4 >= expr.childCount) break
+				index += 2
 			}
+			return value
 		}
 	}
 
-	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, scope: Scope): LLVMValueRef {
-		return when (expr.childCount) {
-			0 -> error("No children for expression '$expr'!")
-			1 -> evaluateExpression(expr.getChild<MainParser.PrimaryExpressionContext>(0), scope)
-			// I think you might be able to do '!!' and so on as a prefix... oops
-			else -> when (scope.returnType as PrimitiveTypeInfo) {
-				is BooleanTypeInfo -> LLVMBuildXor(
-					builder,
-					evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope),
-					bool(true, scope),
-					EMPTY_STRING
-				)
-				is IntTypeInfo -> {
-					val zero: LLVMValueRef = LLVMConstInt(scope.returnType.llvmType, 0L, 0)
-					val value: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope)
-					if (expr.NOT() != null) {
-						// https://llvm.org/doxygen/llvm-c_2Core_8h_source.html#l00294
-						// %4 = icmp ne i32 %3, 0
-						// %5 = xor i1 %4, true
-						// %6 = zext i1 %5 to i32
-						val icmp: LLVMValueRef = LLVMBuildICmp(builder, 33, value, zero, EMPTY_STRING)
-						val xor: LLVMValueRef = LLVMBuildXor(builder, icmp, bool(true, scope), EMPTY_STRING)
-						return LLVMBuildZExt(builder, xor, scope.returnType.llvmType, EMPTY_STRING)
-					}
-					// Clang generates this for unary minus:
-					// %4 = sub nsw i32 0, %3
-					LLVMBuildSub(
-						builder,
-						zero,
-						value,
-						EMPTY_STRING
-					)
+	fun evaluateExpression(expr: MainParser.UnaryExpressionContext, scope: Scope): LLVMValueRef = when (expr.childCount) {
+		0 -> error("No children for expression '$expr'!")
+		1 -> evaluateExpression(expr.getChild<MainParser.PrimaryExpressionContext>(0), scope)
+		// I think you might be able to do '!!' and so on as a prefix... oops
+		else -> when (scope.returnType as PrimitiveTypeInfo) {
+			is BooleanTypeInfo -> LLVMBuildXor(
+				builder,
+				evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope),
+				bool(true, scope),
+				EMPTY_STRING
+			)
+			is IntTypeInfo -> {
+				val zero: LLVMValueRef = LLVMConstInt(scope.returnType.llvmType, 0L, 0)
+				val value: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope)
+				if (expr.NOT() != null) {
+					// https://llvm.org/doxygen/llvm-c_2Core_8h_source.html#l00294
+					// %4 = icmp ne i32 %3, 0
+					// %5 = xor i1 %4, true
+					// %6 = zext i1 %5 to i32
+					val icmp: LLVMValueRef = LLVMBuildICmp(builder, 33, value, zero, EMPTY_STRING)
+					val xor: LLVMValueRef = LLVMBuildXor(builder, icmp, bool(true, scope), EMPTY_STRING)
+					return LLVMBuildZExt(builder, xor, scope.returnType.llvmType, EMPTY_STRING)
 				}
-				is FloatTypeInfo -> LLVMBuildFNeg(
+				// Clang generates this for unary minus:
+				// %4 = sub nsw i32 0, %3
+				LLVMBuildSub(
 					builder,
-					evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope),
+					zero,
+					value,
 					EMPTY_STRING
 				)
 			}
+			is FloatTypeInfo -> LLVMBuildFNeg(
+				builder,
+				evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope),
+				EMPTY_STRING
+			)
 		}
 	}
 
