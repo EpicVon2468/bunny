@@ -8,7 +8,7 @@ import io.github.epicvon2468.bunny.typeinfo.FloatTypeInfo
 import io.github.epicvon2468.bunny.typeinfo.IntTypeInfo
 import io.github.epicvon2468.bunny.typeinfo.NumberTypeInfo
 import io.github.epicvon2468.bunny.typeinfo.PrimitiveTypeInfo
-import io.github.epicvon2468.bunny.typeinfo.SimpleTypeInfo
+import io.github.epicvon2468.bunny.typeinfo.StructTypeInfo
 import io.github.epicvon2468.bunny.typeinfo.TypeInfo
 
 import org.antlr.v4.runtime.CharStreams
@@ -80,21 +80,21 @@ data class MainVisitor(
 		}
 	}
 
-	// TODO: functions within structs, actual struct variables, find out if this even actually works, add a TypeInfo subclass for structs.
+	// TODO: functions within structs, actual struct variables, find out if this even actually works
 	fun visitStructDefinition(struct: MainParser.StructDefinitionContext) {
 		val name: String = struct.IDENTIFIER()!!.text
 		val llvmStruct: LLVMTypeRef = LLVMStructCreateNamed(context, name.cstr(arena))
-		val variableTypes: List<LLVMTypeRef>? = struct.variableDefinition()?.map {
+		val variableTypes: List<TypeInfo>? = struct.variableDefinition()?.map {
 			if (it.ASSIGNMENT() != null) error("Variable was provided an assignment in a struct!  Only a definition of the name and type was expected!")
-			scope.determineLLVMType(it.identifierWithType().type()).llvmType
+			scope.determineLLVMType(it.identifierWithType().type())
 		}
 		LLVMStructSetBody(
 			/*StructTy =*/ llvmStruct,
-			/*ElementTypes =*/ variableTypes?.toNativeArray(arena, LLVMTypeRef) ?: arena.allocateArray(LLVMTypeRef),
+			/*ElementTypes =*/ variableTypes?.map(TypeInfo::llvmType)?.toNativeArray(arena, LLVMTypeRef) ?: arena.allocateArray(LLVMTypeRef),
 			/*ElementCount =*/ variableTypes?.size ?: 0,
 			/*Packed =*/ 0
 		)
-		scope = scope.withTypes(SimpleTypeInfo(llvmStruct, name))
+		scope = scope.withTypes(StructTypeInfo(llvmStruct, name, variableTypes ?: emptyList()))
 	}
 
 	// TODO: Fix difference in type between 'expected' definition and actual implementation.  Also fix the fact that function parameter names can be repeated.
@@ -375,12 +375,12 @@ data class MainVisitor(
 			val llvmFunct: LLVMValueRef = calledFunct.llvmFunction
 			var size = 0
 			val args: MemorySegment = run {
-				val map: List<LLVMValueRef>? = it.argList()?.children?.filterNot(TerminalNode::class::isInstance)?.map { child ->
+				val args: List<LLVMValueRef>? = it.argList()?.children?.filterNot(TerminalNode::class::isInstance)?.map { child ->
 					size++
 					evaluateExpression(child as MainParser.ExpressionContext, scope)
 				}
-				map ?: return@run MemorySegment.NULL
-				map.toNativeArray(arena, LLVMValueRef)
+				args ?: return@run MemorySegment.NULL
+				args.toNativeArray(arena, LLVMValueRef)
 			}
 			return LLVMBuildCall2(
 				builder,
