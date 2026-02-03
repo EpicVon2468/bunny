@@ -39,7 +39,7 @@ fun main(args: Array<String>) {
 	println("Starting parser-based codegen")
 	Arena.ofShared().use { arena: Arena ->
 		val parser = MainParser(CommonTokenStream(MainLexer(CharStreams.fromFileName("minimal.bun"))))
-		MainVisitor<Unit>(parser, arena, LLVMContextCreate(), "test").use(parser.top()::accept)
+		MainVisitor(parser, arena, LLVMContextCreate(), "test").use(parser.top()::accept)
 	}
 }
 
@@ -48,13 +48,12 @@ val EMPTY_STRING: MemorySegment = Arena.global().allocateFrom("")
 
 fun String?.cstr(arena: Arena): MemorySegment = if (this == "" || this == null) EMPTY_STRING else arena.allocateFrom(this)
 
-// TODO: When a struct is parsed, update env to contain it as a type
-data class MainVisitor<T>(
+data class MainVisitor(
 	val parser: MainParser,
 	val arena: Arena,
 	val context: LLVMContextRef,
 	val name: String
-) : ParseTreeVisitor<T>, AutoCloseable {
+) : ParseTreeVisitor<Unit>, AutoCloseable {
 
 	val module: LLVMModuleRef = LLVMModuleCreateWithNameInContext(name.cstr(arena), context)
 	val builder: LLVMBuilderRef = LLVMCreateBuilderInContext(context)
@@ -62,27 +61,23 @@ data class MainVisitor<T>(
 	var scope: Scope = Scope.globalScope(context, module)
 		private set
 
-	override fun visit(tree: ParseTree): T? {
-		val tree: ParserRuleContext = tree as ParserRuleContext
-		return null
-	}
+	override fun visit(tree: ParseTree) = Unit
 
-	override fun visitChildren(node: RuleNode): T? {
+	override fun visitChildren(node: RuleNode) {
 		val node: ParserRuleContext = node as ParserRuleContext
 		if (node !is MainParser.TopContext) {
 			visit(node)
 			for (child: ParseTree in node.children) child.accept(this)
-			return null
+			return
 		}
 		println(node.version().children.joinToString(separator = " ", transform = ParseTree::getText))
-		val topLevelEntries: List<MainParser.TopLevelContext> = node.topLevel() ?: return null
+		val topLevelEntries: List<MainParser.TopLevelContext> = node.topLevel() ?: return
 		topLevelEntries.forEach {
 			when (val declaration: ParserRuleContext = it.functionDefinition() ?: it.structDefinition()) {
 				is MainParser.FunctionDefinitionContext -> visitFunctionDefinition(declaration)
 				is MainParser.StructDefinitionContext -> visitStructDefinition(declaration)
 			}
 		}
-		return null
 	}
 
 	// TODO: functions within structs, actual struct variables, find out if this even actually works, add a TypeInfo subclass for structs.
@@ -303,7 +298,7 @@ data class MainVisitor<T>(
 						is IntTypeInfo -> LLVMBuildSub(builder, lhs, rhs, EMPTY_STRING)
 						is FloatTypeInfo -> LLVMBuildFSub(builder, lhs, rhs, EMPTY_STRING)
 					}
-					else -> error("Illegal operator char '$op', expected '+' or '-'!")
+					else -> error("Illegal operator '$op', expected '+' or '-'!")
 				}
 			}
 		)
@@ -328,7 +323,7 @@ data class MainVisitor<T>(
 						is IntTypeInfo -> LLVMBuildMul(builder, lhs, rhs, EMPTY_STRING)
 						is FloatTypeInfo -> LLVMBuildFMul(builder, lhs, rhs, EMPTY_STRING)
 					}
-					else -> error("Illegal operator char '$op', expected '/' or '*'!")
+					else -> error("Illegal operator '$op', expected '/' or '*'!")
 				}
 			}
 		)
@@ -426,13 +421,9 @@ data class MainVisitor<T>(
 		/*SignExtend =*/ 0
 	)
 
-	override fun visitTerminal(node: TerminalNode): T? {
-		return null
-	}
+	override fun visitTerminal(node: TerminalNode) = Unit
 
-	override fun visitErrorNode(node: ErrorNode): T? {
-		return null
-	}
+	override fun visitErrorNode(node: ErrorNode) = Unit
 
 	override fun close() {
 		LLVMDisposeBuilder(builder)
