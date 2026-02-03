@@ -58,6 +58,11 @@ data class Scope private constructor(
 		returnType
 	)
 
+	fun withTypes(vararg types: Pair<String, TypeInfo>): Scope = childScope(addedTypes = types.toMap())
+	fun withFunctions(vararg functions: Pair<String, FunctionInfo>): Scope = childScope(addedFunctions = functions.toMap())
+	fun withVariables(vararg variables: Pair<String, Variable>): Scope = childScope(addedVariables = variables.toMap())
+	fun withReturnType(returnType: TypeInfo): Scope = childScope(returnType = returnType)
+
 	/**
 	 * Merges the type and function lookups of [other] with this [Scope]'s lookups.
 	 *
@@ -66,7 +71,8 @@ data class Scope private constructor(
 	 */
 	fun mergeLookups(other: Scope): Scope = childScope(
 		other.typeLookup,
-		other.functionLookup
+		other.functionLookup,
+		other.variableLookup
 	)
 
 	/**

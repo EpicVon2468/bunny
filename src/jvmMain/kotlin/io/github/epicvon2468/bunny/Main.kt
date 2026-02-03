@@ -85,7 +85,7 @@ data class MainVisitor<T>(
 		return null
 	}
 
-	// TODO: functions within structs, actual struct variables, find out if this even actually works, maybe turn TypeInfo into an interface & make one for StructInfo & another for SimpleTypeInfo
+	// TODO: functions within structs, actual struct variables, find out if this even actually works, add a TypeInfo subclass for structs.
 	fun visitStructDefinition(struct: MainParser.StructDefinitionContext) {
 		val name: String = struct.IDENTIFIER()!!.text
 		val llvmStruct: LLVMTypeRef = LLVMStructCreateNamed(context, name.cstr(arena))
@@ -99,7 +99,7 @@ data class MainVisitor<T>(
 			/*ElementCount =*/ variableTypes?.size ?: 0,
 			/*Packed =*/ 0
 		)
-		scope = scope.childScope(addedTypes = mapOf(name to SimpleTypeInfo(llvmStruct, name)))
+		scope = scope.withTypes(name to SimpleTypeInfo(llvmStruct, name))
 	}
 
 	// TODO: Fix difference in type between 'expected' definition and actual implementation.  Also fix the fact that function parameter names can be repeated.
@@ -124,11 +124,11 @@ data class MainVisitor<T>(
 				)
 			)
 			FunctionInfo(name, parameters, returnType, function).apply {
-				scope = localScope.childScope(addedFunctions = mapOf(name to this))
+				scope = scope.withFunctions(name to this)
 				localScope = localScope.mergeLookups(scope)
 			}
 		}
-		localScope = localScope.childScope(returnType = function.returnType)
+		localScope = localScope.withReturnType(function.returnType)
 		visitFunctionBody(
 			funct.functionBody() ?: return,
 			function,
@@ -203,16 +203,17 @@ data class MainVisitor<T>(
 			}
 			is MainParser.VariableDefinitionContext -> {
 				val identifierWithType: MainParser.IdentifierWithTypeContext = input.identifierWithType()
-				val name: String = identifierWithType.IDENTIFIER().text + ".addr"
+				var name: String = identifierWithType.IDENTIFIER().text
 				val typeInfo: TypeInfo = localScope.determineLLVMType(identifierWithType.type())
 				fun value(): LLVMValueRef? = evaluateExpression(
 					input.expression() ?: return null,
-					localScope.childScope(returnType = typeInfo)
+					localScope.withReturnType(typeInfo)
 				)
 				// I think I accidentally made inline variables lmao
 				val variable: Variable
-				if (input.MUTABLE() == null) variable = LocalVariable(name, typeInfo, value() ?: return)
+				if (input.MUTABLE() == null) variable = LocalVariable(name, typeInfo, value() ?: return, arena.allocateFrom(name))
 				else {
+					name += ".addr"
 					variable = LocalMutableVariable(
 						name,
 						typeInfo,
@@ -220,14 +221,17 @@ data class MainVisitor<T>(
 					)
 					variable.storeValue(builder, value() ?: return)
 				}
-				localScope = setScope(localScope.childScope(addedVariables = mapOf(name to variable)))
+				localScope = setScope(localScope.withVariables(name to variable))
 				return
 			}
 			is MainParser.AssignmentExpressionContext -> {
 				val variable: MutableVariable = localScope.lookupMutableVariable(input.IDENTIFIER().text)
 				variable.storeValue(
 					builder,
-					evaluateExpression(input.expression(), localScope.childScope(returnType = variable.typeInfo))
+					evaluateExpression(
+						input.expression(),
+						localScope.withReturnType(variable.typeInfo)
+					)
 				)
 				return
 			}
