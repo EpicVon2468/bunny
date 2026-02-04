@@ -84,29 +84,23 @@ data class MainVisitor(
 	fun visitStructDefinition(struct: MainParser.StructDefinitionContext) {
 		val name: String = struct.IDENTIFIER()!!.text
 		val llvmStruct: LLVMTypeRef = LLVMStructCreateNamed(context, name.cstr(arena))
-		// TODO: This is a horrible crime against programming, redo this later
-		val list: MutableList<String> = mutableListOf()
-		val variableTypes: Map<String, TypeInfo>? = struct.variableDefinition()?.associate {
+		val nameAssociation: MutableMap<String, Int> = mutableMapOf()
+		val variableTypes: List<TypeInfo>? = struct.variableDefinition()?.mapIndexed { index: Int, it: MainParser.VariableDefinitionContext ->
 			if (it.ASSIGNMENT() != null) error("Variable was provided an assignment in a struct!  Only a definition of the name and type was expected!")
-			val identifierWIthType = it.identifierWithType()
-			val text: String = identifierWIthType.IDENTIFIER().text
-			list += text
-			text to scope.determineLLVMType(identifierWIthType.type())
+			val identifierWithType = it.identifierWithType()
+			nameAssociation[identifierWithType.IDENTIFIER().text] = index
+			scope.determineLLVMType(identifierWithType.type())
 		}
-		val nameAssociation: Map<String, Int> = list.mapIndexed { index, string ->
-			string to index
-		}.toMap()
 		LLVMStructSetBody(
 			/*StructTy =*/ llvmStruct,
-			/*ElementTypes =*/ variableTypes?.values?.map(TypeInfo::llvmType)?.toNativeArray(arena, LLVMTypeRef) ?: arena.allocateArray(LLVMTypeRef),
+			/*ElementTypes =*/ variableTypes?.map(TypeInfo::llvmType)?.toNativeArray(arena, LLVMTypeRef) ?: arena.allocateArray(LLVMTypeRef),
 			/*ElementCount =*/ variableTypes?.size ?: 0,
 			/*Packed =*/ 0
 		)
 		scope = scope.withTypes(StructTypeInfo(
 			llvmStruct,
 			name,
-			variableTypes?.values?.toList() ?: emptyList(),
-			variableTypes ?: emptyMap(),
+			variableTypes ?: emptyList(),
 			nameAssociation
 		))
 	}
@@ -403,12 +397,12 @@ data class MainVisitor(
 				builder,
 				typeInfo.llvmType,
 				variable.loadValue(builder),
-				typeInfo.nameAssociation[name]!!,
+				typeInfo.indexOf(name),
 				EMPTY_STRING
 			)
 			return LLVMBuildLoad2(
 				builder,
-				typeInfo.namedEntries[name]!!.llvmType,
+				typeInfo[name].llvmType,
 				structFieldPtrN,
 				EMPTY_STRING
 			)
