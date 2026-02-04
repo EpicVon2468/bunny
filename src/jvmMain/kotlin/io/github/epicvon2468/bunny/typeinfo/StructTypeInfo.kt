@@ -5,7 +5,9 @@ import io.github.epicvon2468.bunny.LLVMTypeRef
 data class StructTypeInfo(
 	override val llvmType: LLVMTypeRef,
 	override val name: String,
-	val entries: List<TypeInfo>
+	val entries: List<TypeInfo>,
+	val namedEntries: Map<String, TypeInfo>,
+	val nameAssociation: Map<String, Int>
 ) : TypeInfo {
 
 	override val names: List<String> = listOf(name)

@@ -80,21 +80,35 @@ data class MainVisitor(
 		}
 	}
 
-	// TODO: functions within structs, actual struct variables, find out if this even actually works
+	// TODO: functions within structs
 	fun visitStructDefinition(struct: MainParser.StructDefinitionContext) {
 		val name: String = struct.IDENTIFIER()!!.text
 		val llvmStruct: LLVMTypeRef = LLVMStructCreateNamed(context, name.cstr(arena))
-		val variableTypes: List<TypeInfo>? = struct.variableDefinition()?.map {
+		// TODO: This is a horrible crime against programming, redo this later
+		val list: MutableList<String> = mutableListOf()
+		val variableTypes: Map<String, TypeInfo>? = struct.variableDefinition()?.associate {
 			if (it.ASSIGNMENT() != null) error("Variable was provided an assignment in a struct!  Only a definition of the name and type was expected!")
-			scope.determineLLVMType(it.identifierWithType().type())
+			val identifierWIthType = it.identifierWithType()
+			val text: String = identifierWIthType.IDENTIFIER().text
+			list += text
+			text to scope.determineLLVMType(identifierWIthType.type())
 		}
+		val nameAssociation: Map<String, Int> = list.mapIndexed { index, string ->
+			string to index
+		}.toMap()
 		LLVMStructSetBody(
 			/*StructTy =*/ llvmStruct,
-			/*ElementTypes =*/ variableTypes?.map(TypeInfo::llvmType)?.toNativeArray(arena, LLVMTypeRef) ?: arena.allocateArray(LLVMTypeRef),
+			/*ElementTypes =*/ variableTypes?.values?.map(TypeInfo::llvmType)?.toNativeArray(arena, LLVMTypeRef) ?: arena.allocateArray(LLVMTypeRef),
 			/*ElementCount =*/ variableTypes?.size ?: 0,
 			/*Packed =*/ 0
 		)
-		scope = scope.withTypes(StructTypeInfo(llvmStruct, name, variableTypes ?: emptyList()))
+		scope = scope.withTypes(StructTypeInfo(
+			llvmStruct,
+			name,
+			variableTypes?.values?.toList() ?: emptyList(),
+			variableTypes ?: emptyMap(),
+			nameAssociation
+		))
 	}
 
 	// TODO: Fix difference in type between 'expected' definition and actual implementation.  Also fix the fact that function parameter names can be repeated.
@@ -381,6 +395,24 @@ data class MainVisitor(
 			}
 
 	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, scope: Scope): LLVMValueRef {
+		expr.structFieldCall()?.let { structFieldCall: MainParser.StructFieldCallContext ->
+			val variable: Variable = scope.lookupVariable(structFieldCall.IDENTIFIER(0).text)
+			val typeInfo: StructTypeInfo = variable.typeInfo as StructTypeInfo
+			val name: String = structFieldCall.IDENTIFIER(1).text
+			val structFieldPtrN: LLVMValueRef = LLVMBuildStructGEP2(
+				builder,
+				typeInfo.llvmType,
+				variable.loadValue(builder),
+				typeInfo.nameAssociation[name]!!,
+				EMPTY_STRING
+			)
+			return LLVMBuildLoad2(
+				builder,
+				typeInfo.namedEntries[name]!!.llvmType,
+				structFieldPtrN,
+				EMPTY_STRING
+			)
+		}
 		expr.staticFunctionCall()?.let {
 			val functionCall: MainParser.FunctionCallContext = it.functionCall()
 			when (functionCall.IDENTIFIER().text) {

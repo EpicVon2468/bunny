@@ -78,12 +78,14 @@ primaryExpression :
 	| FALSE
 	| staticFunctionCall
 	| functionCall
+	| structFieldCall
 	| IDENTIFIER
 	| OPEN_PAREN expression CLOSE_PAREN
 	;
 
 staticFunctionCall : IDENTIFIER '::' functionCall ;
 functionCall : IDENTIFIER OPEN_PAREN argList? CLOSE_PAREN ;
+structFieldCall : IDENTIFIER MEMBER_REFERENCE IDENTIFIER ;
 
 argList :
 	(
