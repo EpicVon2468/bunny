@@ -35,7 +35,7 @@ functionDefinition :
 	)
 	;
 
-functionBody : (variableDefinition | assignmentExpression | returnExpression)*;
+functionBody : (variableDefinition | assignmentExpression | standaloneExpression | returnExpression)*;
 
 structDefinition :
 	STRUCT IDENTIFIER
@@ -58,6 +58,8 @@ variableDefinition :
 	(ASSIGNMENT	expression)?
 	TERMINATION
 	;
+
+standaloneExpression : expression TERMINATION ;
 
 assignmentExpression : IDENTIFIER ASSIGNMENT expression TERMINATION ;
 

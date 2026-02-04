@@ -239,7 +239,7 @@ data class MainVisitor(
 				)
 				return
 			}
-			else -> {}
+			is MainParser.StandaloneExpressionContext -> evaluateExpression(input.expression(), localScope)
 		}
 	}
 
