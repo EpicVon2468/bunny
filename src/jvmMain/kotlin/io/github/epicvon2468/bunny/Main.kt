@@ -369,17 +369,53 @@ data class MainVisitor(
 		}
 	}
 
+	fun evaluateParameters(argList: MainParser.ArgListContext?, typeInfo: List<TypeInfo>, scope: Scope): List<LLVMValueRef>? =
+		argList
+			?.children
+			?.filterNot(TerminalNode::class::isInstance)
+			?.mapIndexed { index: Int, child: ParseTree ->
+				evaluateExpression(
+					child as MainParser.ExpressionContext,
+					scope.withReturnType(typeInfo[index])
+				)
+			}
+
 	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, scope: Scope): LLVMValueRef {
+		expr.staticFunctionCall()?.let {
+			val functionCall: MainParser.FunctionCallContext = it.functionCall()
+			when (functionCall.IDENTIFIER().text) {
+				"new" -> {
+					val structType: StructTypeInfo = scope.lookupType(it.IDENTIFIER().text) as StructTypeInfo
+					val llvmStructType: LLVMTypeRef = structType.llvmType
+					val args: List<LLVMValueRef>? = evaluateParameters(functionCall.argList(), structType.entries, scope)
+					val alloca: LLVMValueRef = LLVMBuildAlloca(builder, llvmStructType, EMPTY_STRING)
+					if (args.isNullOrEmpty()) return alloca
+					for ((index: Int, arg: LLVMValueRef) in args.withIndex()) {
+						val structFieldPtrN: LLVMValueRef = LLVMBuildStructGEP2(
+							builder,
+							llvmStructType,
+							alloca,
+							index,
+							EMPTY_STRING
+						)
+						LLVMBuildStore(builder, arg, structFieldPtrN)
+					}
+					return alloca
+				}
+				else -> TODO()
+			}
+		}
 		expr.functionCall()?.let {
 			val calledFunct: FunctionInfo = scope.lookupFunct(it.IDENTIFIER().text)
 			val llvmFunct: LLVMValueRef = calledFunct.llvmFunction
 			var size = 0
 			val args: MemorySegment = run {
-				val args: List<LLVMValueRef>? = it.argList()?.children?.filterNot(TerminalNode::class::isInstance)?.map { child ->
-					size++
-					evaluateExpression(child as MainParser.ExpressionContext, scope)
-				}
-				args ?: return@run MemorySegment.NULL
+				val args: List<LLVMValueRef> = evaluateParameters(
+					argList = it.argList(),
+					typeInfo = calledFunct.parameters.map(NamedParameter::typeInfo),
+					scope = scope
+				) ?: return@run MemorySegment.NULL
+				size = args.size
 				args.toNativeArray(arena, LLVMValueRef)
 			}
 			return LLVMBuildCall2(

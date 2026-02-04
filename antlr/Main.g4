@@ -76,11 +76,13 @@ primaryExpression :
 	| STRING_LITERAL
 	| TRUE
 	| FALSE
+	| staticFunctionCall
 	| functionCall
 	| IDENTIFIER
 	| OPEN_PAREN expression CLOSE_PAREN
 	;
 
+staticFunctionCall : IDENTIFIER '::' functionCall ;
 functionCall : IDENTIFIER OPEN_PAREN argList? CLOSE_PAREN ;
 
 argList :

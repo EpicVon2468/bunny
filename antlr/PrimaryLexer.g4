@@ -53,9 +53,10 @@ STRUCT : 'type' ;
 SINGLETON : 'singleton' ;
 RETURN : 'return' ;
 
-STATIC_KEYWORD_NEW : '::new' ;
-STATIC_KEYWORD_INSTANCE : '::instance()' ;
-STATIC_KEYWORD_DESTROY : '::destroy()' ;
+STATIC_REF : '::' ;
+//STATIC_KEYWORD_NEW : '::new' ;
+//STATIC_KEYWORD_INSTANCE : '::instance()' ;
+//STATIC_KEYWORD_DESTROY : '::destroy()' ;
 
 TRUE : 'true' ;
 FALSE : 'false' ;
