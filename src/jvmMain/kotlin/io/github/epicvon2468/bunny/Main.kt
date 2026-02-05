@@ -263,6 +263,22 @@ data class MainVisitor(
 			0 -> error("No children for expression '$expr'!")
 			1 -> return evaluateExpression(expr.getChild<MainParser.TermExpressionContext>(0), scope)
 			else -> {
+				evaluateOp(
+					expr = expr,
+					evaluate = { index: Int ->
+						evaluateExpression(expr.getChild<MainParser.TermExpressionContext>(index), scope)
+					},
+					evaluateOp = { op: String, lhs: LLVMValueRef, rhs: LLVMValueRef ->
+						// TODO: I need the TypeInfo of LHS & RHS
+						when (op) {
+							">" -> {}
+							">=" -> {}
+							"<" -> {}
+							"<=" -> {}
+						}
+						TODO()
+					}
+				)
 			}
 		}
 		TODO()
@@ -271,13 +287,13 @@ data class MainVisitor(
 	fun evaluateOp(
 		expr: ParserRuleContext,
 		evaluate: (index: Int) -> LLVMValueRef,
-		evaluateOp: (op: Char, lhs: LLVMValueRef, rhs: LLVMValueRef) -> LLVMValueRef
+		evaluateOp: (op: String, lhs: LLVMValueRef, rhs: LLVMValueRef) -> LLVMValueRef
 	): LLVMValueRef {
 		var value: LLVMValueRef = evaluate(0)
 		var index = 0
 		while (index < expr.childCount) {
 			value = evaluateOp(
-				/*op =*/ expr.getChild<TerminalNode>(index + 1).text.trim().first(),
+				/*op =*/ expr.getChild<TerminalNode>(index + 1).text.trim(),
 				/*lhs =*/ value,
 				/*rhs =*/ evaluate(index + 2)
 			)
@@ -296,13 +312,13 @@ data class MainVisitor(
 			evaluate = { index: Int ->
 				evaluateExpression(expr.getChild<MainParser.FactorExpressionContext>(index), scope)
 			},
-			evaluateOp = { op: Char, lhs: LLVMValueRef, rhs: LLVMValueRef ->
+			evaluateOp = { op: String, lhs: LLVMValueRef, rhs: LLVMValueRef ->
 				when (op) {
-					'+' -> when (scope.returnType as NumberTypeInfo) {
+					"+" -> when (scope.returnType as NumberTypeInfo) {
 						is IntTypeInfo -> LLVMBuildAdd(builder, lhs, rhs, EMPTY_STRING)
 						is FloatTypeInfo -> LLVMBuildFAdd(builder, lhs, rhs, EMPTY_STRING)
 					}
-					'-' -> when (scope.returnType as NumberTypeInfo) {
+					"-" -> when (scope.returnType as NumberTypeInfo) {
 						is IntTypeInfo -> LLVMBuildSub(builder, lhs, rhs, EMPTY_STRING)
 						is FloatTypeInfo -> LLVMBuildFSub(builder, lhs, rhs, EMPTY_STRING)
 					}
@@ -320,14 +336,14 @@ data class MainVisitor(
 			evaluate = { index: Int ->
 				evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(index), scope)
 			},
-			evaluateOp = { op: Char, lhs: LLVMValueRef, rhs: LLVMValueRef ->
+			evaluateOp = { op: String, lhs: LLVMValueRef, rhs: LLVMValueRef ->
 				when (op) {
-					'/' -> when (scope.returnType as NumberTypeInfo) {
+					"/" -> when (scope.returnType as NumberTypeInfo) {
 						is IntTypeInfo.Signed -> LLVMBuildSDiv(builder, lhs, rhs, EMPTY_STRING)
 						is IntTypeInfo.Unsigned -> LLVMBuildUDiv(builder, lhs, rhs, EMPTY_STRING)
 						is FloatTypeInfo -> LLVMBuildFDiv(builder, lhs, rhs, EMPTY_STRING)
 					}
-					'*' -> when (scope.returnType as NumberTypeInfo) {
+					"*" -> when (scope.returnType as NumberTypeInfo) {
 						is IntTypeInfo -> LLVMBuildMul(builder, lhs, rhs, EMPTY_STRING)
 						is FloatTypeInfo -> LLVMBuildFMul(builder, lhs, rhs, EMPTY_STRING)
 					}
