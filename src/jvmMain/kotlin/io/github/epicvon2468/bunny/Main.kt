@@ -259,9 +259,9 @@ data class MainVisitor(
 	}
 
 	fun evaluateExpression(expr: MainParser.ComparisonExpressionContext, scope: Scope): LLVMValueRef {
-		when (expr.childCount) {
+		return when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.TermExpressionContext>(0), scope)
+			1 -> evaluateExpression(expr.getChild<MainParser.TermExpressionContext>(0), scope)
 			else -> {
 				evaluateOp(
 					expr = expr,
@@ -269,19 +269,36 @@ data class MainVisitor(
 						evaluateExpression(expr.getChild<MainParser.TermExpressionContext>(index), scope)
 					},
 					evaluateOp = { op: String, lhs: LLVMValueRef, rhs: LLVMValueRef ->
-						// TODO: I need the TypeInfo of LHS & RHS
-						when (op) {
-							">" -> {}
-							">=" -> {}
-							"<" -> {}
-							"<=" -> {}
+						// FIXME: Defeated by 'define mutable it: bool = 1 > 0;'
+						// FIXME: Defeated by everything
+						// https://llvm.org/doxygen/group__LLVMCCoreTypes.html#ga242440d0e4a6d84d80b91df15e161971
+						return@evaluateOp when (op) {
+							">" -> when (scope.returnType as NumberTypeInfo) {
+								is IntTypeInfo.Signed -> LLVMBuildICmp(builder, 38 /*= LLVMIntSGT*/, lhs, rhs, EMPTY_STRING)
+								is IntTypeInfo.Unsigned -> LLVMBuildICmp(builder, 34 /*= LLVMIntUGT*/, lhs, rhs, EMPTY_STRING)
+								is FloatTypeInfo -> LLVMBuildFCmp(builder, 2 /*= LLVMRealOGT*/, lhs, rhs, EMPTY_STRING)
+							}
+							">=" -> when (scope.returnType as NumberTypeInfo) {
+								is IntTypeInfo.Signed -> LLVMBuildICmp(builder, 39 /*= LLVMIntSGE*/, lhs, rhs, EMPTY_STRING)
+								is IntTypeInfo.Unsigned -> LLVMBuildICmp(builder, 35 /*= LLVMIntUGE*/, lhs, rhs, EMPTY_STRING)
+								is FloatTypeInfo -> LLVMBuildFCmp(builder, 3 /*= LLVMRealOGE*/, lhs, rhs, EMPTY_STRING)
+							}
+							"<" -> when (scope.returnType as NumberTypeInfo) {
+								is IntTypeInfo.Signed -> LLVMBuildICmp(builder, 40 /*= LLVMIntSLT*/, lhs, rhs, EMPTY_STRING)
+								is IntTypeInfo.Unsigned -> LLVMBuildICmp(builder, 36 /*= LLVMIntULT*/, lhs, rhs, EMPTY_STRING)
+								is FloatTypeInfo -> LLVMBuildFCmp(builder, 4 /*= LLVMRealOLT*/, lhs, rhs, EMPTY_STRING)
+							}
+							"<=" -> when (scope.returnType as NumberTypeInfo) {
+								is IntTypeInfo.Signed -> LLVMBuildICmp(builder, 41 /*= LLVMIntSLE*/, lhs, rhs, EMPTY_STRING)
+								is IntTypeInfo.Unsigned -> LLVMBuildICmp(builder, 37 /*= LLVMIntULE*/, lhs, rhs, EMPTY_STRING)
+								is FloatTypeInfo -> LLVMBuildFCmp(builder, 5 /*= LLVMRealOLE*/, lhs, rhs, EMPTY_STRING)
+							}
+							else -> error("Illegal operator '$op', expected '>', '>=', '<', or '<='!")
 						}
-						TODO()
 					}
 				)
 			}
 		}
-		TODO()
 	}
 
 	fun evaluateOp(
