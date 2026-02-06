@@ -78,10 +78,15 @@ data class Scope private constructor(
 	 * @param other the [Scope] to append lookup entries from.
 	 * @return a new [Scope] with combined lookups between this and [other].
 	 */
-	fun mergeLookups(other: Scope): Scope = childScope(
-		other.typeLookup,
-		other.functionLookup,
-		other.variableLookup
+	fun mergeLookups(
+		other: Scope,
+		includeTypes: Boolean = true,
+		includeFunctions: Boolean = true,
+		includeVariables: Boolean = true
+	): Scope = childScope(
+		if (includeTypes) other.typeLookup else null,
+		if (includeFunctions) other.functionLookup else null,
+		if (includeVariables) other.variableLookup else null
 	)
 
 	/**
