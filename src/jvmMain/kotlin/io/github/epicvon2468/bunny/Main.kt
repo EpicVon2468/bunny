@@ -249,13 +249,25 @@ data class MainVisitor(
 	)
 
 	fun evaluateExpression(expr: MainParser.EqualityExpressionContext, scope: Scope): LLVMValueRef {
-		when (expr.childCount) {
+		return when (expr.childCount) {
 			0 -> error("No children for expression '$expr'!")
-			1 -> return evaluateExpression(expr.getChild<MainParser.ComparisonExpressionContext>(0), scope)
+			1 -> evaluateExpression(expr.getChild<MainParser.ComparisonExpressionContext>(0), scope)
 			else -> {
+				evaluateOp(
+					expr = expr,
+					evaluate = { index: Int ->
+						evaluateExpression(expr.getChild<MainParser.ComparisonExpressionContext>(index), scope)
+					},
+					evaluateOp = { op: String, lhs: LLVMValueRef, rhs: LLVMValueRef ->
+						return@evaluateOp when (op) {
+							"!=" -> LLVMBuildICmp(builder, 33 /*= LLVMIntNE*/, lhs, rhs, EMPTY_STRING)
+							"==" -> LLVMBuildICmp(builder, 32 /*= LLVMIntEQ*/, lhs, rhs, EMPTY_STRING)
+							else -> error("Illegal operator '$op', expected '!=' or '=='!")
+						}
+					}
+				)
 			}
 		}
-		TODO()
 	}
 
 	fun evaluateExpression(expr: MainParser.ComparisonExpressionContext, scope: Scope): LLVMValueRef {

@@ -177,6 +177,7 @@ data class Scope private constructor(
 				put(FloatTypeInfo(LLVMFloatTypeInContext(context), "f32"))
 				put(FloatTypeInfo(LLVMDoubleTypeInContext(context), "f64"))
 
+				// TODO: rework to add separate PointerTypeInfo stuff, add opaque + backed types
 				put(SimpleTypeInfo(LLVMPointerTypeInContext(context, 0), "ptr"))
 			}
 		)

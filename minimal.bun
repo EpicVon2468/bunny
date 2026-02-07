@@ -12,9 +12,6 @@ funct print_i32(zero: i32);
 funct print_i64(zero: i64);
 
 funct main(/*argc: i32, argv: **u8*/): i32 {
-	define instance: abc = abc::new(1, 2, 3);
-	print_i32(instance.one);
-	print_i32(instance.two);
-	print_i64(instance.three);
-	return 0;
+	define mutable a: i32 = 0;
+	return 1 != a;
 }
