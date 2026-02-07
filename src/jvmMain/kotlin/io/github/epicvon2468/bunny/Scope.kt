@@ -70,7 +70,7 @@ data class Scope private constructor(
 	fun withVariables(vararg variables: Variable): Scope = withVariables(variables.associateBy(Variable::name))
 	fun withVariables(variables: Map<String, Variable>): Scope = childScope(addedVariables = variables)
 
-	fun withReturnType(returnType: TypeInfo): Scope = childScope(returnType = returnType)
+	fun withReturnType(returnType: TypeInfo?): Scope = childScope(returnType = returnType)
 
 	/**
 	 * Merges the type and function lookups of [other] with this [Scope]'s lookups.

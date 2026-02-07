@@ -393,9 +393,20 @@ data class MainVisitor(
 				bool(true, scope),
 				EMPTY_STRING
 			)
+//			is BooleanTypeInfo -> {
+//				val value: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope)
+//				if (LLVMIsConstant(value) != 0) return LLVMConstNot(value)
+//				LLVMBuildXor(
+//					builder,
+//					value,
+//					bool(true, scope),
+//					EMPTY_STRING
+//				)
+//			}
 			is IntTypeInfo -> {
 				val zero: LLVMValueRef = LLVMConstInt(scope.returnType.llvmType, 0L, 0)
 				val value: LLVMValueRef = evaluateExpression(expr.getChild<MainParser.UnaryExpressionContext>(1), scope)
+//				if (LLVMIsConstant(value) != 0) return LLVMConstNeg(value)
 				if (expr.NOT() != null) {
 					// https://llvm.org/doxygen/llvm-c_2Core_8h_source.html#l00294
 					// %4 = icmp ne i32 %3, 0
@@ -541,13 +552,16 @@ data class MainVisitor(
 }
 
 // TODO: Use this for "auto"-like keyword, so we can just infer info about the type by evaluating the expression literally.
-fun ParseTree.isLiteralExpression(): Boolean {
-	tailrec fun recurseThrough(tree: ParseTree): Boolean {
+fun ParseTree.isLiteralExpression(finalValidate: (MainParser.PrimaryExpressionContext) -> Boolean = { true }): Boolean {
+	tailrec fun recurseThrough(
+		tree: ParseTree,
+		finalValidate: (MainParser.PrimaryExpressionContext) -> Boolean = { true }
+	): Boolean {
 		if (tree.childCount != 1) return false
 		if (tree !is MainParser.PrimaryExpressionContext) return recurseThrough(tree.getChild(0))
-		return true
+		return finalValidate(tree)
 	}
-	return recurseThrough(this)
+	return recurseThrough(this, finalValidate)
 }
 
 inline fun <reified T : ParseTree> ParserRuleContext.getChildOrNull(i: Int): T? = this.getChild(i) as? T

@@ -23,7 +23,7 @@ fun test() {
 				int32Type,
 				arena.allocateArray(LLVMTypeRef, ptrType),
 				1,
-				0
+				1
 			)
 		)
 
