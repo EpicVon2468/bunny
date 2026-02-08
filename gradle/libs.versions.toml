@@ -1,7 +1,7 @@
 [versions]
-kotlin = "2.3.0"
+kotlin = "2.3.10"
 kotlinx-io = "0.8.2"
-kotlinx-serialisation = "1.10.0-RC"
+kotlinx-serialisation = "1.10.0"
 antlr4 = "4.13.2"
 
 [libraries]
