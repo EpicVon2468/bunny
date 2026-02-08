@@ -30,6 +30,9 @@ import java.lang.foreign.MemorySegment
 // https://llvm.org/doxygen/group__LLVMCCoreContext.html
 // https://llvm.org/doxygen/files.html
 // https://llvm.org/docs/LangRef.html
+// https://github.com/antlr/antlr4/blob/dev/doc/wildcard.md
+// https://tomassetti.me/antlr-mega-tutorial/#chapter23
+// https://plugins.jetbrains.com/docs/intellij/custom-language-support-tutorial.html
 fun main(args: Array<String>) {
 	println("Got args: ${args.contentToString()}")
 	println("Java library path: ${System.getProperty("java.library.path")}")
