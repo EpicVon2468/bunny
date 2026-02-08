@@ -36,7 +36,6 @@ import platform.posix.exit as _exit
 @OptIn(ShutUpAndLetMeUseCCode::class)
 fun main(args: Array<String>) {
 	println("Hello, world!")
-	if (args.getOrNull(0) != null) return io.github.epicvon2468.bunny.codegen.main(args)
 	val isDebug: Boolean = memScoped {
 		val str: CArrayPointer<ByteVar> = allocArray<ByteVar>(PATH_MAX + 1)
 		val length: ssize_t = readlink("/proc/self/exe", str, PATH_MAX.convert())
