@@ -43,11 +43,6 @@ fun main(args: Array<String>) {
 	}
 }
 
-@JvmField
-val EMPTY_STRING: MemorySegment = Arena.global().allocateFrom("")
-
-fun String?.cstr(arena: Arena): MemorySegment = if (this == "" || this == null) EMPTY_STRING else arena.allocateFrom(this)
-
 data class MainVisitor(
 	val parser: MainParser,
 	val arena: Arena,
@@ -433,20 +428,23 @@ data class MainVisitor(
 		}
 	}
 
-	fun evaluateParameters(argList: MainParser.ArgListContext?, typeInfo: List<TypeInfo>, scope: Scope): List<LLVMValueRef>? =
-		argList
-			?.children
-			?.filterNot(TerminalNode::class::isInstance)
-			?.mapIndexed { index: Int, child: ParseTree ->
-				evaluateExpression(
-					child as MainParser.ExpressionContext,
-					scope.withReturnType(typeInfo[index])
-				)
-			}
+	fun evaluateParameters(
+		argList: MainParser.ArgListContext?,
+		typeInfo: List<TypeInfo>,
+		scope: Scope
+	): List<LLVMValueRef>? = argList
+		?.children
+		?.filterNot(TerminalNode::class::isInstance)
+		?.mapIndexed { index: Int, child: ParseTree ->
+			evaluateExpression(
+				child as MainParser.ExpressionContext,
+				scope.withReturnType(typeInfo[index])
+			)
+		}
 
 	fun evaluateExpression(expr: MainParser.PrimaryExpressionContext, scope: Scope): LLVMValueRef {
 		expr.structFieldCall()?.let { structFieldCall: MainParser.StructFieldCallContext ->
-			val variable: Variable = scope.lookupVariable(structFieldCall.IDENTIFIER(0).text)
+			val variable: MutableVariable = scope.lookupMutableVariable(structFieldCall.IDENTIFIER(0).text)
 			val typeInfo: StructTypeInfo = variable.typeInfo as StructTypeInfo
 			val name: String = structFieldCall.IDENTIFIER(1).text
 			val structFieldPtrN: LLVMValueRef = LLVMBuildStructGEP2(
@@ -558,7 +556,7 @@ fun ParseTree.isLiteralExpression(finalValidate: (MainParser.PrimaryExpressionCo
 		finalValidate: (MainParser.PrimaryExpressionContext) -> Boolean = { true }
 	): Boolean {
 		if (tree.childCount != 1) return false
-		if (tree !is MainParser.PrimaryExpressionContext) return recurseThrough(tree.getChild(0))
+		if (tree !is MainParser.PrimaryExpressionContext) return recurseThrough(tree.getChild(0), finalValidate)
 		return finalValidate(tree)
 	}
 	return recurseThrough(this, finalValidate)
@@ -566,16 +564,3 @@ fun ParseTree.isLiteralExpression(finalValidate: (MainParser.PrimaryExpressionCo
 
 inline fun <reified T : ParseTree> ParserRuleContext.getChildOrNull(i: Int): T? = this.getChild(i) as? T
 inline fun <reified T : ParseTree> ParserRuleContext.getChild(i: Int): T = this.getChildOrNull(i)!!
-
-fun MemorySegment.jvmNull(): MemorySegment? = if (this == MemorySegment.NULL) null else this
-fun MemorySegment?.nativeNull(): MemorySegment = this ?: MemorySegment.NULL
-// This always evaluates 'other' (even if inlined)
-infix fun MemorySegment.elvis(other: MemorySegment): MemorySegment = this.jvmNull() ?: other
-// This version does not have the same problem, but might not always want braces
-infix fun MemorySegment.elvis(other: () -> MemorySegment): MemorySegment = this.jvmNull() ?: other()
-
-fun Scope.determineLLVMType(type: MainParser.TypeContext?): TypeInfo {
-	if (type == null) return this.lookupType("")
-	if (type.pointerType() != null) return this.lookupType("ptr")
-	return this.lookupType(type.IDENTIFIER()!!.text)
-}
