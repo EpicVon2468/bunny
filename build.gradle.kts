@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.epicvon2468.bunny"
-version = "1.0.0"
+version = libs.versions.self.get()
 
 repositories {
 	mavenCentral()
@@ -104,6 +104,7 @@ kotlin {
 	sourceSets {
 		commonMain.dependencies {
 			implementation(libs.kotlinx.serialisation)
+			implementation(libs.jetBrains.annotations)
 		}
 //		nativeMain.dependencies {
 //			implementation(libs.kotlinx.io)

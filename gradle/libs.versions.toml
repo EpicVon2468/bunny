@@ -3,11 +3,13 @@ kotlin = "2.3.10"
 kotlinx-io = "0.8.2"
 kotlinx-serialisation = "1.10.0"
 antlr4 = "4.13.2"
+self = "0.0.0"
 
 [libraries]
 kotlinx-io = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
 kotlinx-serialisation = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialisation" }
 antlr4 = { module = "org.antlr:antlr4", version.ref = "antlr4" }
+jetBrains-annotations = { module = "org.jetbrains:annotations", version = "26.0.2-1" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

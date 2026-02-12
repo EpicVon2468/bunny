@@ -14,8 +14,6 @@ import llvm.LLVMCreateBuilderInContext
 import llvm.LLVMFunctionType
 import llvm.LLVMGetTypeByName2
 
-fun main(args: Array<String>) = Unit
-
 fun MemScope.generateRecurse(input: List<SerialisableToken>) = CodeGen.withModule("anonymous") { context: LLVMContextRef ->
 	LLVMCreateBuilderInContext(context)!!.use { builder: LLVMBuilderRef ->
 		LLVMGetTypeByName2(context, "i32")
