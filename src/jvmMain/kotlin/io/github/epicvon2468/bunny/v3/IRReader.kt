@@ -1,14 +1,13 @@
 package io.github.epicvon2468.bunny.v3
 
-import java.io.BufferedReader
+import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
 
-data class IRReader(val source: BufferedReader) : AutoCloseable {
+data class IRReader(val input: String) : AutoCloseable {
 
-	fun read(count: Int): String {
-		val out = CharArray(count)
-		this.source.read(out)
-		return out.joinToString()
-	}
+	val source: BufferedInputStream = BufferedInputStream(ByteArrayInputStream(input.toByteArray()))
 
-	override fun close() = this.source.close()
+	fun read(count: Int): String = ByteArray(count).apply(source::read).decodeToString()
+
+	override fun close() = source.close()
 }
