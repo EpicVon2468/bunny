@@ -1,0 +1,27 @@
+IDENTIFIER = [A-Za-z_][A-Za-z_\d]*
+
+TYPE = IDENTIFIER
+
+TYPE_LIST = TYPE(;TYPE)*
+
+
+
+fBegin <name: IDENTIFIER> <parameters: TYPE_LIST> <returnType: TYPE>
+
+fEnd <name: IDENTIFIER>
+
+def <name: IDENTIFIER> <type: TYPE>
+
+store <name: IDENTIFIER> [lit | expr]
+
+load <name: IDENTIFIER> <type: TYPE>
+
+lit <value: ???> <type: TYPE>
+
+expr <name: IDENTIFIER> <returnType: TYPE>
+
+eBegin <name: IDENTIFIER> <returnType: TYPE>
+
+eEnd <name: IDENTIFIER>
+
+ret [lit | expr]

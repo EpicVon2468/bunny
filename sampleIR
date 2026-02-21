@@ -4,30 +4,25 @@ fBegin "main" "i32;P" "i32"
 # create variable "a" of type "i32"
 def "a" "i32"
 # assign "a" to the literal value "2" of type "i32"
-store "a" lit "i32" 2
+store "a" lit "2" "i32"
 
 def "b" "i32"
-store "b" lit "i32" 2
+store "b" lit "2" "i32"
 
 # begin an expression which will return a value of type "i32"
 eBegin "b$0" "i32"
-
-load "a"
+load "a" "i32"
 # signed int addition
 op SIADD
-load "b"
-
+load "b" "i32"
 # expression end
-eEnd
-
-store "b" expr "b$0"
+eEnd "b$0"
+store "b" expr "b$0" "i32"
 
 eBegin "ret$0" "i32"
+load "b" "i32"
+eEnd "ret$0"
+ret expr "ret$0" "i32"
 
-load "b"
-
-eEnd
-
-ret expr "ret$0"
-
-fEnd "main" # end function main
+# end function main
+fEnd "main"
