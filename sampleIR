@@ -1,0 +1,33 @@
+# begin function "main" with two parameters, an i32 and a pointer of some kind
+fBegin "main" "i32;P" "i32"
+
+# create variable "a" of type "i32"
+def "a" "i32"
+# assign "a" to the literal value "2" of type "i32"
+store "a" lit "i32" 2
+
+def "b" "i32"
+store "b" lit "i32" 2
+
+# begin an expression which will return a value of type "i32"
+eBegin "b$0" "i32"
+
+load "a"
+# signed int addition
+op SIADD
+load "b"
+
+# expression end
+eEnd
+
+store "b" expr "b$0"
+
+eBegin "ret$0" "i32"
+
+load "b"
+
+eEnd
+
+ret expr "ret$0"
+
+fEnd "main" # end function main
