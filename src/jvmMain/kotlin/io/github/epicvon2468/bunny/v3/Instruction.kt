@@ -19,7 +19,73 @@ sealed interface Instruction {
 	data class GroupBegin(val returnType: Type) : Instruction
 	data class GroupEnd(val returnType: Type) : Instruction
 
+	// TODO: LHS, RHS
+	data class InvokeOpcode(val value: Opcode)
+
 	data class Return(val value: Value) : Instruction
+}
+
+enum class Opcode {
+
+	/**
+	 * Signed Integer Division
+	 */
+	SIDIV,
+
+	/**
+	 * Unsigned Integer Division
+	 */
+	UIDIV,
+
+	/**
+	 * Floating-Point Division
+	 */
+	FDIV,
+
+	/**
+	 * Signed Integer Multiplication
+	 */
+	SIMUL,
+
+	/**
+	 * Unsigned Integer Multiplication
+	 */
+	UIMUL,
+
+	/**
+	 * Floating-Point Multiplication
+	 */
+	FMUL,
+
+	/**
+	 * Signed Integer Addition
+	 */
+	SIADD,
+
+	/**
+	 * Unsigned Integer Addition
+	 */
+	UIADD,
+
+	/**
+	 * Floating-Point Addition
+	 */
+	FADD,
+
+	/**
+	 * Singed Integer Subtraction
+	 */
+	SISUB,
+
+	/**
+	 * Unsigned Integer Subtraction
+	 */
+	UISUB,
+
+	/**
+	 * Floating-Point Subtraction
+	 */
+	FSUB
 }
 
 typealias Type = String
