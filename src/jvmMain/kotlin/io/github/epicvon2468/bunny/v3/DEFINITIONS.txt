@@ -6,22 +6,38 @@ TYPE_LIST = TYPE(;TYPE)*
 
 
 
+// Function Begin
 fBegin <name: IDENTIFIER> <parameters: TYPE_LIST> <returnType: TYPE>
 
+// Function End
 fEnd <name: IDENTIFIER>
 
+// Define Variable
 def <name: IDENTIFIER> <type: TYPE>
 
+// Store Value
 store <name: IDENTIFIER> [lit | expr]
 
+// Load Value
 load <name: IDENTIFIER> <type: TYPE>
 
+// Literal Value
 lit <value: ???> <type: TYPE>
 
+// Expression Reference
 expr <name: IDENTIFIER> <returnType: TYPE>
 
+// Expression Begin
 eBegin <name: IDENTIFIER> <returnType: TYPE>
 
+// Expression End
 eEnd <name: IDENTIFIER>
 
+// Group Begin
+gBegin <returnType: TYPE>
+
+// Group End
+gEnd <returnType: TYPE>
+
+// Return
 ret [lit | expr]
