@@ -13,7 +13,7 @@ store "b" lit "2" "i32"
 eBegin "b$0" "i32"
 load "a" "i32"
 # signed int addition
-op SIADD
+_op SIADD
 load "b" "i32"
 # expression end
 eEnd "b$0"

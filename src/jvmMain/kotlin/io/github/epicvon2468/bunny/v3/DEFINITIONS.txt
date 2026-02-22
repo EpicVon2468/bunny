@@ -39,5 +39,7 @@ gBegin <returnType: TYPE>
 // Group End
 gEnd <returnType: TYPE>
 
+_op <value: ???>
+
 // Return
 ret [lit | expr]

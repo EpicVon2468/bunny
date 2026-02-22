@@ -24,6 +24,7 @@ data class IRReader(val input: String) : AutoCloseable {
 			source.readLine()
 			return matchInstruction()
 		}
+		val instFunct: () -> Unit
 		when (val out: String = first + read(2)) {
 			// fBegin
 			"fBe" -> {
@@ -67,13 +68,16 @@ data class IRReader(val input: String) : AutoCloseable {
 			"gEn" -> {
 				skip()
 			}
+			// _op
+			"_op" -> {
+			}
 			// ret
 			"ret" -> {
 			}
-			else -> {
-				println(out)
-			}
+			else -> return println(out)
 		}
+		// ' '
+		skip(1)
 		return matchInstruction()
 	}
 
@@ -81,6 +85,6 @@ data class IRReader(val input: String) : AutoCloseable {
 
 	companion object {
 
-		const val INVALID: Char = (-1).toChar()
+		const val INVALID: Char = 1.unaryMinus().toChar()
 	}
 }
