@@ -9,44 +9,70 @@ data class IRReader(val input: String) : AutoCloseable {
 
 	val source: BufferedReader = BufferedReader(StringReader(input))
 
+	fun read(): Char = source.read().toChar()
 	fun read(count: Int): String = CharArray(count).apply(source::read).concatToString()
+	fun skip(n: Long = 1): Long = source.skip(n)
 
 	fun start() {
 		matchInstruction()
 	}
 
 	tailrec fun matchInstruction() {
-		val first: Char = source.read().toChar()
+		val first: Char = read()
 		if (first == INVALID) return
 		if (first == '#') {
 			source.readLine()
 			return matchInstruction()
 		}
-		when (first + read(2)) {
+		when (val out: String = first + read(2)) {
 			// fBegin
-			"fBe" -> {}
+			"fBe" -> {
+				skip(3)
+			}
 			// fEnd
-			"fEn" -> {}
+			"fEn" -> {
+				skip()
+			}
 			// def
-			"def" -> {}
+			"def" -> {
+			}
 			// store
-			"sto" -> {}
+			"sto" -> {
+				skip(2)
+			}
 			// load
-			"loa" -> {}
+			"loa" -> {
+				skip()
+			}
 			// lit
-			"lit" -> {}
+			"lit" -> {
+			}
 			// expr
-			"exp" -> {}
+			"exp" -> {
+				skip()
+			}
 			// eBegin
-			"eBe" -> {}
+			"eBe" -> {
+				skip(3)
+			}
 			// eEnd
-			"eEn" -> {}
+			"eEn" -> {
+				skip()
+			}
 			// gBegin
-			"gBe" -> {}
+			"gBe" -> {
+				skip(3)
+			}
 			// gEnd
-			"gEn" -> {}
+			"gEn" -> {
+				skip()
+			}
 			// ret
-			"ret" -> {}
+			"ret" -> {
+			}
+			else -> {
+				println(out)
+			}
 		}
 		return matchInstruction()
 	}
