@@ -4,6 +4,8 @@ import kotlin.reflect.KClass
 
 sealed interface Instruction : Serial {
 
+	override fun serialise(): String = Serial.INST_TO_BINARY[this::class].toString()
+
 	data class FunctionBegin(val name: Identifier, val parameters: List<Type>) : Instruction
 	data class FunctionEnd(val name: Identifier) : Instruction
 
@@ -29,13 +31,16 @@ sealed interface Instruction : Serial {
 
 interface Serial {
 
-	fun serialise(instruction: Instruction): String = INST_TO_BINARY[instruction::class].toString()
+	fun serialise(): String = TODO()
 	fun deserialise(input: String): Instruction {
-		val klass = BINARY_TO_INST[input.toByte()]!!
+		val translated = input.substring(0..<4) + input.substring(5..<input.length)
+		println("input: $translated")
+		val klass = BINARY_TO_INST[translated.toByte(radix = 2)]!!
+		println("class: $klass")
 		TODO()
 	}
 
-	companion object {
+	companion object : Serial {
 
 		val INST_TO_BINARY: Map<KClass<out Instruction>, Byte> = mapOf(
 			Instruction.FunctionBegin::class to 0b0000_0000,
