@@ -1,28 +1,28 @@
 # begin function "main" with two parameters, an i32 and a pointer of some kind
-fBegin "main" "i32;P" "i32"
+0000_0000 "main" "i32;P" "i32"
 
 # create variable "a" of type "i32"
-def "a" "i32"
+0000_0010 "a" "i32"
 # assign "a" to the literal value "2" of type "i32"
-store "a" lit "2" "i32"
+0000_0011 "a" lit "2" "i32"
 
-def "b" "i32"
-store "b" lit "2" "i32"
+0000_0010 "b" "i32"
+0000_0011 "b" lit "2" "i32"
 
 # begin an expression which will return a value of type "i32"
-eBegin "b$0" "i32"
-load "a" "i32"
+0000_0111 "b$0" "i32"
+0000_0100 "a" "i32"
 # signed int addition
-_op SIADD
-load "b" "i32"
+0000_1011 SIADD
+0000_0100 "b" "i32"
 # expression end
-eEnd "b$0"
-store "b" expr "b$0" "i32"
+0000_1000 "b$0"
+0000_0011 "b" expr "b$0" "i32"
 
-eBegin "ret$0" "i32"
-load "b" "i32"
-eEnd "ret$0"
-ret expr "ret$0" "i32"
+0000_0111 "ret$0" "i32"
+0000_0100 "b" "i32"
+0000_1000 "ret$0"
+0000_1100 0000_0110 "ret$0" "i32"
 
 # end function main
-fEnd "main"
+0000_0001 "main"

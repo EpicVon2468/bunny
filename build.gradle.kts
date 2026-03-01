@@ -113,6 +113,7 @@ kotlin {
 		jvmMain.dependencies {
 			implementation(libs.antlr4)
 			implementation(project(":generated"))
+			implementation(kotlin("reflect"))
 		}
 		all {
 			languageSettings.enableLanguageFeature("ContextParameters")
