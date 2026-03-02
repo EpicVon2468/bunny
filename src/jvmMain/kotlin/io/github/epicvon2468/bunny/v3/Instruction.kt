@@ -1,5 +1,8 @@
 package io.github.epicvon2468.bunny.v3
 
+import java.lang.invoke.MethodHandles
+import java.lang.invoke.MethodType
+
 import kotlin.reflect.KClass
 
 sealed interface Instruction : Serial {
@@ -33,10 +36,12 @@ interface Serial {
 
 	fun serialise(): String = TODO()
 	fun deserialise(input: String): Instruction {
-		val translated = input.substring(0..<4) + input.substring(5..<input.length)
+		val translated = input.substring(0..3) + input.substring(5..8)
 		println("input: $translated")
-		val klass = BINARY_TO_INST[translated.toByte(radix = 2)]!!
+		val klass = BINARY_TO_INST[translated.toByte(radix = 2)]!!.java
 		println("class: $klass")
+		val lookup: MethodHandles.Lookup = MethodHandles.privateLookupIn(klass, MethodHandles.lookup())
+		val handle = lookup.findStatic(klass, "deserialise", MethodType.methodType(Instruction::class.java, String::class.java))
 		TODO()
 	}
 
