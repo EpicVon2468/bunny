@@ -5,7 +5,7 @@ import java.io.Reader
 sealed interface IR {
 
 	data class Funct(
-		val name: String,
+		val name: Identifier,
 		val parameters: Parameters,
 		val returnType: Type
 	) : IR {
@@ -14,7 +14,7 @@ sealed interface IR {
 
 			@JvmStatic
 			fun deserialise(mode: Byte, input: Reader): Funct {
-				val fBegin: Instruction.FBegin = deserialiseInstruction(input = input, op = mode) as Instruction.FBegin
+				val fBegin: Instruction.FBegin = deserialiseInstruction(input = input, op = mode)
 				TODO()
 			}
 		}
@@ -23,7 +23,7 @@ sealed interface IR {
 
 sealed interface Instruction {
 
-	data class FBegin(val name: String, val parameters: Parameters, val returnType: Type) : Instruction {
+	data class FBegin(val name: Identifier, val parameters: Parameters, val returnType: Type) : Instruction {
 
 		companion object {
 
@@ -31,6 +31,9 @@ sealed interface Instruction {
 
 			@JvmStatic
 			fun deserialise(input: Reader): Instruction {
+				val name: Identifier = input.readIdentifier()
+				// whitespace
+				input.skip(1)
 				TODO()
 			}
 		}
@@ -50,6 +53,8 @@ fun <T : Instruction> deserialiseInstruction(input: Reader, op: Byte? = null): T
 		else -> TODO()
 	} as T
 }
+
+typealias Identifier = String
 
 typealias Parameters = String
 
