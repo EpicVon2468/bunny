@@ -38,8 +38,6 @@ fun String.toIdentifier(): Identifier {
 	return this
 }
 
-fun Reader.readParameters(): Parameters {
-	TODO()
-}
+fun Reader.readParameters(): List<Identifier> = this.readQuoted(defaultCapacity = 10).split(';').map(String::toIdentifier)
 
 fun String.binaryToByte(): Byte = this.replace("_", "").toByte(radix = 2)

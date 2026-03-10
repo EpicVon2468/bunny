@@ -6,7 +6,7 @@ sealed interface IR {
 
 	data class Funct(
 		val name: Identifier,
-		val parameters: Parameters,
+		val parameters: List<Identifier>,
 		val returnType: Type,
 		val body: List<Instruction>
 	) : IR {
@@ -24,18 +24,24 @@ sealed interface IR {
 
 sealed interface Instruction {
 
-	data class FBegin(val name: Identifier, val parameters: Parameters, val returnType: Type) : Instruction {
+	data class FBegin(val name: Identifier, val parameters: List<Identifier>, val returnType: Type) : Instruction {
 
 		companion object {
 
 			const val OP: Byte = 0b0000_0000
 
 			@JvmStatic
-			fun deserialise(input: Reader): Instruction {
+			fun deserialise(input: Reader): FBegin {
 				val name: Identifier = input.readIdentifier()
 				// whitespace
 				input.skip(1)
-				TODO()
+				val parameters: List<Identifier> = input.readParameters()
+				// whitespace
+				input.skip(1)
+				val returnType: Type = input.readIdentifier(5)
+				// newline
+				input.skip(1)
+				return FBegin(name, parameters, returnType)
 			}
 		}
 	}
@@ -56,7 +62,4 @@ fun <T : Instruction> deserialiseInstruction(input: Reader, op: Byte? = null): T
 }
 
 typealias Identifier = String
-
-typealias Parameters = String
-
 typealias Type = String
