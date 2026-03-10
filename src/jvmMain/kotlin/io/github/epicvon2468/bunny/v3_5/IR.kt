@@ -1,14 +1,17 @@
 package io.github.epicvon2468.bunny.v3_5
 
+import java.io.OutputStreamWriter
 import java.io.Reader
 import java.io.Writer
 
 fun main() {
 	try {
-		"""
+		val function: IR.Funct = """
 			0000_0000 "main" "i32;P" "i32"
 			0000_0001
-		""".trimIndent().reader().use(::deserialisePrimary)
+		""".trimIndent().reader().use(::deserialisePrimary) as IR.Funct
+		println()
+		OutputStreamWriter(System.out).use(function::serialise)
 	} catch (e: Throwable) {
 		// System.err seems to get flushed manually, and then System.out only gets flushed from process exit, meaning errors show first
 		System.out.flush()
