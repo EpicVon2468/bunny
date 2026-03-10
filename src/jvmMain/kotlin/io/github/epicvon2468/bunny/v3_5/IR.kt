@@ -12,15 +12,15 @@ fun main() {
 		""".trimIndent()
 		val function: IR.Funct = input.reader().use(::deserialisePrimary) as IR.Funct
 		println()
-		val writer = CharArrayWriter(40)
-		writer.use(function::serialise)
-		val toString = writer.toString().dropLast(1)
+		val output: Writer = CharArrayWriter(40)
+		output.use(function::serialise)
+		val serialised: String = output.toString().dropLast(1)
 		println("'''")
 		println(input)
 		println("'''")
-		println(toString)
+		println(serialised)
 		println("'''")
-		println(toString == input)
+		println(serialised == input)
 	} catch (e: Throwable) {
 		// System.err seems to get flushed manually, and then System.out only gets flushed from process exit, meaning errors show first
 		System.out.flush()

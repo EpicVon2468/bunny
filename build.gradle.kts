@@ -115,6 +115,10 @@ kotlin {
 			implementation(project(":generated"))
 			implementation(kotlin("reflect"))
 		}
+		jvmTest.dependencies {
+			implementation("org.junit.jupiter:junit-jupiter-api:6.0.3")
+			implementation(kotlin("test"))
+		}
 		all {
 			languageSettings.enableLanguageFeature("ContextParameters")
 		}
