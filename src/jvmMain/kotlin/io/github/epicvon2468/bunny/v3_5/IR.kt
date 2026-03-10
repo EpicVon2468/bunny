@@ -7,7 +7,8 @@ sealed interface IR {
 	data class Funct(
 		val name: Identifier,
 		val parameters: Parameters,
-		val returnType: Type
+		val returnType: Type,
+		val body: List<Instruction>
 	) : IR {
 
 		companion object {

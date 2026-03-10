@@ -14,25 +14,32 @@ fun Reader.readInstruction(): Byte {
 	return result
 }
 
-fun Reader.readIdentifier(defaultCapacity: Int = 16): Identifier {
+fun Reader.readQuoted(defaultCapacity: Int = 16): String {
 	val output: StringBuilder = StringBuilder(defaultCapacity)
-	require(this.read(1) == "\"") { "Identifier did not start with '\"'!" }
+	require(this.read(1) == "\"") { "Quoted element did not start with '\"'!" }
 	while (true) {
 		val next: Char = this.read().toChar()
 		if (next == '"') break
 		output.append(next)
 	}
-	return output.toString().toIdentifier()
+	return output.toString()
 }
+
+fun Reader.readIdentifier(defaultCapacity: Int = 16): Identifier = this.readQuoted(defaultCapacity).toIdentifier()
 
 // PrimaryLexer.g4 vaguely defines the spec, although keyword stuff isn't important here since none of them are relevant
 fun String.toIdentifier(): Identifier {
 	fun badInput(): Nothing = throw IllegalArgumentException("Noncompliant String passed for Identifier conversion: \"$this\"!")
-	if (this.any(Char::isWhitespace)) badInput()
 	if (this.isEmpty()) badInput()
 	if (this == "_") badInput()
-	if ('"' in this) badInput()
+	if (this.length == 1 && this.single().isDigit()) badInput()
+	// no whitespace, no quotes, and no characters which are not one of: [letter, digit, '_']
+	if (this.any { it.isWhitespace() || it == '"' || (!it.isLetterOrDigit() && it != '_') }) badInput()
 	return this
+}
+
+fun Reader.readParameters(): Parameters {
+	TODO()
 }
 
 fun String.binaryToByte(): Byte = this.replace("_", "").toByte(radix = 2)
