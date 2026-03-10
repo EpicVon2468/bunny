@@ -10,11 +10,9 @@ fun main() {
 			0000_0000 "main" "i32;P" "i32"
 			0000_0001
 		""".trimIndent()
-		val function: IR.Funct = input.reader().use(::deserialisePrimary) as IR.Funct
+		val function: IR.Funct = input.reader().use(Reader::deserialisePrimary) as IR.Funct
 		println()
-		val output: Writer = CharArrayWriter(40)
-		output.use(function::serialise)
-		val serialised: String = output.toString().dropLast(1)
+		val serialised: String = function.serialise(initSize = 40).dropLast(1)
 		println("'''")
 		println(input)
 		println("'''")
@@ -28,10 +26,11 @@ fun main() {
 	}
 }
 
-// TODO: Unit tests
 interface Serialisable {
 
 	fun serialise(output: Writer)
+
+	fun serialise(initSize: Int = 100): String = CharArrayWriter(initSize).apply(this::serialise).toString()
 }
 
 sealed interface IR : Serialisable {
@@ -53,10 +52,10 @@ sealed interface IR : Serialisable {
 
 			@JvmStatic
 			fun deserialise(mode: Byte, input: Reader): Funct {
-				val fBegin: Instruction.FBegin = deserialiseInstruction(input = input, op = mode)
+				val fBegin: Instruction.FBegin = input.deserialiseInstruction(op = mode)
 				val body: MutableList<Instruction> = mutableListOf()
 				while (true) {
-					val next: Instruction = deserialiseInstruction(input = input)
+					val next: Instruction = input.deserialiseInstruction()
 					if (next is Instruction.FEnd) break
 					body.add(next)
 				}
@@ -125,17 +124,17 @@ sealed interface Instruction : Serialisable {
 	}
 }
 
-fun deserialisePrimary(input: Reader): IR = when (val binary: Byte = input.readInstruction()) {
-	Instruction.FBegin.OP -> IR.Funct.deserialise(binary, input)
+fun Reader.deserialisePrimary(): IR = when (val binary: Byte = this.readInstruction()) {
+	Instruction.FBegin.OP -> IR.Funct.deserialise(binary, this)
 	else -> TODO()
 }
 
-fun <T : Instruction> deserialiseInstruction(input: Reader, op: Byte? = null): T {
-	val op: Byte = op ?: input.readInstruction()
+fun <T : Instruction> Reader.deserialiseInstruction(op: Byte? = null): T {
+	val op: Byte = op ?: this.readInstruction()
 	@Suppress("UNCHECKED_CAST")
 	return when (op) {
-		Instruction.FBegin.OP -> Instruction.FBegin.deserialise(input)
-		Instruction.FEnd.OP -> Instruction.FEnd.deserialise(input)
+		Instruction.FBegin.OP -> Instruction.FBegin.deserialise(this)
+		Instruction.FEnd.OP -> Instruction.FEnd.deserialise(this)
 		else -> TODO()
 	} as T
 }
