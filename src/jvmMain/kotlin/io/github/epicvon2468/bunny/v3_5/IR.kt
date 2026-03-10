@@ -5,12 +5,10 @@ import java.io.Writer
 
 fun main() {
 	try {
-		deserialisePrimary(
-			"""
-				0000_0000 "main" "i32;P" "i32"
-				0000_0001
-			""".trimIndent().reader()
-		)
+		"""
+			0000_0000 "main" "i32;P" "i32"
+			0000_0001
+		""".trimIndent().reader().use(::deserialisePrimary)
 	} catch (e: Throwable) {
 		// System.err seems to get flushed manually, and then System.out only gets flushed from process exit, meaning errors show first
 		System.out.flush()
@@ -53,7 +51,11 @@ sealed interface IR {
 
 sealed interface Instruction {
 
-	data class FBegin(val name: Identifier, val parameters: List<Identifier>, val returnType: Type) : Instruction {
+	data class FBegin(
+		val name: Identifier,
+		val parameters: List<Identifier>,
+		val returnType: Type
+	) : Instruction {
 
 		companion object {
 
