@@ -2,6 +2,16 @@ package io.github.epicvon2468.bunny.v3_5
 
 import java.io.Reader
 
+fun main() {
+	try {
+		deserialisePrimary("""0000_0000 "main" "i32;P" "i32"""".reader())
+	} catch (e: Throwable) {
+		// System.err seems to get flushed manually, and then System.out only gets flushed from process exit, meaning errors show first
+		System.out.flush()
+		throw RuntimeException(e)
+	}
+}
+
 sealed interface IR {
 
 	data class Funct(
@@ -16,6 +26,7 @@ sealed interface IR {
 			@JvmStatic
 			fun deserialise(mode: Byte, input: Reader): Funct {
 				val fBegin: Instruction.FBegin = deserialiseInstruction(input = input, op = mode)
+				println("Got fBegin: $fBegin")
 				TODO()
 			}
 		}
