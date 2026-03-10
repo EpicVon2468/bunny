@@ -16,7 +16,12 @@ fun main() {
 	}
 }
 
-sealed interface IR {
+interface Serialisable {
+
+	fun serialise(output: Writer)
+}
+
+sealed interface IR : Serialisable {
 
 	data class Funct(
 		val name: Identifier,
@@ -24,6 +29,12 @@ sealed interface IR {
 		val returnType: Type,
 		val body: List<Instruction>
 	) : IR {
+
+		override fun serialise(output: Writer) {
+			Instruction.FBegin(this.name, this.parameters, this.returnType).serialise(output)
+			for (entry: Instruction in this.body) entry.serialise(output)
+			Instruction.FEnd.serialise(output)
+		}
 
 		companion object {
 
@@ -49,13 +60,17 @@ sealed interface IR {
 	}
 }
 
-sealed interface Instruction {
+sealed interface Instruction : Serialisable {
 
 	data class FBegin(
 		val name: Identifier,
 		val parameters: List<Identifier>,
 		val returnType: Type
 	) : Instruction {
+
+		override fun serialise(output: Writer) {
+
+		}
 
 		companion object {
 
@@ -81,11 +96,11 @@ sealed interface Instruction {
 
 		const val OP: Byte = 0b0000_0001
 
-		@JvmStatic
-		fun deserialise(input: Reader): FEnd = this.apply { input.skip(1) }
+		// Can't @JvmStatic an override fun
+		override fun serialise(output: Writer): Unit = output.write("${OP.toBinaryString()}\n")
 
 		@JvmStatic
-		fun serialise(output: Writer): Unit = output.write("${OP.toBinaryString()}\n")
+		fun deserialise(input: Reader): FEnd = this.apply { input.skip(1) }
 	}
 }
 
