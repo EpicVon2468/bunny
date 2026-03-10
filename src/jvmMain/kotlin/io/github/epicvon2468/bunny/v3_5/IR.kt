@@ -1,17 +1,26 @@
 package io.github.epicvon2468.bunny.v3_5
 
-import java.io.OutputStreamWriter
+import java.io.CharArrayWriter
 import java.io.Reader
 import java.io.Writer
 
 fun main() {
 	try {
-		val function: IR.Funct = """
+		val input: String = """
 			0000_0000 "main" "i32;P" "i32"
 			0000_0001
-		""".trimIndent().reader().use(::deserialisePrimary) as IR.Funct
+		""".trimIndent()
+		val function: IR.Funct = input.reader().use(::deserialisePrimary) as IR.Funct
 		println()
-		OutputStreamWriter(System.out).use(function::serialise)
+		val writer = CharArrayWriter(40)
+		writer.use(function::serialise)
+		val toString = writer.toString().dropLast(1)
+		println("'''")
+		println(input)
+		println("'''")
+		println(toString)
+		println("'''")
+		println(toString == input)
 	} catch (e: Throwable) {
 		// System.err seems to get flushed manually, and then System.out only gets flushed from process exit, meaning errors show first
 		System.out.flush()
@@ -19,6 +28,7 @@ fun main() {
 	}
 }
 
+// TODO: Unit tests
 interface Serialisable {
 
 	fun serialise(output: Writer)
@@ -72,12 +82,19 @@ sealed interface Instruction : Serialisable {
 	) : Instruction {
 
 		override fun serialise(output: Writer) {
-
+			output.write("$OP_C ")
+			output.write(name.quoted())
+			output.write(' ')
+			output.write(parameters.joinToString(separator = ";", prefix = "\"", postfix = "\""))
+			output.write(' ')
+			output.write(returnType.quoted())
+			output.write('\n')
 		}
 
 		companion object {
 
 			const val OP: Byte = 0b0000_0000
+			const val OP_C: String = "0000_0000"
 
 			@JvmStatic
 			fun deserialise(input: Reader): FBegin {
@@ -98,9 +115,10 @@ sealed interface Instruction : Serialisable {
 	data object FEnd : Instruction {
 
 		const val OP: Byte = 0b0000_0001
+		const val OP_C: String = "0000_0001"
 
 		// Can't @JvmStatic an override fun
-		override fun serialise(output: Writer): Unit = output.write("${OP.toBinaryString()}\n")
+		override fun serialise(output: Writer): Unit = output.write("$OP_C\n")
 
 		@JvmStatic
 		fun deserialise(input: Reader): FEnd = this.apply { input.skip(1) }
