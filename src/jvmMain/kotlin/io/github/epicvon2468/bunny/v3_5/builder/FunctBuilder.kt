@@ -1,9 +1,12 @@
-package io.github.epicvon2468.bunny.v3_5
+package io.github.epicvon2468.bunny.v3_5.builder
 
-@DslMarker
-annotation class IRBuilder
+import io.github.epicvon2468.bunny.v3_5.IR
+import io.github.epicvon2468.bunny.v3_5.Identifier
+import io.github.epicvon2468.bunny.v3_5.Instruction
+import io.github.epicvon2468.bunny.v3_5.Type
+import io.github.epicvon2468.bunny.v3_5.toIdentifier
 
-@IRBuilder
+@Builder
 interface FunctBuilder {
 
 	var name: Identifier
@@ -23,7 +26,7 @@ interface FunctBuilder {
 
 	val body: MutableList<Instruction>
 
-	@IRBuilder
+	@Builder
 	interface BodyBuilder {
 
 		val elements: MutableList<Instruction>

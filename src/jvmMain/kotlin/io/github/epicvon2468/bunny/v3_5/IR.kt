@@ -1,5 +1,7 @@
 package io.github.epicvon2468.bunny.v3_5
 
+import io.github.epicvon2468.bunny.v3_5.builder.funct
+
 import java.io.CharArrayWriter
 import java.io.Reader
 import java.io.Writer
