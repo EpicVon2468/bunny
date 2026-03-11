@@ -6,25 +6,42 @@ import java.io.Writer
 
 fun main() {
 	try {
-		val input: String = """
-			0000_0000 "main" "i32;P" "i32"
-			0000_0010 "a" "i32"
-			0000_0001
-		""".trimIndent()
-		val function: IR.Funct = input.reader().use(Reader::deserialisePrimary) as IR.Funct
-		println()
-		val serialised: String = function.serialise(initSize = 40).dropLast(1)
-		println("'''")
-		println(input)
-		println("'''")
-		println(serialised)
-		println("'''")
-		println(serialised == input)
+		main2()
+		main1()
 	} catch (e: Throwable) {
 		// System.err seems to get flushed manually, and then System.out only gets flushed from process exit, meaning errors show first
 		System.out.flush()
 		throw RuntimeException(e)
 	}
+}
+
+private fun main2() {
+	val funct: IR.Funct = funct {
+		name = "main"
+		parameters = mutableListOf("i32".toIdentifier(), "P".toIdentifier())
+		returnType = "i32".toIdentifier()
+		body {
+		}
+	}
+	val serialise: String = funct.serialise()
+	println(serialise)
+}
+
+private fun main1() {
+	val input: String = """
+			0000_0000 "main" "i32;P" "i32"
+			0000_0010 "a" "i32"
+			0000_0001
+		""".trimIndent()
+	val function: IR.Funct = input.reader().use(Reader::deserialisePrimary) as IR.Funct
+	println()
+	val serialised: String = function.serialise(initSize = 40).dropLast(1)
+	println("'''")
+	println(input)
+	println("'''")
+	println(serialised)
+	println("'''")
+	println(serialised == input)
 }
 
 interface Serialisable {
