@@ -8,6 +8,7 @@ fun main() {
 	try {
 		val input: String = """
 			0000_0000 "main" "i32;P" "i32"
+			0000_0010 "a" "i32"
 			0000_0001
 		""".trimIndent()
 		val function: IR.Funct = input.reader().use(Reader::deserialisePrimary) as IR.Funct
@@ -81,7 +82,8 @@ sealed interface Instruction : Serialisable {
 	) : Instruction {
 
 		override fun serialise(output: Writer) {
-			output.write("$OP_C ")
+			output.write(OP_C)
+			output.write(' ')
 			output.write(name.quoted())
 			output.write(' ')
 			output.write(parameters.joinToString(separator = ";", prefix = "\"", postfix = "\""))
@@ -122,6 +124,33 @@ sealed interface Instruction : Serialisable {
 		@JvmStatic
 		fun deserialise(input: Reader): FEnd = this.apply { input.skip(1) }
 	}
+
+	data class Def(val name: Identifier, val type: Type) : Instruction {
+
+		override fun serialise(output: Writer) {
+			output.write(OP_C)
+			output.write(' ')
+			output.write(name.quoted())
+			output.write(' ')
+			output.write(type.quoted())
+			output.write('\n')
+		}
+
+		companion object {
+
+			const val OP: Byte = 0b0000_0010
+			const val OP_C: String = "0000_0010"
+
+			@JvmStatic
+			fun deserialise(input: Reader): Def {
+				val name: Identifier = input.readIdentifier()
+				input.skip(1)
+				val type: Type = input.readIdentifier()
+				input.skip(1)
+				return Def(name, type)
+			}
+		}
+	}
 }
 
 fun Reader.deserialisePrimary(): IR = when (val binary: Byte = this.readInstruction()) {
@@ -135,6 +164,7 @@ fun <T : Instruction> Reader.deserialiseInstruction(op: Byte? = null): T {
 	return when (op) {
 		Instruction.FBegin.OP -> Instruction.FBegin.deserialise(this)
 		Instruction.FEnd.OP -> Instruction.FEnd.deserialise(this)
+		Instruction.Def.OP -> Instruction.Def.deserialise(this)
 		else -> TODO()
 	} as T
 }
