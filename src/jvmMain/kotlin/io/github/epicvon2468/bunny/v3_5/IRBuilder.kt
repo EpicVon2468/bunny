@@ -8,38 +8,38 @@ interface FunctBuilder {
 
 	var name: String
 
-	var parameters: MutableList<Identifier>
+	val parameters: MutableList<Identifier>
 
 	var returnType: Type
 
-	var body: MutableList<Instruction>
+	val body: MutableList<Instruction>
 
 	@IRBuilder
 	interface BodyBuilder {
 
-		var elements: MutableList<Instruction>
+		val elements: MutableList<Instruction>
 	}
 
 	fun body(block: BodyBuilder.() -> Unit) {
 		val impl: BodyBuilder = object : BodyBuilder {
 
-			override var elements: MutableList<Instruction> = mutableListOf()
+			override val elements: MutableList<Instruction>
+				get() = this@FunctBuilder.body
 		}
 		impl.block()
-		body = impl.elements
 	}
 }
 
 fun funct(block: FunctBuilder.() -> Unit): IR.Funct {
 	val impl: FunctBuilder = object : FunctBuilder {
 
-		override var name: String = "_anonymous"
+		override var name: String = "anonymous"
 
-		override var parameters: MutableList<Identifier> = mutableListOf()
+		override val parameters: MutableList<Identifier> = mutableListOf()
 
 		override var returnType: Type = "void"
 
-		override var body: MutableList<Instruction> = mutableListOf()
+		override val body: MutableList<Instruction> = mutableListOf()
 	}
 	impl.block()
 	return IR.Funct(
