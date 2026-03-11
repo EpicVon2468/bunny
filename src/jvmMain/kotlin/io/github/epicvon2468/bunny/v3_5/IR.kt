@@ -18,8 +18,8 @@ fun main() {
 private fun main2() {
 	val funct: IR.Funct = funct {
 		name = "main"
-		parameters.addAll(mutableListOf("i32".toIdentifier(), "P".toIdentifier()))
-		returnType = "i32".toIdentifier()
+		parameters("i32", "P")
+		returnType = "i32"
 		body {
 		}
 	}

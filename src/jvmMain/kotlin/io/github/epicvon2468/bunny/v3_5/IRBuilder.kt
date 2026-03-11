@@ -6,9 +6,18 @@ annotation class IRBuilder
 @IRBuilder
 interface FunctBuilder {
 
-	var name: String
+	var name: Identifier
 
 	val parameters: MutableList<Identifier>
+
+	fun parameters(vararg params: String, noValidate: Boolean = false, replace: Boolean = false) {
+		if (replace) parameters.clear()
+		if (noValidate) {
+			parameters.addAll(params)
+			return
+		}
+		parameters.addAll(params.map(String::toIdentifier))
+	}
 
 	var returnType: Type
 
@@ -33,11 +42,17 @@ interface FunctBuilder {
 fun funct(block: FunctBuilder.() -> Unit): IR.Funct {
 	val impl: FunctBuilder = object : FunctBuilder {
 
-		override var name: String = "anonymous"
+		override var name: Identifier = "anonymous"
+			set(value) {
+				field = value.toIdentifier()
+			}
 
 		override val parameters: MutableList<Identifier> = mutableListOf()
 
 		override var returnType: Type = "void"
+			set(value) {
+				field = value.toIdentifier()
+			}
 
 		override val body: MutableList<Instruction> = mutableListOf()
 	}
