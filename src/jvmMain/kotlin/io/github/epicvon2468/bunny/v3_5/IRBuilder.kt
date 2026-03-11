@@ -1,9 +1,9 @@
 package io.github.epicvon2468.bunny.v3_5
 
 @DslMarker
-annotation class IRBuilderDSL
+annotation class IRBuilder
 
-@IRBuilderDSL
+@IRBuilder
 interface FunctBuilder {
 
 	var name: String
@@ -14,7 +14,7 @@ interface FunctBuilder {
 
 	var body: MutableList<Instruction>
 
-	@IRBuilderDSL
+	@IRBuilder
 	interface BodyBuilder {
 
 		var elements: MutableList<Instruction>

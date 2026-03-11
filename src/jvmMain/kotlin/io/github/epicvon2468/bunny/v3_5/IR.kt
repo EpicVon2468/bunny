@@ -7,7 +7,7 @@ import java.io.Writer
 fun main() {
 	try {
 		main2()
-		main1()
+//		main1()
 	} catch (e: Throwable) {
 		// System.err seems to get flushed manually, and then System.out only gets flushed from process exit, meaning errors show first
 		System.out.flush()
