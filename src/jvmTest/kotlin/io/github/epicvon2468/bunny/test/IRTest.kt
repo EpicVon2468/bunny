@@ -17,6 +17,7 @@ class IRTest {
 		@JvmField
 		val INPUT_1: String = """
 			0000_0000 "main" "i32;P" "i32"
+			0000_0010 "a" "i32"
 			0000_0001
 		""".trimIndent() + '\n'
 	}
