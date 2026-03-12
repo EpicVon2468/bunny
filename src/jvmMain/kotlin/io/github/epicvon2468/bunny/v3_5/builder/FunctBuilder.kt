@@ -5,6 +5,7 @@ import io.github.epicvon2468.bunny.v3_5.Identifier
 import io.github.epicvon2468.bunny.v3_5.Instruction
 import io.github.epicvon2468.bunny.v3_5.Type
 import io.github.epicvon2468.bunny.v3_5.toIdentifier
+import io.github.epicvon2468.bunny.v3_5.builder.def as _def
 
 @Builder
 interface FunctBuilder {
@@ -30,6 +31,10 @@ interface FunctBuilder {
 	interface BodyBuilder {
 
 		val elements: MutableList<Instruction>
+
+		fun def(block: DefBuilder.() -> Unit) {
+			elements += _def(block)
+		}
 	}
 
 	fun body(block: BodyBuilder.() -> Unit) {

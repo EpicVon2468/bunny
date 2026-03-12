@@ -23,6 +23,10 @@ private fun main2() {
 		parameters("i32", "P")
 		returnType = "i32"
 		body {
+			def {
+				name = "a"
+				type = "i32"
+			}
 		}
 	}
 	val serialise: String = funct.serialise()
