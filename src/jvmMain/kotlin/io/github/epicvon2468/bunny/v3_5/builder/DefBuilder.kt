@@ -8,8 +8,20 @@ import io.github.epicvon2468.bunny.v3_5.toIdentifier
 @Builder
 interface DefBuilder {
 
+	/**
+	 * The name of this element.
+	 *
+	 * Note: Setting this property does not require use of [toIdentifier], as the implementation validates mutations using [toIdentifier] already.
+	 */
 	var name: Identifier
 
+	/**
+	 * The type of this element.
+	 *
+	 * Note: Setting this property does not require use of [toIdentifier], as the implementation validates mutations using [toIdentifier] already.
+	 *
+	 * @throws IllegalStateException if the type is unset.  This behaviour is specific to [DefBuilder.type], as variables cannot simply default to `void`.
+	 */
 	var type: Type
 }
 
@@ -21,10 +33,11 @@ fun def(block: DefBuilder.() -> Unit): Instruction.Def {
 				field = value.toIdentifier()
 			}
 
-		// TODO: make this specifically throw if unset?
-		override var type: Type = "void"
+		private var _type: Type? = null
+		override var type: Type
+			get() = _type ?: error("DefBuilder.type was not set!")
 			set(value) {
-				field = value.toIdentifier()
+				_type = value.toIdentifier()
 			}
 	}
 	impl.block()

@@ -148,7 +148,10 @@ sealed interface Instruction : Serialisable {
 		fun deserialise(input: Reader): FEnd = this.apply { input.skip(1) }
 	}
 
-	data class Def(val name: Identifier, val type: Type) : Instruction {
+	data class Def(
+		val name: Identifier,
+		val type: Type
+	) : Instruction {
 
 		override fun serialise(output: Writer) {
 			output.write(OP_C)
@@ -193,4 +196,4 @@ fun <T : Instruction> Reader.deserialiseInstruction(op: Byte? = null): T {
 }
 
 typealias Identifier = String
-typealias Type = String
+typealias Type = Identifier

@@ -10,6 +10,11 @@ import io.github.epicvon2468.bunny.v3_5.builder.def as _def
 @Builder
 interface FunctBuilder {
 
+	/**
+	 * The name of this element.
+	 *
+	 * Note: Setting this property does not require use of [toIdentifier], as the implementation validates mutations using [toIdentifier] already.
+	 */
 	var name: Identifier
 
 	val parameters: MutableList<Identifier>
@@ -23,6 +28,11 @@ interface FunctBuilder {
 		parameters.addAll(params.map(String::toIdentifier))
 	}
 
+	/**
+	 * The return type of this element.
+	 *
+	 * Note: Setting this property does not require use of [toIdentifier], as the implementation validates mutations using [toIdentifier] already.
+	 */
 	var returnType: Type
 
 	val body: MutableList<Instruction>
@@ -30,6 +40,9 @@ interface FunctBuilder {
 	@Builder
 	interface BodyBuilder {
 
+		/**
+		 * Mutable access to the parent [FunctBuilder]'s [FunctBuilder.body].
+		 */
 		val elements: MutableList<Instruction>
 
 		fun def(block: DefBuilder.() -> Unit) {
