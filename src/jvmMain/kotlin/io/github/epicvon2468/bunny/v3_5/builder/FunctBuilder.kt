@@ -17,7 +17,7 @@ interface FunctBuilder {
 	 */
 	var name: Identifier
 
-	val parameters: MutableList<Identifier>
+	var parameters: MutableList<Identifier>
 
 	fun parameters(vararg params: String, noValidate: Boolean = false, replace: Boolean = false) {
 		if (replace) parameters.clear()
@@ -68,7 +68,11 @@ fun funct(block: FunctBuilder.() -> Unit): IR.Funct {
 				field = value.toIdentifier()
 			}
 
-		override val parameters: MutableList<Identifier> = mutableListOf()
+		override var parameters: MutableList<Identifier> = mutableListOf()
+			set(value) {
+				field.clear()
+				field.addAll(value)
+			}
 
 		override var returnType: Type = "void"
 			set(value) {
