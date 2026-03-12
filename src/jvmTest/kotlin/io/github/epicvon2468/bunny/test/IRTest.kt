@@ -1,6 +1,7 @@
 package io.github.epicvon2468.bunny.test
 
 import io.github.epicvon2468.bunny.v3_5.IR
+import io.github.epicvon2468.bunny.v3_5.builder.funct
 import io.github.epicvon2468.bunny.v3_5.deserialisePrimary
 
 import java.io.Reader
@@ -20,6 +21,9 @@ class IRTest {
 			0000_0010 "a" "i32"
 			0000_0001
 		""".trimIndent() + '\n'
+
+		@Suppress("NOTHING_TO_INLINE")
+		private inline fun input1(): IR.Funct = INPUT_1.reader().use(Reader::deserialisePrimary) as IR.Funct
 	}
 
 	@BeforeTest
@@ -30,10 +34,39 @@ class IRTest {
 
 	@Test
 	fun serialiseFunctionTest1() {
-		val function: IR.Funct = INPUT_1.reader().use(Reader::deserialisePrimary) as IR.Funct
+		val function: IR.Funct = input1()
 		val serialised: String = function.serialise(initSize = INPUT_1.length)
-		assertEquals(INPUT_1, serialised)
+		assertEquals(
+			expected = INPUT_1,
+			actual = serialised
+		)
 		val reconstructed: IR.Funct = serialised.reader().use(Reader::deserialisePrimary) as IR.Funct
-		assertEquals(function, reconstructed)
+		assertEquals(
+			expected = function,
+			actual = reconstructed
+		)
+	}
+
+	@Test
+	fun builderTest1() {
+		val function: IR.Funct = funct {
+			name = "main"
+			parameters = mutableListOf("i32", "P")
+			returnType = "i32"
+			body {
+				def {
+					name = "a"
+					type = "i32"
+				}
+			}
+		}
+		assertEquals(
+			expected = input1(),
+			actual = function
+		)
+		assertEquals(
+			expected = INPUT_1,
+			actual = function.serialise()
+		)
 	}
 }
