@@ -20,12 +20,9 @@ interface FunctBuilder {
 	var parameters: MutableList<Identifier>
 
 	fun parameters(vararg params: String, noValidate: Boolean = false, replace: Boolean = false) {
-		if (replace) parameters.clear()
-		if (noValidate) {
-			parameters.addAll(params)
-			return
-		}
-		parameters.addAll(params.map(String::toIdentifier))
+		val params: List<String> = if (noValidate) params.toList() else params.map(String::toIdentifier)
+		if (replace) parameters = params.toMutableList()
+		else parameters += params
 	}
 
 	/**
