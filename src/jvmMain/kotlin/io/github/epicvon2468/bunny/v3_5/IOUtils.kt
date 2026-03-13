@@ -18,9 +18,11 @@ fun Reader.readInstruction(): Byte {
 fun Reader.readQuoted(defaultCapacity: Int = 16): String {
 	val output: StringBuilder = StringBuilder(defaultCapacity)
 	require(this.read(1) == "\"") { "Quoted element did not start with '\"'!" }
+	var prev: Char? = null
 	while (true) {
 		val next: Char = this.read().toChar()
-		if (next == '"') break
+		if (next == '"' && prev != '\\') break
+		prev = next
 		output.append(next)
 	}
 	return output.toString()

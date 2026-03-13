@@ -35,10 +35,10 @@ private fun main2() {
 
 private fun main1() {
 	val input: String = """
-			0000_0000 "main" "i32;P" "i32"
-			0000_0010 "a" "i32"
-			0000_0001
-		""".trimIndent()
+		0000_0000 "main" "i32;P" "i32"
+		0000_0010 "a" "i32"
+		0000_0001
+	""".trimIndent()
 	val function: IR.Funct = input.reader().use(Reader::deserialisePrimary) as IR.Funct
 	println()
 	val serialised: String = function.serialise(initSize = 40).dropLast(1)

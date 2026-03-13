@@ -28,7 +28,7 @@ class IRTest {
 
 	@BeforeTest
 	@AfterTest
-	internal fun append() {
+	internal fun separate() {
 		println()
 	}
 
@@ -66,7 +66,7 @@ class IRTest {
 		)
 		assertEquals(
 			expected = INPUT_1,
-			actual = function.serialise()
+			actual = function.serialise(initSize = INPUT_1.length)
 		)
 	}
 }
