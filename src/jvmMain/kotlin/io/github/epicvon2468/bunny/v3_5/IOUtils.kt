@@ -28,6 +28,24 @@ fun Reader.readQuoted(defaultCapacity: Int = 16): String {
 	return output.toString()
 }
 
+fun Reader.peek(count: Int): String = when {
+	count == 1 -> this.peek().toString()
+	count > 1 -> {
+		this.mark(count)
+		val result: String = this.read(count)
+		this.reset()
+		return result
+	}
+	else -> throw IllegalArgumentException("Bad read request, cannot peek zero or negative number of characters: $count!")
+}
+
+fun Reader.peek(): Char {
+	this.mark(1)
+	val result: Char = this.read().toChar()
+	this.reset()
+	return result
+}
+
 fun Reader.readIdentifier(defaultCapacity: Int = 16): Identifier = this.readQuoted(defaultCapacity).toIdentifier()
 
 // PrimaryLexer.g4 vaguely defines the spec, although keyword stuff isn't important here since none of them are relevant

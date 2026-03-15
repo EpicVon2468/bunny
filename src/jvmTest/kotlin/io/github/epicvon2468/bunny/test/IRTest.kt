@@ -51,7 +51,7 @@ class IRTest {
 	fun builderTest1() {
 		val function: IR.Funct = funct {
 			name = "main"
-			parameters = mutableListOf("i32", "P")
+			parameters += listOf("i32", "P")
 			returnType = "i32"
 			body {
 				def {
