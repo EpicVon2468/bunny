@@ -41,7 +41,7 @@ private fun main1() {
 	""".trimIndent()
 	val function: IR.Funct = input.reader().use(Reader::deserialisePrimary) as IR.Funct
 	println()
-	val serialised: String = function.serialise(initSize = 40).dropLast(1)
+	val serialised: String = function.serialise(initSize = input.length).dropLast(1)
 	println("'''")
 	println(input)
 	println("'''")
@@ -107,11 +107,11 @@ sealed interface Instruction : Serialisable {
 		override fun serialise(output: Writer) {
 			output.write(OP_C)
 			output.write(' ')
-			output.write(name.quoted())
+			output.write(this.name.quoted())
 			output.write(' ')
-			output.write(parameters.joinToString(separator = ";", prefix = "\"", postfix = "\""))
+			output.write(this.parameters.joinToString(separator = ";", prefix = "\"", postfix = "\""))
 			output.write(' ')
-			output.write(returnType.quoted())
+			output.write(this.returnType.quoted())
 			output.write('\n')
 		}
 
@@ -156,9 +156,9 @@ sealed interface Instruction : Serialisable {
 		override fun serialise(output: Writer) {
 			output.write(OP_C)
 			output.write(' ')
-			output.write(name.quoted())
+			output.write(this.name.quoted())
 			output.write(' ')
-			output.write(type.quoted())
+			output.write(this.type.quoted())
 			output.write('\n')
 		}
 
