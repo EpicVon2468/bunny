@@ -12,7 +12,7 @@ fBegin <name: IDENTIFIER> <parameters: TYPE_LIST> <returnType: TYPE>
 
 // Function End
 // 0b0000_0001
-fEnd <name: IDENTIFIER>
+fEnd
 
 // Define Variable
 // 0b0000_0010
@@ -56,3 +56,11 @@ _op <value: ???>
 // Return
 // 0b0000_1100
 ret [lit | expr]
+
+// Label Begin
+// 0b0000_1101
+lBegin <name: IDENTIFIER>
+
+// Label End
+// 0b0000_1110
+lEnd

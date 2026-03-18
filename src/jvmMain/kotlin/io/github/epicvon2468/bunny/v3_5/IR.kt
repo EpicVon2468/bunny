@@ -94,6 +94,19 @@ sealed interface IR : Serialisable {
 			}
 		}
 	}
+
+	data class Label(
+		val name: Identifier,
+		val parent: Funct,
+		val body: List<Instruction>
+	) : IR {
+
+		override fun serialise(output: Writer) {
+			Instruction.LBegin(this.name).serialise(output)
+			for (entry: Instruction in this.body) entry.serialise(output)
+			Instruction.LEnd.serialise(output)
+		}
+	}
 }
 
 sealed interface Instruction : Serialisable {
@@ -177,6 +190,42 @@ sealed interface Instruction : Serialisable {
 			}
 		}
 	}
+
+	data class LBegin(
+		val name: Identifier
+	) : Instruction {
+
+		override fun serialise(output: Writer) {
+			output.write(OP_C)
+			output.write(' ')
+			output.write(this.name.quoted())
+			output.write('\n')
+		}
+
+		companion object {
+
+			const val OP: Byte = 0b0000_1101
+			const val OP_C: String = "0000_1101"
+
+			@JvmStatic
+			fun deserialise(input: Reader): LBegin {
+				val name: Identifier = input.readIdentifier()
+				input.skip(1)
+				return LBegin(name)
+			}
+		}
+	}
+
+	data object LEnd : Instruction {
+
+		const val OP: Byte = 0b0000_1110
+		const val OP_C: String = "0000_1110"
+
+		override fun serialise(output: Writer) = output.write("$OP_C\n")
+
+		@JvmStatic
+		fun deserialise(input: Reader): LEnd = this.apply { input.skip(1) }
+	}
 }
 
 fun Reader.deserialisePrimary(): IR = when (val binary: Byte = this.readInstruction()) {
@@ -191,6 +240,8 @@ fun <T : Instruction> Reader.deserialiseInstruction(op: Byte? = null): T {
 		Instruction.FBegin.OP -> Instruction.FBegin.deserialise(this)
 		Instruction.FEnd.OP -> Instruction.FEnd.deserialise(this)
 		Instruction.Def.OP -> Instruction.Def.deserialise(this)
+		Instruction.LBegin.OP -> Instruction.LBegin.deserialise(this)
+		Instruction.LEnd.OP -> Instruction.LEnd.deserialise(this)
 		else -> TODO()
 	} as T
 }
