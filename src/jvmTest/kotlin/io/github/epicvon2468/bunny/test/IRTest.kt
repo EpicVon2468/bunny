@@ -18,7 +18,6 @@ class IRTest {
 		@JvmField
 		val INPUT_1: String = """
 			0000_0000 "main" "i32;P" "i32"
-			0000_0010 "a" "i32"
 			0000_0001
 		""".trimIndent() + '\n'
 
@@ -54,10 +53,10 @@ class IRTest {
 			parameters += listOf("i32", "P")
 			returnType = "i32"
 			body {
-				def {
-					name = "a"
-					type = "i32"
-				}
+//				def {
+//					name = "a"
+//					type = "i32"
+//				}
 			}
 		}
 		assertEquals(

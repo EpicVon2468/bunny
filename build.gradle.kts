@@ -19,6 +19,7 @@ tasks.withType<JavaExec> {
 		"--enable-native-access=ALL-UNNAMED",
 		"-Djava.library.path=${System.getenv("LIB_LLVM_LOCATION")}/lib:${System.getProperty("java.library.path")}"
 	)
+	standardInput = System.`in`
 	//systemProperty("jextract.trace.downcalls", "true")
 }
 

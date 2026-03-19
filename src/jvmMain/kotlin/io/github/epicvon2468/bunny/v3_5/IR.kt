@@ -23,10 +23,10 @@ private fun main2() {
 		parameters("i32", "P")
 		returnType = "i32"
 		body {
-			def {
-				name = "a"
-				type = "i32"
-			}
+//			def {
+//				name = "a"
+//				type = "i32"
+//			}
 		}
 	}
 	val serialise: String = funct.serialise()
@@ -36,7 +36,6 @@ private fun main2() {
 private fun main1() {
 	val input: String = """
 		0000_0000 "main" "i32;P" "i32"
-		0000_0010 "a" "i32"
 		0000_0001
 	""".trimIndent()
 	val function: IR.Funct = input.reader().use(Reader::deserialisePrimary) as IR.Funct
@@ -63,28 +62,27 @@ sealed interface IR : Serialisable {
 		val name: Identifier,
 		val parameters: List<Identifier>,
 		val returnType: Type,
-		val body: List<Instruction>
+		val body: List<Label>
 	) : IR {
 
 		override fun serialise(output: Writer) {
 			Instruction.FBegin(this.name, this.parameters, this.returnType).serialise(output)
-			for (entry: Instruction in this.body) entry.serialise(output)
+			for (entry: Label in this.body) entry.serialise(output)
 			Instruction.FEnd.serialise(output)
 		}
 
 		companion object {
 
 			@JvmStatic
-			fun deserialise(mode: Byte, input: Reader): Funct {
-				val fBegin: Instruction.FBegin = input.deserialiseInstruction(op = mode)
-				val body: MutableList<Instruction> = mutableListOf()
-				while (true) {
-					val next: Instruction = input.deserialiseInstruction()
-					if (next is Instruction.FEnd) break
-					body.add(next)
+			fun deserialise(input: Reader): Funct {
+				val fBegin: Instruction.FBegin = input.deserialiseInstruction()
+				val body: MutableList<Label> = mutableListOf()
+				var next: Byte = input.peekOpcode()
+				while (next == Instruction.LBegin.OP) {
+					body.add(Label.deserialise(input))
+					next = input.peekOpcode()
 				}
-				println("Got fBegin: $fBegin")
-				println("Got body: $body")
+				require(input.deserialiseInstruction<Instruction>() is Instruction.FEnd)
 				return Funct(
 					name = fBegin.name,
 					parameters = fBegin.parameters,
@@ -97,7 +95,6 @@ sealed interface IR : Serialisable {
 
 	data class Label(
 		val name: Identifier,
-		val parent: Funct,
 		val body: List<Instruction>
 	) : IR {
 
@@ -105,6 +102,24 @@ sealed interface IR : Serialisable {
 			Instruction.LBegin(this.name).serialise(output)
 			for (entry: Instruction in this.body) entry.serialise(output)
 			Instruction.LEnd.serialise(output)
+		}
+
+		companion object {
+
+			@JvmStatic
+			fun deserialise(input: Reader): Label {
+				val lBegin = Instruction.LBegin.deserialise(input)
+				val body: MutableList<Instruction> = mutableListOf()
+				while (true) {
+					val next: Instruction = input.deserialiseInstruction()
+					if (next is Instruction.LEnd) break
+					body.add(next)
+				}
+				return Label(
+					name = lBegin.name,
+					body = body
+				)
+			}
 		}
 	}
 }
@@ -228,15 +243,14 @@ sealed interface Instruction : Serialisable {
 	}
 }
 
-fun Reader.deserialisePrimary(): IR = when (val binary: Byte = this.readInstruction()) {
-	Instruction.FBegin.OP -> IR.Funct.deserialise(binary, this)
+fun Reader.deserialisePrimary(): IR = when (this.peekOpcode()) {
+	Instruction.FBegin.OP -> IR.Funct.deserialise(this)
 	else -> TODO()
 }
 
-fun <T : Instruction> Reader.deserialiseInstruction(op: Byte? = null): T {
-	val op: Byte = op ?: this.readInstruction()
+fun <T : Instruction> Reader.deserialiseInstruction(): T {
 	@Suppress("UNCHECKED_CAST")
-	return when (op) {
+	return when (this.readOpcode()) {
 		Instruction.FBegin.OP -> Instruction.FBegin.deserialise(this)
 		Instruction.FEnd.OP -> Instruction.FEnd.deserialise(this)
 		Instruction.Def.OP -> Instruction.Def.deserialise(this)

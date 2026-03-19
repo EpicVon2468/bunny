@@ -9,11 +9,13 @@ fun Reader.read(count: Int): String = when {
 	else -> throw IllegalArgumentException("Bad read request, cannot read zero or negative number of characters: $count!")
 }
 
-fun Reader.readInstruction(): Byte {
+fun Reader.readOpcode(): Byte {
 	val result: Byte = this.read(9).binaryToByte()
 	this.skip(1)
 	return result
 }
+
+fun Reader.peekOpcode(): Byte = this.peek(10, Reader::readOpcode)
 
 fun Reader.readQuoted(defaultCapacity: Int = 16): String {
 	val output: StringBuilder = StringBuilder(defaultCapacity)
@@ -30,18 +32,15 @@ fun Reader.readQuoted(defaultCapacity: Int = 16): String {
 
 fun Reader.peek(count: Int): String = when {
 	count == 1 -> this.peek().toString()
-	count > 1 -> {
-		this.mark(count)
-		val result: String = this.read(count)
-		this.reset()
-		return result
-	}
+	count > 1 -> this.peek(count) { this.read(count) }
 	else -> throw IllegalArgumentException("Bad read request, cannot peek zero or negative number of characters: $count!")
 }
 
-fun Reader.peek(): Char {
-	this.mark(1)
-	val result: Char = this.read().toChar()
+fun Reader.peek(): Char = this.peek(1, Reader::read).toChar()
+
+fun <T> Reader.peek(count: Int, block: Reader.() -> T): T {
+	this.mark(count)
+	val result: T = this.block()
 	this.reset()
 	return result
 }

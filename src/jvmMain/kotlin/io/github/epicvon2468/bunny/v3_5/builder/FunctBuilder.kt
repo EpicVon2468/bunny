@@ -32,7 +32,7 @@ interface FunctBuilder {
 	 */
 	var returnType: Type
 
-	val body: MutableList<Instruction>
+	val body: MutableList<IR.Label>
 
 	@Builder
 	interface BodyBuilder {
@@ -40,17 +40,17 @@ interface FunctBuilder {
 		/**
 		 * Mutable access to the parent [FunctBuilder]'s [FunctBuilder.body].
 		 */
-		val elements: MutableList<Instruction>
+		val elements: MutableList<IR.Label>
 
-		fun def(block: DefBuilder.() -> Unit) {
-			elements += _def(block)
-		}
+//		fun def(block: DefBuilder.() -> Unit) {
+//			elements += _def(block)
+//		}
 	}
 
 	fun body(block: BodyBuilder.() -> Unit) {
 		val impl: BodyBuilder = object : BodyBuilder {
 
-			override val elements: MutableList<Instruction>
+			override val elements: MutableList<IR.Label>
 				get() = this@FunctBuilder.body
 		}
 		impl.block()
@@ -76,7 +76,7 @@ fun funct(block: FunctBuilder.() -> Unit): IR.Funct {
 				field = value.toIdentifier()
 			}
 
-		override val body: MutableList<Instruction> = mutableListOf()
+		override val body: MutableList<IR.Label> = mutableListOf()
 	}
 	impl.block()
 	return IR.Funct(
