@@ -119,8 +119,6 @@ kotlin {
 			implementation("org.junit.jupiter:junit-jupiter-api:6.0.3")
 			implementation(kotlin("test"))
 		}
-		all {
-			languageSettings.enableLanguageFeature("ContextParameters")
-		}
 	}
+	compilerOptions.freeCompilerArgs.add("-Xcontext-parameters")
 }
