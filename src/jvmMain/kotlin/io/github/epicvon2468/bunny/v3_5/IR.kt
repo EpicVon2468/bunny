@@ -8,7 +8,7 @@ import java.io.Writer
 
 fun main() {
 	try {
-		main2()
+//		main2()
 		main1()
 	} catch (e: Throwable) {
 		// System.err seems to get flushed manually, and then System.out only gets flushed from process exit, meaning errors show first
@@ -36,6 +36,9 @@ private fun main2() {
 private fun main1() {
 	val input: String = """
 		0000_0000 "main" "i32;P" "i32"
+		0000_1101 "entry"
+		0000_0010 "a" "i32"
+		0000_1110
 		0000_0001
 	""".trimIndent()
 	val function: IR.Funct = input.reader().use(Reader::deserialisePrimary) as IR.Funct
@@ -79,6 +82,7 @@ sealed interface IR : Serialisable {
 				val body: MutableList<Label> = mutableListOf()
 				var next: Byte = input.peekOpcode()
 				while (next == Instruction.LBegin.OP) {
+					input.readOpcode()
 					body.add(Label.deserialise(input))
 					next = input.peekOpcode()
 				}
@@ -173,7 +177,7 @@ sealed interface Instruction : Serialisable {
 		override fun serialise(output: Writer): Unit = output.write("$OP_C\n")
 
 		@JvmStatic
-		fun deserialise(input: Reader): FEnd = this.apply { input.skip(1) }
+		fun deserialise(input: Reader): FEnd = this
 	}
 
 	data class Def(
@@ -239,7 +243,7 @@ sealed interface Instruction : Serialisable {
 		override fun serialise(output: Writer) = output.write("$OP_C\n")
 
 		@JvmStatic
-		fun deserialise(input: Reader): LEnd = this.apply { input.skip(1) }
+		fun deserialise(input: Reader): LEnd = this
 	}
 }
 

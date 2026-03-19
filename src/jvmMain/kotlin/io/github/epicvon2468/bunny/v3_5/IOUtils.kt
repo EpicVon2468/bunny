@@ -38,7 +38,7 @@ fun Reader.peek(count: Int): String = when {
 
 fun Reader.peek(): Char = this.peek(1, Reader::read).toChar()
 
-fun <T> Reader.peek(count: Int, block: Reader.() -> T): T {
+inline fun <T> Reader.peek(count: Int, block: Reader.() -> T): T {
 	this.mark(count)
 	val result: T = this.block()
 	this.reset()
